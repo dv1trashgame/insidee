@@ -547,25 +547,10 @@
             ];
 
             try {
-// 1. 이미지 전처리 (원래 코드 유지 - 게임 화면이라면 대비를 높이는 것이 좋습니다)
-const processedImgSrc = await preprocessImageForOCR(imagePreview.src);
-
-// 2. 외부 파일 대신 가장 안정적인 공식 'eng' 엔진 사용
-const worker = await Tesseract.createWorker('eng');
-
-// 3. 파라미터 설정 (여기서 숫자만 읽도록 강제)
-await worker.setParameters({ 
-    tessedit_pageseg_mode: '6',
-    tessedit_char_whitelist: '0123456789' // 🚨 핵심: OCR이 오직 숫자만 결과로 뱉어내도록 제한
-});
-
-// 4. 텍스트 인식
-const ret = await worker.recognize(processedImgSrc);
-await worker.terminate();
-
-let text = ret.data.text;
-
-const ret = await worker.recognize(processedImgSrc);
+                const processedImgSrc = await preprocessImageForOCR(imagePreview.src);
+                const worker = await Tesseract.createWorker('eng');
+                await worker.setParameters({ tessedit_pageseg_mode: '6' });
+                const ret = await worker.recognize(processedImgSrc);
                 await worker.terminate();
 
                 let text = ret.data.text;
