@@ -314,6 +314,7 @@
             }
         }
 
+        // 🌟 순위표 데이터 불러오기 및 커스텀 메달 이미지 렌더링 로직
         async function loadLeaderboard() {
             const tbody = document.getElementById('leaderboardBody');
             tbody.innerHTML = `<tr><td colspan="5" style="color:#94a3b8;">데이터를 불러오는 중입니다... ⏳</td></tr>`;
@@ -328,6 +329,7 @@
                 }
 
                 data.forEach((row, index) => {
+                    // 🌟 1~3위 커스텀 이미지 매칭 구조화 (실패시 일반 텍스트 대체 안전장치 구현)
                     let medalHtml = `<span class="rank-td-cell">${index + 1}위</span>`;
                     if(index === 0) medalHtml = `<img src="./images/medal_1.png" class="leaderboard-medal-icon" alt="1위" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';"><span style="display:none;" class="rank-td-cell">1위</span>`;
                     if(index === 1) medalHtml = `<img src="./images/medal_2.png" class="leaderboard-medal-icon" alt="2위" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';"><span style="display:none;" class="rank-td-cell">2위</span>`;
@@ -546,16 +548,19 @@
 
             try {
                 const processedImgSrc = await preprocessImageForOCR(imagePreview.src);
-                
-                // 🌟 커스텀 모델(digits.traineddata) 불러오기 적용
-                const worker = await Tesseract.createWorker('digits', 1, {
-                    langPath: '.',    // index.html과 같은 폴더에 있는 digits.traineddata를 찾음
-                    gzip: false       // .gz 압축 파일이 아니므로 false
+
+                // 🌟 최신 문법을 사용하여 직접 만드신 digits.traineddata 파일을 안전하게 로드합니다.
+                const worker = await Tesseract.createWorker({
+                    langPath: '.',    // index.html과 같은 폴더에 있는 파일을 찾음
+                    gzip: false       // 압축 파일이 아니므로 해제 처리 안 함
                 });
                 
+                await worker.loadLanguage('digits');
+                await worker.initialize('digits');
+
+                // 🌟 커스텀 모델 사용 시 빈칸을 출력하는 LSTM 화이트리스트 버그 방지를 위해 화이트리스트 설정 제거
                 await worker.setParameters({ 
-                    tessedit_pageseg_mode: '6',
-                    tessedit_char_whitelist: '0123456789' // 숫자만 강제 인식 (정확도 향상)
+                    tessedit_pageseg_mode: '6'
                 });
                 
                 const ret = await worker.recognize(processedImgSrc);
