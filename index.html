@@ -559,7 +559,7 @@ const worker = await Tesseract.createWorker('digits', 1, {
 await worker.setParameters({ 
     tessedit_pageseg_mode: '6',
     // 숫자만 인식하도록 강제하고 싶다면 아래 옵션도 추가해 보세요 (선택 사항)
-    // tessedit_char_whitelist: '0123456789'
+    tessedit_char_whitelist: '0123456789'
 });
 
 const ret = await worker.recognize(processedImgSrc);
