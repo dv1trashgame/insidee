@@ -477,6 +477,7 @@
                 const img = new Image();
                 img.onload = () => {
                     const canvas = document.createElement('canvas');
+                    // 크롭 영역은 그대로 유지
                     const cropY = img.height * 0.33;
                     const cropH = img.height * 0.52;
                     canvas.width  = img.width  * 3;
@@ -491,7 +492,11 @@
                         const r = data[i], g = data[i + 1], b = data[i + 2];
                         const gray = 0.299 * r + 0.587 * g + 0.114 * b;
                         const inverted = 255 - gray;
-                        const binary = inverted > 110 ? 255 : 0;
+                        
+                        // ✨ 핵심 변경 부분: 임계값을 110에서 85로 하향 조정
+                        // 숫자의 테두리 픽셀을 날려버려서 얇고 뾰족하게 깎아냅니다.
+                        const binary = inverted > 85 ? 255 : 0; 
+                        
                         data[i] = data[i + 1] = data[i + 2] = binary;
                     }
                     ctx.putImageData(imageData, 0, 0);
