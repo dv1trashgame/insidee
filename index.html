@@ -477,7 +477,6 @@
                 const img = new Image();
                 img.onload = () => {
                     const canvas = document.createElement('canvas');
-                    // 크롭 영역은 그대로 유지
                     const cropY = img.height * 0.33;
                     const cropH = img.height * 0.52;
                     canvas.width  = img.width  * 3;
@@ -493,9 +492,8 @@
                         const gray = 0.299 * r + 0.587 * g + 0.114 * b;
                         const inverted = 255 - gray;
                         
-                        // ✨ 핵심 변경 부분: 임계값을 110에서 85로 하향 조정
-                        // 숫자의 테두리 픽셀을 날려버려서 얇고 뾰족하게 깎아냅니다.
-                        const binary = inverted > 85 ? 255 : 0; 
+                        // ✨ 임계값 상향 (85 -> 105): 7이 1로 깎이거나 Eval이 지워지는 현상 방지
+                        const binary = inverted > 105 ? 255 : 0; 
                         
                         data[i] = data[i + 1] = data[i + 2] = binary;
                     }
@@ -508,21 +506,33 @@
 
         // 🔧 [수정 2] 개선된 파싱 로직 추가
         function parseStatsFromOCRText(rawOCR) {
-            let text = rawOCR
-                .replace(/m/gi, '11').replace(/n/gi, '11')
-                .replace(/I/g,  '1' ).replace(/l/g,  '1' )
-                .replace(/O/gi, '0' ).replace(/S/gi, '5' );
+            // 1. 위험한 무지성 치환(m, n -> 11 / S -> 5) 전면 폐기
+            // 형태가 매우 비슷한 문자만 최소한으로 보정합니다.
+            let text = rawOCR.replace(/O/gi, '0').replace(/[Il]/g, '1');
+        
+            // 2. 숫자와 알파벳이 붙어버린 경우 분리 (예: "1785S" ➔ "1785 S")
+            text = text.replace(/([0-9]+)[a-zA-Z]+/g, '$1 ');
+            text = text.replace(/[a-zA-Z]+([0-9]+)/g, ' $1');
         
             let allNums = (text.match(/\d+/g) || []).map(n => parseInt(n, 10));
         
+            // 3. OCR 오인식 자가 보정 (중복 숫자 및 5자리 수 깎아내기)
             allNums = allNums.map(n => {
                 if (n >= 10000 && n <= 19999) {
                     const candidate = n % 10000;
-                    if (candidate >= 1000) return candidate;
+                    if (candidate >= 1000) return candidate; // 17200 -> 7200
+                }
+                // 렉스톤 오류 방어: 28446 처럼 가운데 숫자가 중복으로 씹힌 경우 (2846으로 복구)
+                if (n >= 20000 && n <= 99999) {
+                    const str = n.toString();
+                    if(str[2] === str[3]) { 
+                        return parseInt(str.slice(0,2) + str.slice(3), 10);
+                    }
                 }
                 return n;
             });
         
+            // 이후 로직은 기존과 동일 (9개 숫자 추출 및 Eval 검증)
             for (const line of text.split('\n')) {
                 const lineNums = (line.match(/\d+/g) || [])
                     .map(n => parseInt(n, 10))
