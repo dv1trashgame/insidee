@@ -210,23 +210,30 @@
 
     <div class="upload-section">
         <p style="margin-top:0; font-weight:800; color: #e2e8f0; font-size:15px; margin-bottom:12px;">1. 덱 설정 화면 스크린샷 업로드</p>
-        <input type="file" id="imageInput" accept="image/*" style="display: block; width: 100%; padding: 15px; border: 2px dashed #555; border-radius: 8px; background: #1a1a1a; cursor: pointer; color: #a0aab5; font-weight: 600; text-align: center; box-sizing: border-box; transition: all 0.2s;">
+        <input type="file" id="imageInput" accept="image/*">
         
         <div style="display:flex; gap: 15px; flex-wrap: wrap;">
             <div style="width: 100%;">
-                <img id="imagePreview" alt="원본 이미지" style="width: 100%; height: auto; margin-top: 15px; border-radius: 8px; display: none; border: 1px solid #444; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
+                <img id="imagePreview" alt="원본 이미지">
+            </div>
+            <div style="display: none;">
+                <p id="processedLabel">AI 인식용 보정 이미지</p>
+                <img id="processedPreview" alt="보정 이미지">
             </div>
         </div>
         
-        <div id="preSelectArea" style="display: none; margin-top: 25px; padding: 25px; background-color: #1a1a1a; border-radius: 12px; border: 1px solid #333;">
+        <div id="preSelectArea" class="pre-select-area">
             <p style="margin-top:0; font-weight:800; color: #e2e8f0; font-size:15px; margin-bottom:5px;">2. 각 그룹의 드래곤과 등급 지정</p>
             
-            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 15px;">
-                <div style="display: flex; flex-direction: column; background: #252525; padding: 15px; border-radius: 8px; border: 1px solid #444;">
-                    <label style="font-weight: 800; margin-bottom: 12px; color: #cbd5e1; font-size: 15px; text-align: center; border-bottom: 1px solid #444; padding-bottom: 8px;">그룹 1 (왼쪽)</label>
-                    <div style="display: flex; flex-direction: column; gap: 10px;">
-                        <input type="text" id="preInput1" autocomplete="off" placeholder="드래곤 이름 검색" style="width: 100%; padding: 12px; border-radius: 6px; border: 1px solid #444; background-color: #1e1e1e; font-family: inherit; font-size: 14px; font-weight: bold; box-sizing: border-box; color: #eee;">
-                        <select id="preGrade1" style="width: 100%; padding: 12px; border-radius: 6px; border: 1px solid #444; font-family: inherit; font-size: 14px; font-weight: bold; cursor: pointer; background-color: #1e1e1e; color: #eee; box-sizing: border-box;">
+            <div class="pre-select-container">
+                <div class="pre-select-item">
+                    <label>그룹 1 (왼쪽)</label>
+                    <div class="input-row">
+                        <div class="autocomplete-wrapper">
+                            <input type="text" class="dragon-search" id="preInput1" autocomplete="off" placeholder="드래곤 이름 검색">
+                            <div class="autocomplete-list" id="autoList1"></div>
+                        </div>
+                        <select class="grade-select" id="preGrade1">
                             <option value="7.0">7.0</option>
                             <option value="8.0">8.0</option>
                             <option value="9.0" selected>9.0</option>
@@ -234,11 +241,14 @@
                     </div>
                 </div>
                 
-                <div style="display: flex; flex-direction: column; background: #252525; padding: 15px; border-radius: 8px; border: 1px solid #444;">
-                    <label style="font-weight: 800; margin-bottom: 12px; color: #cbd5e1; font-size: 15px; text-align: center; border-bottom: 1px solid #444; padding-bottom: 8px;">그룹 2 (가운데)</label>
-                    <div style="display: flex; flex-direction: column; gap: 10px;">
-                        <input type="text" id="preInput2" autocomplete="off" placeholder="드래곤 이름 검색" style="width: 100%; padding: 12px; border-radius: 6px; border: 1px solid #444; background-color: #1e1e1e; font-family: inherit; font-size: 14px; font-weight: bold; box-sizing: border-box; color: #eee;">
-                        <select id="preGrade2" style="width: 100%; padding: 12px; border-radius: 6px; border: 1px solid #444; font-family: inherit; font-size: 14px; font-weight: bold; cursor: pointer; background-color: #1e1e1e; color: #eee; box-sizing: border-box;">
+                <div class="pre-select-item">
+                    <label>그룹 2 (가운데)</label>
+                    <div class="input-row">
+                        <div class="autocomplete-wrapper">
+                            <input type="text" class="dragon-search" id="preInput2" autocomplete="off" placeholder="드래곤 이름 검색">
+                            <div class="autocomplete-list" id="autoList2"></div>
+                        </div>
+                        <select class="grade-select" id="preGrade2">
                             <option value="7.0">7.0</option>
                             <option value="8.0">8.0</option>
                             <option value="9.0" selected>9.0</option>
@@ -246,11 +256,14 @@
                     </div>
                 </div>
                 
-                <div style="display: flex; flex-direction: column; background: #252525; padding: 15px; border-radius: 8px; border: 1px solid #444;">
-                    <label style="font-weight: 800; margin-bottom: 12px; color: #cbd5e1; font-size: 15px; text-align: center; border-bottom: 1px solid #444; padding-bottom: 8px;">그룹 3 (오른쪽)</label>
-                    <div style="display: flex; flex-direction: column; gap: 10px;">
-                        <input type="text" id="preInput3" autocomplete="off" placeholder="드래곤 이름 검색" style="width: 100%; padding: 12px; border-radius: 6px; border: 1px solid #444; background-color: #1e1e1e; font-family: inherit; font-size: 14px; font-weight: bold; box-sizing: border-box; color: #eee;">
-                        <select id="preGrade3" style="width: 100%; padding: 12px; border-radius: 6px; border: 1px solid #444; font-family: inherit; font-size: 14px; font-weight: bold; cursor: pointer; background-color: #1e1e1e; color: #eee; box-sizing: border-box;">
+                <div class="pre-select-item">
+                    <label>그룹 3 (오른쪽)</label>
+                    <div class="input-row">
+                        <div class="autocomplete-wrapper">
+                            <input type="text" class="dragon-search" id="preInput3" autocomplete="off" placeholder="드래곤 이름 검색">
+                            <div class="autocomplete-list" id="autoList3"></div>
+                        </div>
+                        <select class="grade-select" id="preGrade3">
                             <option value="7.0">7.0</option>
                             <option value="8.0">8.0</option>
                             <option value="9.0" selected>9.0</option>
@@ -268,7 +281,7 @@
         <h3 style="margin-top:0; color:#ffffff; font-weight:800; font-size:18px; border-bottom:1px solid #444; padding-bottom:12px; margin-bottom:20px;">이번 주 비밸 계산 결과</h3>
         <div id="parsedResults"></div>
         <h4 style="margin-top: 35px; font-size: 13px; color: #94a3b8; margin-bottom:5px;">전체 인식된 텍스트 (로그 확인용)</h4>
-        <textarea id="rawText" style="width: 100%; height: 100px; margin-top: 10px; padding: 15px; box-sizing: border-box; background-color: #0f172a; color: #a5b4fc; border: 1px solid #333; border-radius: 8px; font-size: 12px; font-family: monospace; resize: vertical;" readonly></textarea>
+        <textarea id="rawText" class="raw-text" readonly></textarea>
     </div>
 
     <script>
@@ -301,20 +314,22 @@
             }
         }
 
+        // 🌟 순위표 데이터 불러오기 및 커스텀 메달 이미지 렌더링 로직
         async function loadLeaderboard() {
             const tbody = document.getElementById('leaderboardBody');
-            tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color:#94a3b8;">데이터를 불러오는 중입니다... ⏳</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="5" style="color:#94a3b8;">데이터를 불러오는 중입니다... ⏳</td></tr>`;
             try {
                 const response = await fetch(GAS_URL);
                 const data = await response.json();
                 
                 tbody.innerHTML = '';
                 if(data.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color:#94a3b8;">아직 등록된 랭킹이 없습니다.</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="5" style="color:#94a3b8;">아직 등록된 랭킹이 없습니다.</td></tr>`;
                     return;
                 }
 
                 data.forEach((row, index) => {
+                    // 🌟 1~3위 커스텀 이미지 매칭 구조화 (실패시 일반 텍스트 대체 안전장치 구현)
                     let medalHtml = `<span class="rank-td-cell">${index + 1}위</span>`;
                     if(index === 0) medalHtml = `<img src="./images/medal_1.png" class="leaderboard-medal-icon" alt="1위" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';"><span style="display:none;" class="rank-td-cell">1위</span>`;
                     if(index === 1) medalHtml = `<img src="./images/medal_2.png" class="leaderboard-medal-icon" alt="2위" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';"><span style="display:none;" class="rank-td-cell">2위</span>`;
@@ -376,7 +391,7 @@
                     `;
                 });
             } catch (error) {
-                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color:#fca5a5;">순위표를 불러오는 데 실패했습니다.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="5" style="color:#fca5a5;">순위표를 불러오는 데 실패했습니다.</td></tr>`;
             }
         }
 
@@ -532,29 +547,25 @@
             ];
 
             try {
-                const processedImgSrc = await preprocessImageForOCR(imagePreview.src);
+const processedImgSrc = await preprocessImageForOCR(imagePreview.src);
 
-                // 🌟 최신 Tesseract v5 모델 불러오기 방식
-                const worker = await Tesseract.createWorker({
-                    langPath: '.', // 현재 폴더 (index.html이 있는 위치의 digits.traineddata 파일을 다운로드)
-                    gzip: false,   // .gz 파일이 아닌 .traineddata를 그대로 읽음
-                    logger: m => console.log(m) // (F12) 개발자 도구에서 다운로드 상태 확인 가능
-                });
-                
-                await worker.loadLanguage('digits');
-                await worker.initialize('digits');
+// 'digits'는 사용할 파일의 이름(digits.traineddata의 앞부분)입니다.
+// 1은 OEM(OCR Engine Mode) 값으로, 일반적으로 LSTM 모델을 사용할 때 1을 줍니다.
+const worker = await Tesseract.createWorker('digits', 1, {
+    langPath: '.', // 파일이 위치한 경로 (index.html과 같은 폴더인 경우 '.')
+    gzip: false    // 파일이 압축되지 않은 일반 .traineddata 파일일 경우 반드시 false로 설정
+});
 
-                // 🌟 숫자 모델에 최적화된 옵션 및 화이트리스트(안전장치) 복구
-                await worker.setParameters({ 
-                    tessedit_pageseg_mode: '6',
-                    tessedit_char_whitelist: '0123456789'
-                });
-                
-                const ret = await worker.recognize(processedImgSrc);
+await worker.setParameters({ 
+    tessedit_pageseg_mode: '6',
+    // 숫자만 인식하도록 강제하고 싶다면 아래 옵션도 추가해 보세요 (선택 사항)
+    // tessedit_char_whitelist: '0123456789'
+});
+
+const ret = await worker.recognize(processedImgSrc);
                 await worker.terminate();
 
                 let text = ret.data.text;
-                // 커스텀 모델 인식 결과에서 발생할 수 있는 소소한 오차 보정용 (보조)
                 text = text.replace(/m/gi, '11').replace(/n/gi, '11').replace(/I/g, '1').replace(/l/g, '1').replace(/O/gi, '0').replace(/S/gi, '5');
                 rawText.value = text;
                 
@@ -578,15 +589,14 @@
                 }
 
                 if (statNumbers && statNumbers.length === 9) {
-                    let html = '<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px; align-items: stretch;">';
-                    const colors = ['#ff4757', '#ffa502', '#2ed573']; 
+                    let html = '<div class="groups-wrapper">';
+                    const colors = ['group-1', 'group-2', 'group-3']; 
                     let totalBival = 0;
 
                     for (let i = 0; i < 9; i += 3) {
                         const groupNum = Math.floor(i / 3) + 1;
                         const dragonName = selectedNames[groupNum - 1]; 
                         const dragonGrade = selectedGrades[groupNum - 1];
-                        const currentColor = colors[groupNum - 1];
                         
                         let base_hp = parseInt(statNumbers[i], 10);
                         let base_atk = parseInt(statNumbers[i+1], 10);
@@ -595,7 +605,7 @@
                         const calculatedEval = base_hp + ((base_atk + base_def) * 4);
 
                         let buff_hp = 0, buff_atk = 0, buff_def = 0;
-                        let infoBadge = `<span style="font-size: 12px; color: #94a3b8; font-weight: normal; visibility:hidden;">[미지정/미지정]</span>`; 
+                        let infoBadge = `<span class="dragon-type" style="visibility:hidden;">[미지정/미지정]</span>`; 
                         let dragonBuffCount = 0;
 
                         const dragonInfo = dragonDB[dragonName];
@@ -603,7 +613,7 @@
                             const eType = dragonInfo.e; 
                             const tType = dragonInfo.t; 
                             
-                            infoBadge = `<span style="font-size: 12px; color: #94a3b8; font-weight: normal;">[${eType} / ${tType}]</span>`;
+                            infoBadge = `<span class="dragon-type">[${eType} / ${tType}]</span>`;
 
                             let buffElements = new Set();
                             let buffTypes = new Set();
@@ -655,9 +665,9 @@
                         if (groupNum === 3) currentG3 = currentGroupData;
 
                         const formatStat = (base, buff) => {
-                            if (buff > 0) return `<b style="font-size: 18px; display: block; margin-top: 4px; color: #ffffff;">${base}</b> <div style="color: #4ade80; font-weight: bold; font-size: 12px; margin-top: 4px; min-height: 14px;">(+${buff})</div>`;
-                            if (buff < 0) return `<b style="font-size: 18px; display: block; margin-top: 4px; color: #ffffff;">${base}</b> <div style="color: #f87171; font-weight: bold; font-size: 12px; margin-top: 4px; min-height: 14px;">(${buff})</div>`;
-                            return `<b style="font-size: 18px; display: block; margin-top: 4px; color: #ffffff;">${base}</b> <div style="color: #4ade80; font-weight: bold; font-size: 12px; margin-top: 4px; min-height: 14px; visibility:hidden;">(+0)</div>`;
+                            if (buff > 0) return `<b>${base}</b> <div class="stat-buff-plus">(+${buff})</div>`;
+                            if (buff < 0) return `<b>${base}</b> <div class="stat-buff-minus">(${buff})</div>`;
+                            return `<b>${base}</b> <div class="stat-buff-plus" style="visibility:hidden;">(+0)</div>`;
                         };
 
                         let gradeHtml = '';
@@ -666,33 +676,33 @@
                         } else if (dragonGrade === '8.0') {
                             gradeHtml = `<img src="./images/grade_8.png" alt="8.0" style="height: 24px;">`;
                         } else {
-                            gradeHtml = `<span style="background-color: #854d0e; color: #fef08a; padding: 5px 10px; border-radius: 4px; font-size: 13px; font-weight: bold; border: 1px solid #ca8a04;">⭐ ${dragonGrade} 등급</span>`;
+                            gradeHtml = `<span class="grade-badge">⭐ ${dragonGrade} 등급</span>`;
                         }
 
                         html += `
-                            <div style="background: #1a1a1a; padding: 20px; border-radius: 8px; border: 1px solid ${currentColor}; border-left-width: 6px; box-shadow: 0 4px 6px rgba(0,0,0,0.2); display: flex; flex-direction: column;">
-                                <div style="display: flex; flex-direction: column; align-items: flex-start; border-bottom: 1px solid #333; padding-bottom: 12px; margin-bottom: 15px; gap: 8px;">
-                                    <span style="font-size: 18px; font-weight: 800; color: #ffffff; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                                        <img src="./images/icons/${dragonName}.png" alt="${dragonName}" style="width: 24px; height: 24px; vertical-align: middle; border-radius: 4px; object-fit: cover;" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+                            <div class="group ${colors[groupNum-1]}">
+                                <div class="group-header">
+                                    <span class="dragon-title">
+                                        <img src="./images/icons/${dragonName}.png" alt="${dragonName}" class="dragon-icon" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
                                         <span style="display:none;">🐲</span> 
                                         ${dragonName} ${infoBadge}
                                     </span>
                                     ${gradeHtml}
                                 </div>
-                                <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px; align-items: flex-start;">
-                                    <span style="background-color: #2563eb; color: white; padding: 5px 10px; border-radius: 4px; font-size: 13px; font-weight: bold;">순수 원본 Eval: ${calculatedEval}</span>
-                                    <span style="background-color: #059669; color: white; padding: 5px 10px; border-radius: 4px; font-size: 13px; font-weight: bold;">스탯 인식 완료</span>
+                                <div class="badges-container">
+                                    <span class="eval-badge">순수 원본 Eval: ${calculatedEval}</span>
+                                    <span class="badge-success">스탯 인식 완료</span>
                                 </div>
                                 
-                                <div style="display: flex; gap: 8px; justify-content: space-between; margin-bottom: 15px; align-items: stretch;">
-                                    <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 10px 4px; border-radius: 6px; text-align: center; font-size: 12px; font-weight: bold; line-height: 1.2; background-color: #2a1111; border: 1px solid #5c2222; color: #ff8a8a;">♥ HP${formatStat(base_hp, buff_hp)}</div>
-                                    <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 10px 4px; border-radius: 6px; text-align: center; font-size: 12px; font-weight: bold; line-height: 1.2; background-color: #2a1c0d; border: 1px solid #6b431a; color: #ffa756;">⚔ ATK${formatStat(base_atk, buff_atk)}</div>
-                                    <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 10px 4px; border-radius: 6px; text-align: center; font-size: 12px; font-weight: bold; line-height: 1.2; background-color: #112a1a; border: 1px solid #1f5c35; color: #6ee7b7;">🛡 DEF${formatStat(base_def, buff_def)}</div>
+                                <div class="stat-container">
+                                    <div class="stat-box stat-hp">♥ HP${formatStat(base_hp, buff_hp)}</div>
+                                    <div class="stat-box stat-atk">⚔ ATK${formatStat(base_atk, buff_atk)}</div>
+                                    <div class="stat-box stat-def">🛡 DEF${formatStat(base_def, buff_def)}</div>
                                 </div>
                                 
-                                <div style="text-align: center; background: #1e253c; padding: 12px; border-radius: 6px; border: 1px dashed #374151; margin-top: auto;">
-                                    <span style="font-size: 12px; color: #94a3b8; margin-bottom: 4px; display: block;">📊 비밸 (버프 적용):</span>
-                                    <span style="color: #ffffff; font-size: 20px; font-weight: bold;">${groupBival.toLocaleString()}</span>
+                                <div class="bival-box">
+                                    <span class="bival-label">📊 비밸 (버프 적용):</span>
+                                    <span class="bival-score">${groupBival.toLocaleString()}</span>
                                 </div>
                             </div>
                         `;
@@ -702,13 +712,13 @@
                     currentCalculatedBival = totalBival;
 
                     html += `
-                        <div style="background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; padding: 25px; border-radius: 12px; text-align: center; margin-top: 30px; font-size: 22px; font-weight: 900; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
+                        <div class="total-bival-box">
                             🏆 이번 주 총합 비밸
-                            <span style="font-size: 32px; display: block; margin-top: 8px; color: #fef08a;">${totalBival.toLocaleString()}</span>
+                            <span>${totalBival.toLocaleString()}</span>
                             
-                            <div style="margin-top: 15px; padding: 15px; background: rgba(0,0,0,0.2); border-radius: 8px; display: flex; gap: 10px; align-items: center; justify-content: center; flex-wrap: wrap;">
-                                <input type="text" id="nicknameInput" placeholder="닉네임 입력 (최대 10자)" maxlength="10" style="padding: 10px 15px; border-radius: 6px; border: 1px solid #444; background: #1e1e1e; color: white; font-size: 15px; font-family: inherit; width: 200px; font-weight: bold;">
-                                <button id="submitScoreBtn" onclick="submitScoreToDB()" style="margin-top: 0; width: auto; padding: 10px 20px; background: #f59e0b; font-size: 15px; box-shadow: 0 4px 10px rgba(245, 158, 11, 0.2);">명예의 전당에 기록 등록하기</button>
+                            <div class="submit-section">
+                                <input type="text" id="nicknameInput" placeholder="닉네임 입력 (최대 10자)" maxlength="10">
+                                <button id="submitScoreBtn" onclick="submitScoreToDB()">명예의 전당에 기록 등록하기</button>
                             </div>
                         </div>
                     `;
