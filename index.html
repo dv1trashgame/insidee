@@ -305,21 +305,21 @@
             const tbody = document.getElementById('leaderboardBody');
             tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color:#94a3b8;">데이터를 불러오는 중입니다... ⏳</td></tr>`;
             try {
-                const res = await fetch(GAS_URL);
-                const data = await res.json();
+                const response = await fetch(GAS_URL);
+                const data = await response.json();
+                
                 tbody.innerHTML = '';
                 if(data.length === 0) {
                     tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color:#94a3b8;">아직 등록된 랭킹이 없습니다.</td></tr>`;
                     return;
                 }
-                data.forEach((row, i) => {
-                    const buffCount = row.totalBuffCount || 0;
-                    
-                    let medalHtml = `<span style="font-weight: bold;">${i + 1}위</span>`;
-                    if(i === 0) medalHtml = `<img src="./images/medal_1.png" class="leaderboard-medal-icon" alt="1위" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';"><span style="display:none; font-weight: bold;">1위</span>`;
-                    if(i === 1) medalHtml = `<img src="./images/medal_2.png" class="leaderboard-medal-icon" alt="2위" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';"><span style="display:none; font-weight: bold;">2위</span>`;
-                    if(i === 2) medalHtml = `<img src="./images/medal_3.png" class="leaderboard-medal-icon" alt="3위" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';"><span style="display:none; font-weight: bold;">3위</span>`;
 
+                data.forEach((row, index) => {
+                    let medalHtml = `<span class="rank-td-cell">${index + 1}위</span>`;
+                    if(index === 0) medalHtml = `<img src="./images/medal_1.png" class="leaderboard-medal-icon" alt="1위" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';"><span style="display:none;" class="rank-td-cell">1위</span>`;
+                    if(index === 1) medalHtml = `<img src="./images/medal_2.png" class="leaderboard-medal-icon" alt="2위" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';"><span style="display:none;" class="rank-td-cell">2위</span>`;
+                    if(index === 2) medalHtml = `<img src="./images/medal_3.png" class="leaderboard-medal-icon" alt="3위" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';"><span style="display:none;" class="rank-td-cell">3위</span>`;
+                    
                     let iconsHtml = '';
                     const dNames = [row.g1?.name, row.g2?.name, row.g3?.name];
                     dNames.forEach(dName => {
@@ -327,27 +327,55 @@
                             iconsHtml += `<img src="./images/icons/${dName}.png" class="leaderboard-dragon-icon" onerror="this.style.display='none'">`;
                         }
                     });
+                    
+                    const buffCount = row.totalBuffCount || 0;
+                    let buffClass = `buff-${buffCount}`;
+                    if (buffCount > 6) buffClass = "buff-6"; 
+                    const buffBadge = `<span class="buff-badge ${buffClass}">${buffCount}버프</span>`;
+                    
+                    const bivalText = `<span class="score-text">${Number(row.score).toLocaleString()}</span>`;
+                    
+                    const g1Bival = (row.g1?.hp * row.g1?.atk * row.g1?.def) || 0;
+                    const g2Bival = (row.g2?.hp * row.g2?.atk * row.g2?.def) || 0;
+                    const g3Bival = (row.g3?.hp * row.g3?.atk * row.g3?.def) || 0;
 
                     tbody.innerHTML += `
                         <tr class="main-row">
                             <td>${medalHtml}</td>
-                            <td><div style="font-size:11px; font-weight:bold;">${row.nickname}<br><div style="display:flex; justify-content:center; margin-top:2px;">${iconsHtml}</div></div></td>
-                            <td><span class="buff-badge ${buffCount > 0 ? (buffCount >= 6 ? 'buff-6' : 'buff-6') : 'buff-0'}">${buffCount}버프</span></td>
-                            <td style="color:#a7f3d0; font-weight:bold;">${Number(row.score).toLocaleString()}</td>
+                            <td>
+                                <div class="nickname-container">
+                                    <span class="nickname-text">${row.nickname}</span>
+                                    <div>${iconsHtml}</div>
+                                </div>
+                            </td>
+                            <td>${buffBadge}</td>
+                            <td>${bivalText}</td>
                             <td><button class="detail-toggle-btn" onclick="toggleDetails(this)">상세 ▼</button></td>
                         </tr>
                         <tr class="details-row" style="display:none;">
                             <td colspan="5">
-                                <div style="display:flex; gap:4px; justify-content:center; flex-wrap:wrap;">
-                                    <div class="detail-card">🐲${row.g1?.name || '-'}<br>♥<b>${row.g1?.hp || 0}</b> | ⚔<b>${row.g1?.atk || 0}</b> | 🛡<b>${row.g1?.def || 0}</b></div>
-                                    <div class="detail-card">🐲${row.g2?.name || '-'}<br>♥<b>${row.g2?.hp || 0}</b> | ⚔<b>${row.g2?.atk || 0}</b> | 🛡<b>${row.g2?.def || 0}</b></div>
-                                    <div class="detail-card">🐲${row.g3?.name || '-'}<br>♥<b>${row.g3?.hp || 0}</b> | ⚔<b>${row.g3?.atk || 0}</b> | 🛡<b>${row.g3?.def || 0}</b></div>
+                                <div class="details-container">
+                                    <div class="detail-card">
+                                        <span class="d-name">🐲 ${row.g1?.name || '-'}</span>
+                                        ♥ <b>${row.g1?.hp || 0}</b> | ⚔ <b>${row.g1?.atk || 0}</b> | 🛡 <b>${row.g1?.def || 0}</b>
+                                        <span class="detail-bival">📊 ${g1Bival.toLocaleString()}</span>
+                                    </div>
+                                    <div class="detail-card">
+                                        <span class="d-name">🐲 ${row.g2?.name || '-'}</span>
+                                        ♥ <b>${row.g2?.hp || 0}</b> | ⚔ <b>${row.g2?.atk || 0}</b> | 🛡 <b>${row.g2?.def || 0}</b>
+                                        <span class="detail-bival">📊 ${g2Bival.toLocaleString()}</span>
+                                    </div>
+                                    <div class="detail-card">
+                                        <span class="d-name">🐲 ${row.g3?.name || '-'}</span>
+                                        ♥ <b>${row.g3?.hp || 0}</b> | ⚔ <b>${row.g3?.atk || 0}</b> | 🛡 <b>${row.g3?.def || 0}</b>
+                                        <span class="detail-bival">📊 ${g3Bival.toLocaleString()}</span>
+                                    </div>
                                 </div>
                             </td>
                         </tr>
                     `;
                 });
-            } catch (err) {
+            } catch (error) {
                 tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color:#fca5a5;">순위표를 불러오는 데 실패했습니다.</td></tr>`;
             }
         }
@@ -506,24 +534,27 @@
             try {
                 const processedImgSrc = await preprocessImageForOCR(imagePreview.src);
 
-                // 🌟 깃허브 페이지 절대 경로 동적 계산 (CDN 워커 미아 방지)
-                const currentPath = window.location.href.split('?')[0].replace(/\/[^\/]*$/, ''); 
-
-                // 🌟 커스텀 모델(digits.traineddata) 불러오기 적용
-                const worker = await Tesseract.createWorker('digits', 1, {
-                    langPath: currentPath, 
-                    gzip: false,
-                    logger: m => console.log(m) // 에러 발생 시 F12에서 확인 가능하도록 로거 추가
+                // 🌟 최신 Tesseract v5 모델 불러오기 방식
+                const worker = await Tesseract.createWorker({
+                    langPath: '.', // 현재 폴더 (index.html이 있는 위치의 digits.traineddata 파일을 다운로드)
+                    gzip: false,   // .gz 파일이 아닌 .traineddata를 그대로 읽음
+                    logger: m => console.log(m) // (F12) 개발자 도구에서 다운로드 상태 확인 가능
                 });
                 
+                await worker.loadLanguage('digits');
+                await worker.initialize('digits');
+
+                // 🌟 숫자 모델에 최적화된 옵션 및 화이트리스트(안전장치) 복구
                 await worker.setParameters({ 
-                    tessedit_pageseg_mode: '6'
+                    tessedit_pageseg_mode: '6',
+                    tessedit_char_whitelist: '0123456789'
                 });
                 
                 const ret = await worker.recognize(processedImgSrc);
                 await worker.terminate();
 
                 let text = ret.data.text;
+                // 커스텀 모델 인식 결과에서 발생할 수 있는 소소한 오차 보정용 (보조)
                 text = text.replace(/m/gi, '11').replace(/n/gi, '11').replace(/I/g, '1').replace(/l/g, '1').replace(/O/gi, '0').replace(/S/gi, '5');
                 rawText.value = text;
                 
