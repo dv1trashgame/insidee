@@ -601,28 +601,75 @@
                 rawText.value = ret.data.text;
                 statNumbers = parseStatsFromOCRText(ret.data.text);
             
-                if (statNumbers && statNumbers.length === 9) {
-                    const evalWarnings = [];
-                    const evalMatches = rawText.value.match(/\b[5-9]\d{3}\b|\b1[0-2]\d{3}\b/g) || [];
-                    const evalVals = evalMatches.map(n => parseInt(n, 10)).filter(n => n >= 5000 && n <= 12000);
-                    
-                    if (evalVals.length === 3) {
-                        for (let g = 0; g < 3; g++) {
-                            const hp = statNumbers[g*3], atk = statNumbers[g*3+1], def = statNumbers[g*3+2];
-                            const calcEval = hp + (atk + def) * 4;
-                            const nearestEval = evalVals.reduce((a, b) =>
-                                Math.abs(a - calcEval) < Math.abs(b - calcEval) ? a : b);
-                            if (Math.abs(nearestEval - calcEval) > 50) {
-                                evalWarnings.push(`그룹 ${g+1} 계산 Eval(${calcEval}) ≠ 실제(${nearestEval})`);
-                            }
-                        }
-                    }
-                    
-                    if (evalWarnings.length > 0) {
-                        statusDiv.innerHTML = `⚠️ 인식 불일치 주의: ${evalWarnings.join(' / ')}`;
+                // ... (이전 코드: statNumbers = parseStatsFromOCRText(ret.data.text); 부분 바로 아래부터 교체) ...
+
+    if (statNumbers && statNumbers.length === 9) {
+        const evalWarnings = [];
+        let healedCount = 0; // 복구된 스탯 개수 카운터
+
+        // 1. 확실한 'Eval' 키워드 근처의 숫자 3개 추출 시도 (정규식 강화)
+        let evalMatches = [...rawText.value.matchAll(/(?:Eval|Eva|Evel)\s*[:;]?\s*(\d{4,5})/gi)];
+        let evalVals = evalMatches.map(m => parseInt(m[1], 10));
+
+        // 2. 만약 키워드 기반 추출이 3개가 안 된다면, 기존 방식(4000~12000 사이 숫자)으로 백업 검색
+        if (evalVals.length < 3) {
+            const fallbackMatches = rawText.value.match(/\b[4-9]\d{3}\b|\b1[0-2]\d{3}\b/g) || [];
+            evalVals = fallbackMatches.map(n => parseInt(n, 10)).filter(n => n >= 4000 && n <= 12000);
+            if (evalVals.length > 3) evalVals = evalVals.slice(0, 3); // 앞에서부터 3개만 자름
+        }
+
+        // 3. ✨ 핵심: 자가 치유(Self-Healing) 역산 로직
+        if (evalVals.length === 3) {
+            for (let g = 0; g < 3; g++) {
+                const hp = statNumbers[g*3];
+                const atk = statNumbers[g*3+1];
+                const def = statNumbers[g*3+2];
+
+                const calcEval = hp + (atk + def) * 4;
+                const realEval = evalVals[g]; // 화면 좌측부터 순서대로 1:1 매칭
+
+                if (Math.abs(realEval - calcEval) > 50) {
+                    // 계산된 비밸과 실제 비밸이 다르면 역산으로 HP 추적
+                    // 공식: HP = Eval - ((ATK + DEF) * 4)
+                    const expectedHp = realEval - ((atk + def) * 4);
+
+                    // 역산된 HP가 정상적인 드래곤 체력 범위(500 ~ 9000) 안이라면 덮어쓰기 진행
+                    if (expectedHp >= 500 && expectedHp <= 9000) {
+                        statNumbers[g*3] = expectedHp; // 🚨 실제 배열의 에러 값(1111)을 진짜 체력(3171)으로 교체!
+                        healedCount++;
+                        evalWarnings.push(`그룹 ${g+1} 복구됨(${hp}➔${expectedHp})`);
                     } else {
-                        statusDiv.innerHTML = "계산 완료 ✅";
+                        // 역산 값이 음수이거나 너무 크면 ATK, DEF 쪽이 잘못 인식된 것
+                        evalWarnings.push(`그룹 ${g+1} 불일치 주의`);
                     }
+                }
+            }
+        } else {
+            // Eval 값을 3개 다 찾지 못했을 때의 예비 경고 시스템
+            for (let g = 0; g < 3; g++) {
+                const hp = statNumbers[g*3], atk = statNumbers[g*3+1], def = statNumbers[g*3+2];
+                const calcEval = hp + (atk + def) * 4;
+                if (evalVals.length > 0) {
+                    const nearestEval = evalVals.reduce((a, b) => Math.abs(a - calcEval) < Math.abs(b - calcEval) ? a : b);
+                    if (Math.abs(nearestEval - calcEval) > 50) evalWarnings.push(`그룹 ${g+1} 수치 불일치`);
+                }
+            }
+        }
+
+        // 4. 상태 메시지(UI) 업데이트
+        if (evalWarnings.length > 0) {
+            if (healedCount > 0) {
+                // 성공적으로 치유했을 때는 초록색으로 기분 좋게 알림
+                statusDiv.innerHTML = `✨ AI 자가 치유 완료: ${evalWarnings.join(', ')}`;
+                statusDiv.style.color = "#4ade80"; 
+            } else {
+                statusDiv.innerHTML = `⚠️ 인식 불일치: ${evalWarnings.join(', ')}`;
+                statusDiv.style.color = "#fca5a5"; 
+            }
+        } else {
+            statusDiv.innerHTML = "계산 완료 ✅";
+            statusDiv.style.color = "#94a3b8"; 
+        }
             
                     let html = '<div class="groups-wrapper">';
                     const colors = ['group-1', 'group-2', 'group-3']; 
