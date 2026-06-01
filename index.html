@@ -486,7 +486,7 @@
                     tempCtx.drawImage(img, 0, 0);
                     const tempData = tempCtx.getImageData(0, 0, img.width, img.height).data;
 
-                    // 1. 가로줄 평균 밝기 계산
+                    // 1. 가로줄 평균 밝기 계산 (중앙 50% 영역만 스캔)
                     const rowBrightness = new Float32Array(img.height);
                     const startX = Math.floor(img.width * 0.25);
                     const endX = Math.floor(img.width * 0.75);
@@ -501,7 +501,7 @@
                         rowBrightness[y] = sum / scanWidth;
                     }
 
-                    // 2. 진짜 게임 화면 상하단 찾기 (레터박스 무시)
+                    // 2. 진짜 게임 화면 상하단 찾기 (위아래 검은 레터박스 무시)
                     let gameTop = 0;
                     let gameBottom = img.height - 1;
                     for (let y = 0; y < img.height; y++) {
@@ -512,9 +512,11 @@
                     }
                     const gameHeight = gameBottom - gameTop;
 
-                    // 3. 빛의 닻 내리기
-                    let searchStart = gameTop + Math.floor(gameHeight * 0.45);
-                    let searchEnd = gameTop + Math.floor(gameHeight * 0.80);
+                    // 3. ✨ 빛의 닻 내리기 (탐색 범위 대폭 수정!)
+                    // CRI 박스가 더 밝아서 닻이 끌려가는 현상을 막기 위해,
+                    // 오직 Eval 박스가 존재하는 42% ~ 54% 구간에서만 닻을 내립니다.
+                    let searchStart = gameTop + Math.floor(gameHeight * 0.42);
+                    let searchEnd = gameTop + Math.floor(gameHeight * 0.54);
                     let maxBrightness = 0;
                     let evalMidY = searchStart;
 
@@ -525,7 +527,7 @@
                         }
                     }
 
-                    // 4. 경계선 스캔
+                    // 4. 닻(Eval 중앙)에서 위아래로 뻗어나가며 경계선 스캔
                     let evalTopY = evalMidY;
                     for (let y = evalMidY; y > gameTop + Math.floor(gameHeight * 0.2); y--) {
                         if (rowBrightness[y] < maxBrightness - 40 || rowBrightness[y] < 100) {
@@ -550,31 +552,34 @@
                         }
                     }
 
-                    // 5. 완벽한 크롭 범위 확정 (여백 추가)
+                    // 5. 완벽한 크롭 범위 확정
                     const cropTop = Math.max(0, evalTopY - 2);
                     const cropBottom = Math.min(img.height, criTopY + 2);
                     const cropH = cropBottom - cropTop;
 
-                    // 6. 해상도 3배 뻥튀기 캔버스 생성
+                    // 6. ✨ 해상도 3배 뻥튀기 캔버스 생성 (인공 여백 대폭 확장!)
                     const scale = 3; 
-                    const pad = 15; // 상하 여백
+                    
+                    // 기존 15 -> 40으로 증가!
+                    // 위아래로 넓은 도화지를 깔아주어 Tesseract가 숨 쉴 공간(여백)을 넉넉하게 줍니다.
+                    const pad = 40; 
+                    
                     const canvas = document.createElement('canvas');
                     canvas.width = img.width * scale;
+                    // 여백 공간(pad * 2)만큼 캔버스 세로 길이를 늘려줍니다.
                     canvas.height = (cropH + pad * 2) * scale;
                     const ctx = canvas.getContext('2d');
                     
-                    // 배경을 하얗게 채우고 그 위에 원본 '컬러' 이미지를 3배로 그림
+                    // 배경을 하얗게 채우고, 그 위에 크롭한 '원본 컬러 이미지'를 얹습니다.
                     ctx.fillStyle = 'white';
                     ctx.fillRect(0, 0, canvas.width, canvas.height);
                     ctx.imageSmoothingEnabled = false; 
                     ctx.drawImage(img, 0, cropTop, img.width, cropH, 0, pad * scale, canvas.width, cropH * scale);
 
-                    // 🚨 흑백(이진화) 필터 로직 전면 삭제! 🚨
-                    // Tesseract 엔진이 원본 컬러 이미지를 보고 스스로 명암을 판단하도록 던져줍니다.
+                    // 🚨 흑백 필터 로직 전면 삭제 유지
 
                     const dataUrl = canvas.toDataURL('image/png');
                     
-                    // 디버깅 창에는 이제 크롭+확대된 '컬러 원본'이 표시됩니다.
                     const debugImg = document.getElementById('debugProcessedImage');
                     if (debugImg) {
                         debugImg.src = dataUrl;
