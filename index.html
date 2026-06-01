@@ -518,11 +518,11 @@
                         let b = rowBrightness[y];
 
                         if (phase === 0) {
-                            // [Phase 0] 밝은 CRI 박스를 찾는다
+                            // [Phase 0] 밝은 곳을 찾는다 (배치하기 버튼 or CRI 박스 등)
                             if (b > 115) phase = 1;
                         } 
                         else if (phase === 1) {
-                            // [Phase 1] 어두운 스탯 박스 바닥을 찾는다
+                            // [Phase 1] 어두운 곳을 찾는다 (틈새 or 진짜 스탯창 바닥)
                             if (b < 105) {
                                 phase = 2;
                                 tempStatBottom = y;
@@ -530,24 +530,25 @@
                             }
                         } 
                         else if (phase === 2) {
-                            // [Phase 2] 스탯 박스를 관통하며 두께를 잰다
+                            // [Phase 2] 어두운 구역을 관통하며 '두께'를 잰다
                             if (b < 105) {
                                 darkHeight++;
                             } else if (b > 115) { 
-                                // 밝은 Eval 박스를 만남! 스탯창 두께가 2.5% 이상인지 검증
-                                if (darkHeight > img.height * 0.025) {
+                                // 다시 밝은 곳을 만남! 어두운 구역의 두께가 4.5% 이상인지 검증
+                                // ✨ 핵심 수정: 0.025 -> 0.045 로 상향하여 '버튼 틈새(가짜)'를 완벽히 무시!
+                                if (darkHeight > img.height * 0.045) {
                                     statBottomY = tempStatBottom;
-                                    statTopY = y; // ✨ Eval과 스탯창의 완벽한 경계선
+                                    statTopY = y; // Eval과 스탯창의 완벽한 경계선 확정
                                     phase = 3;
                                 } else {
-                                    // 너무 얇다! 버튼 틈새 가짜 노이즈다. 다시 찾는다.
+                                    // 너무 얇다! 이건 버튼 사이의 가짜 틈새다. 무시하고 Phase 1로 돌아가서 계속 올라감.
                                     phase = 1;
                                 }
                             }
                         } 
                         else if (phase === 3) {
                             // [Phase 3] 밝은 Eval 박스를 관통하여 어두운 드래곤 배경을 찾는다
-                            // 🚨 주의: Eval 글씨(검은색)에 속지 않도록 1.5% 높이는 무조건 건너뜁니다!
+                            // 검은색 글씨(Eval)에 속지 않도록 1.5% 높이는 무조건 건너뜀
                             if (statTopY - y > img.height * 0.015) {
                                 if (b < 100) {
                                     evalTopY = y; // 완벽한 크롭 상단!
@@ -557,7 +558,7 @@
                         }
                     }
 
-                    // 4. ✨ 화려하게 부활한 좌우(X축) 경계선 찾기
+                    // 4. 좌우(X축) 경계선 찾기
                     const evalRowBrightness = new Float32Array(img.width);
                     for (let x = 0; x < img.width; x++) {
                         let sum = 0;
@@ -600,7 +601,7 @@
                     ctx.imageSmoothingEnabled = false;
                     ctx.drawImage(img, cropLeft, cropTop, cropW, cropH, pad * scale, pad * scale, cropW * scale, cropH * scale);
 
-                    // 7. ✨ 흑백 필터 아님! 부드러운 소프트 반전(Grayscale Invert)
+                    // 7. 부드러운 소프트 반전(Grayscale Invert)
                     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
                     const data = imageData.data;
                     const splitY = (statTopY - cropTop + pad) * scale;
@@ -612,7 +613,7 @@
                             let gray = 0.299 * data[i] + 0.587 * data[i+1] + 0.114 * data[i+2];
 
                             if (!isEvalBox) {
-                                // 하단 스탯창 구역만 수학적으로 색상 반전 (어두운 배경 -> 밝게)
+                                // 하단 스탯창 구역만 색상 반전 (어두운 배경 -> 밝게)
                                 gray = 255 - gray;
                             }
 
