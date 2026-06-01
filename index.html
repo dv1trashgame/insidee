@@ -54,7 +54,7 @@
         .bival-label { font-size: 12px; color: #94a3b8; margin-bottom: 4px; display: block; }
         .bival-box span.bival-score { color: #ffffff; font-size: 20px; font-weight: bold; }
         
-        .total-bival-box { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; padding: 25px; border-radius: 12px; text-align: center; margin-top: 30px; font-size: 22px; font-weight: 900; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+        .total-bival-box { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; padding: 25px; border-radius: 12px; text-align: center; margin-top: 15px; font-size: 22px; font-weight: 900; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
         .total-bival-box span { font-size: 32px; display: block; margin-top: 8px; color: #fef08a; }
 
         .submit-section { margin-top: 15px; padding: 15px; background: rgba(0,0,0,0.2); border-radius: 8px; display: flex; gap: 10px; align-items: center; justify-content: center; flex-wrap: wrap; }
@@ -70,22 +70,18 @@
         .close-btn { color: #94a3b8; float: right; font-size: 28px; font-weight: bold; cursor: pointer; line-height: 1; margin-top: -5px; }
         .close-btn:hover { color: #fff; }
         
-        /* 🚨 레이아웃 강제 고정 핵심 및 균등화 */
         .rank-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px; table-layout: fixed; }
         .rank-table th, .rank-table td { padding: 12px 4px; border-bottom: 1px solid #333; text-align: center; vertical-align: middle; }
         .rank-table th { color: #94a3b8; font-weight: bold; border-bottom: 2px solid #444; }
         
-        /* 순위 관련 스타일 통일 (크기 격차 해소) */
         .rank-td-cell { font-weight: bold; font-size: 15px; color: #ffffff; }
         .score-text { color: #a7f3d0; font-weight: bold; font-size: 15px; letter-spacing: -0.5px; }
         .nickname-text { font-weight: bold; font-size: 15px; word-break: break-all; }
         
-        /* 커스텀 메달 아이콘 스타일 */
         .leaderboard-medal-icon { width: 24px; height: 24px; vertical-align: middle; object-fit: contain; }
         .leaderboard-dragon-icon { width: 22px; height: 22px; vertical-align: middle; border-radius: 4px; margin: 0 2px; object-fit: cover; }
         .nickname-container { display: flex; align-items: center; justify-content: center; gap: 6px; flex-wrap: wrap; }
         
-        /* 🎨 버프 수 컬러 배지 시스템 디자인 */
         .buff-badge { padding: 4px 8px; border-radius: 6px; font-size: 13px; font-weight: 900; display: inline-block; text-shadow: 0px 1px 2px rgba(0,0,0,0.3); white-space: nowrap; }
         .buff-6 { background-color: #ef4444; color: white; } 
         .buff-5 { background-color: #f97316; color: white; } 
@@ -116,7 +112,11 @@
         .autocomplete-item { padding: 12px 14px; cursor: pointer; border-bottom: 1px solid #444; font-size: 14px; color: #cbd5e1; }
         .autocomplete-item:hover { background-color: #3d3d3d; font-weight: bold; color: #60a5fa; }
 
-        /* 📱 모바일 반응형 지원 (가로 잘림 방지 모바일 최적화) */
+        /* ✨ 디버깅용 흑백 이미지 토글 버튼 디자인 (얇고 심플하게) */
+        .toggle-debug-btn { background: transparent; border: 1px solid #555; color: #94a3b8; padding: 6px 16px; border-radius: 20px; font-size: 13px; cursor: pointer; margin-top: 0; width: auto; font-weight: normal; transition: all 0.2s; }
+        .toggle-debug-btn:hover { background: #333; color: #fff; border-color: #777; }
+
+        /* 📱 모바일 반응형 지원 */
         @media (max-width: 800px) {
             body { padding: 10px 5px; }
             h2 { font-size: 20px; padding-top: 40px; margin-bottom: 20px; }
@@ -153,7 +153,6 @@
             .total-bival-box { padding: 12px 5px; font-size: 16px; margin-top: 15px; border-radius: 6px; }
             .total-bival-box span { font-size: 22px; margin-top: 4px; }
 
-            /* 🌟 모바일 명예의 전당 가로 압축 고정 */
             .modal-content { padding: 15px 4px; width: 98%; }
             .rank-table th, .rank-table td { padding: 6px 1px; font-size: 10px; }
             
@@ -161,7 +160,6 @@
             .score-text { font-size: 9.5px; word-break: break-all; } 
             .nickname-text { font-size: 10px; }
             
-            /* 모바일에서 닉네임과 아이콘을 위아래 2단 분리하여 공간 절약 */
             .nickname-container { flex-direction: column; gap: 2px; }
             .leaderboard-dragon-icon { width: 12px; height: 12px; margin: 0 1px; }
             .leaderboard-medal-icon { width: 16px; height: 16px; }
@@ -215,10 +213,6 @@
         <div style="display:flex; gap: 15px; flex-wrap: wrap;">
             <div style="width: 100%;">
                 <img id="imagePreview" alt="원본 이미지">
-            </div>
-            <div style="display: none;">
-                <p id="processedLabel">AI 인식용 보정 이미지</p>
-                <img id="processedPreview" alt="보정 이미지">
             </div>
         </div>
         
@@ -281,10 +275,7 @@
         <h3 style="margin-top:0; color:#ffffff; font-weight:800; font-size:18px; border-bottom:1px solid #444; padding-bottom:12px; margin-bottom:20px;">이번 주 비밸 계산 결과</h3>
         <div id="parsedResults"></div>
         <h4 style="margin-top: 35px; font-size: 13px; color: #94a3b8; margin-bottom:5px;">전체 인식된 텍스트 (로그 확인용)</h4>
-        <textarea id="rawText" class="raw-text" readonly></textarea>
-        
-        <h4 style="margin-top: 20px; font-size: 13px; color: #94a3b8; margin-bottom:5px;">👀 AI 인식용 흑백 변환 이미지 (디버깅용)</h4>
-        <img id="debugProcessedImage" style="max-width: 100%; border: 1px solid #444; border-radius: 8px; display: none;">
+        <textarea id="rawText" class="raw-text" style="width: 100%; height: 60px; background: #1e1e1e; color: #cbd5e1; border: 1px solid #444; border-radius: 6px; padding: 10px;" readonly></textarea>
     </div>
 
     <script>
@@ -421,7 +412,7 @@
                 loadLeaderboard();
             } catch (error) {
                 alert("등록에 실패했습니다. 다시 시도해주세요.");
-                submitBtn.innerText = "길전 주랭 등록하기";
+                submitBtn.innerText = "주간 랭킹에 기록 등록하기";
                 submitBtn.disabled = false;
             }
         }
@@ -474,7 +465,6 @@
             notice.style.borderColor = "#7f2222";
         });
 
-        // 🔧 [수정 1] 이미지 전처리 함수 개선 적용
         function preprocessImageForOCR(imgSrc) {
             return new Promise((resolve) => {
                 const img = new Image();
@@ -486,7 +476,6 @@
                     tempCtx.drawImage(img, 0, 0);
                     const tempData = tempCtx.getImageData(0, 0, img.width, img.height).data;
 
-                    // 1. 가로줄 평균 밝기 (좌우 UI 간섭을 피하기 위해 중앙 40% 영역만 스캔)
                     const rowBrightness = new Float32Array(img.height);
                     const startX = Math.floor(img.width * 0.3);
                     const endX = Math.floor(img.width * 0.7);
@@ -501,11 +490,9 @@
                         rowBrightness[y] = sum / scanWidth;
                     }
 
-                    // 2. 안전 구역(Safe Zone) 설정 (상단 15%, 하단 15%의 노이즈 원천 차단)
                     const safeTop = Math.floor(img.height * 0.15);
                     const safeBottom = Math.floor(img.height * 0.85);
 
-                    // 3. ✨ 철벽 방어 '바텀-업 페이즈 스캐너'
                     let statBottomY = safeBottom;
                     let statTopY = safeBottom;
                     let evalTopY = safeTop;
@@ -518,11 +505,9 @@
                         let b = rowBrightness[y];
 
                         if (phase === 0) {
-                            // [Phase 0] 밝은 곳을 찾는다 (배치하기 버튼 or CRI 박스 등)
                             if (b > 115) phase = 1;
                         } 
                         else if (phase === 1) {
-                            // [Phase 1] 어두운 곳을 찾는다 (틈새 or 진짜 스탯창 바닥)
                             if (b < 105) {
                                 phase = 2;
                                 tempStatBottom = y;
@@ -530,35 +515,28 @@
                             }
                         } 
                         else if (phase === 2) {
-                            // [Phase 2] 어두운 구역을 관통하며 '두께'를 잰다
                             if (b < 105) {
                                 darkHeight++;
                             } else if (b > 115) { 
-                                // 다시 밝은 곳을 만남! 어두운 구역의 두께가 4.5% 이상인지 검증
-                                // ✨ 핵심 수정: 0.025 -> 0.045 로 상향하여 '버튼 틈새(가짜)'를 완벽히 무시!
                                 if (darkHeight > img.height * 0.045) {
                                     statBottomY = tempStatBottom;
-                                    statTopY = y; // Eval과 스탯창의 완벽한 경계선 확정
+                                    statTopY = y; 
                                     phase = 3;
                                 } else {
-                                    // 너무 얇다! 이건 버튼 사이의 가짜 틈새다. 무시하고 Phase 1로 돌아가서 계속 올라감.
                                     phase = 1;
                                 }
                             }
                         } 
                         else if (phase === 3) {
-                            // [Phase 3] 밝은 Eval 박스를 관통하여 어두운 드래곤 배경을 찾는다
-                            // 검은색 글씨(Eval)에 속지 않도록 1.5% 높이는 무조건 건너뜀
                             if (statTopY - y > img.height * 0.015) {
                                 if (b < 100) {
-                                    evalTopY = y; // 완벽한 크롭 상단!
+                                    evalTopY = y; 
                                     break;
                                 }
                             }
                         }
                     }
 
-                    // 4. 좌우(X축) 경계선 찾기
                     const evalRowBrightness = new Float32Array(img.width);
                     for (let x = 0; x < img.width; x++) {
                         let sum = 0;
@@ -580,7 +558,6 @@
                         if (evalRowBrightness[x] > 115) { cropRight = x; break; }
                     }
 
-                    // 5. 크롭 범위 확정 (좌우 5px 여유)
                     cropLeft = Math.max(0, cropLeft - 5);
                     cropRight = Math.min(img.width, cropRight + 5);
                     const cropW = cropRight - cropLeft;
@@ -588,7 +565,6 @@
                     const cropBottom = Math.min(img.height, statBottomY + 2);
                     const cropH = cropBottom - cropTop;
 
-                    // 6. 3배 확대 및 사방 40픽셀 광활한 여백 추가
                     const scale = 6;
                     const pad = 20;
                     const canvas = document.createElement('canvas');
@@ -601,13 +577,11 @@
                     ctx.imageSmoothingEnabled = false;
                     ctx.drawImage(img, cropLeft, cropTop, cropW, cropH, pad * scale, pad * scale, cropW * scale, cropH * scale);
 
-                    // 7. 부드러운 소프트 반전(Grayscale Invert) + ✨ 대비(Contrast) 필터 추가
                     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
                     const data = imageData.data;
                     const splitY = (statTopY - cropTop + pad) * scale;
 
-                    // ✨ [추가 1] 대비(Contrast) 강도와 계산용 계수(factor)를 루프 밖에서 미리 선언합니다.
-                    const contrast = 80; // 대비 강도 조절 (0~255 사이. 50~100 사이가 적당합니다)
+                    const contrast = 80; 
                     const factor = (259 * (contrast + 255)) / (255 * (259 - contrast));
 
                     for (let y = 0; y < canvas.height; y++) {
@@ -617,14 +591,11 @@
                             let gray = 0.299 * data[i] + 0.587 * data[i+1] + 0.114 * data[i+2];
 
                             if (!isEvalBox) {
-                                // 하단 스탯창 구역만 색상 반전 (어두운 배경 -> 밝게)
                                 gray = 255 - gray;
                             }
 
-                            // ✨ [추가 2] 위에서 구한 반전된 회색조 값에 대비 공식을 먹입니다.
                             gray = factor * (gray - 128) + 128;
 
-                            // ✨ [추가 3] 계산된 값이 0(완전 검정) ~ 255(완전 흰색) 범위를 넘지 않게 잘라냅니다.
                             if (gray > 255) gray = 255;
                             if (gray < 0) gray = 0;
 
@@ -634,39 +605,25 @@
 
                     ctx.putImageData(imageData, 0, 0);
                     const dataUrl = canvas.toDataURL('image/png');
-
-                    const debugImg = document.getElementById('debugProcessedImage');
-                    if (debugImg) {
-                        debugImg.src = dataUrl;
-                        debugImg.style.display = 'block';
-                    }
-
                     resolve(dataUrl);
                 };
                 img.src = imgSrc;
             });
         }
-        // 🔧 [수정 2] 개선된 파싱 로직 추가
+
         function parseStatsFromOCRText(rawOCR) {
             let text = rawOCR;
 
-            // 1. 영어 찌꺼기를 숫자로 강제 변환 (자가 치유 로직을 발동시키기 위한 미끼)
-            // S, s -> 5 / B -> 8
             text = text.replace(/[Ss]/g, '5').replace(/B/g, '8');
-            // o, O, D, d, Q, g -> 0 (실제 숫자가 아니어도 됨. 자가치유가 고쳐줄 예정)
             text = text.replace(/[OoDdQqg]/g, '0');
-            // M, N, m -> 11
             text = text.replace(/[MNm]/g, '11');
-            // I, l, | -> 1
             text = text.replace(/[Il|]/g, '1');
 
-            // 2. 위에서 복원하지 않은 나머지 쓰레기 알파벳들 떼어내기
             text = text.replace(/([0-9]+)[a-zA-Z]+/g, '$1 ');
             text = text.replace(/[a-zA-Z]+([0-9]+)/g, ' $1');
         
             let allNums = (text.match(/\d+/g) || []).map(n => parseInt(n, 10));
         
-            // 3. OCR 오인식 자가 보정 (중복 숫자 및 5자리 수 깎아내기)
             allNums = allNums.map(n => {
                 if (n >= 10000 && n <= 19999) {
                     const candidate = n % 10000;
@@ -681,7 +638,6 @@
                 return n;
             });
         
-            // 4. 추출 로직
             for (const line of text.split('\n')) {
                 const lineNums = (line.match(/\d+/g) || [])
                     .map(n => parseInt(n, 10))
@@ -734,7 +690,6 @@
             }
         });
 
-        // 🔧 [수정 3] Claude API 통신 없이 Tesseract와 파싱 로직만 활용하도록 변경
         extractBtn.addEventListener('click', async () => {
             extractBtn.disabled = true;
             statusDiv.innerHTML = "스탯 인식 중... ⏳";
@@ -759,7 +714,6 @@
                 const processedImgSrc = await preprocessImageForOCR(imagePreview.src);
                 const worker = await Tesseract.createWorker('eng');
                 
-                // ✨ 원상 복구: 정렬된 표를 꼼꼼히 읽는 PSM 6 모드
                 await worker.setParameters({ tessedit_pageseg_mode: '6' }); 
                 
                 const ret = await worker.recognize(processedImgSrc);
@@ -768,104 +722,87 @@
                 rawText.value = ret.data.text;
                 statNumbers = parseStatsFromOCRText(ret.data.text);
             
-                // ... (이전 코드: statNumbers = parseStatsFromOCRText(ret.data.text); 부분 바로 아래부터 교체) ...
+                if (statNumbers && statNumbers.length === 9) {
+                    const evalWarnings = [];
+                    let healedCount = 0;
 
-    if (statNumbers && statNumbers.length === 9) {
-        const evalWarnings = [];
-        let healedCount = 0; // 복구된 스탯 개수 카운터
+                    let evalMatches = [...rawText.value.matchAll(/(?:Eval|Eva|Evel)\s*[:;]?\s*(\d{4,5})/gi)];
+                    let evalVals = evalMatches.map(m => parseInt(m[1], 10));
 
-        // 1. 확실한 'Eval' 키워드 근처의 숫자 3개 추출 시도 (정규식 강화)
-        let evalMatches = [...rawText.value.matchAll(/(?:Eval|Eva|Evel)\s*[:;]?\s*(\d{4,5})/gi)];
-        let evalVals = evalMatches.map(m => parseInt(m[1], 10));
-
-        // 2. 만약 키워드 기반 추출이 3개가 안 된다면, 기존 방식(4000~12000 사이 숫자)으로 백업 검색
-        if (evalVals.length < 3) {
-            const fallbackMatches = rawText.value.match(/\b[4-9]\d{3}\b|\b1[0-2]\d{3}\b/g) || [];
-            evalVals = fallbackMatches.map(n => parseInt(n, 10)).filter(n => n >= 4000 && n <= 12000);
-            if (evalVals.length > 3) evalVals = evalVals.slice(0, 3); // 앞에서부터 3개만 자름
-        }
-
-        // 3. ✨ 핵심: 자가 치유(Self-Healing) 역산 로직
-        if (evalVals.length === 3) {
-            for (let g = 0; g < 3; g++) {
-                let hp = statNumbers[g*3];
-                let atk = statNumbers[g*3+1];
-                let def = statNumbers[g*3+2];
-
-                const calcEval = hp + (atk + def) * 4;
-                const realEval = evalVals[g]; // 화면 좌측부터 순서대로 매칭
-
-                // 계산된 비밸과 실제 비밸이 단 1이라도 다르면 즉시 역산 돌입
-                if (calcEval !== realEval) {
-                    // 각 스탯이 범인일 경우를 가정한 3가지 예상값 계산
-                    const expectedHp = realEval - ((atk + def) * 4);
-                    const expectedAtk = (realEval - hp) / 4 - def;
-                    const expectedDef = (realEval - hp) / 4 - atk;
-
-                    let healed = false;
-
-                    // 🛠️ CASE 1: HP가 범인인가?
-                    // 조건: 예상 HP가 1000~6000 사이이고, 나머지 ATK/DEF는 정상 범위(200~1500)일 것
-                    if (expectedHp >= 1000 && expectedHp <= 6000 && 
-                        atk >= 200 && atk <= 1500 && def >= 200 && def <= 1500) {
-                        statNumbers[g*3] = expectedHp; // 배열 수정
-                        evalWarnings.push(`그룹 ${g+1} HP복구(${hp}➔${expectedHp})`);
-                        healed = true;
-                    }
-                    
-                    // 🛠️ CASE 2: ATK가 범인인가?
-                    // 조건: 소수점이 안 나오는 정수(isInteger)이고, 200~1500 사이이며, 나머지 HP/DEF는 정상 범위일 것
-                    else if (!healed && Number.isInteger(expectedAtk) && expectedAtk >= 200 && expectedAtk <= 1500 &&
-                             hp >= 1000 && hp <= 6000 && def >= 200 && def <= 1500) {
-                        statNumbers[g*3+1] = expectedAtk; // 배열 수정
-                        evalWarnings.push(`그룹 ${g+1} ATK복구(${atk}➔${expectedAtk})`);
-                        healed = true;
+                    if (evalVals.length < 3) {
+                        const fallbackMatches = rawText.value.match(/\b[4-9]\d{3}\b|\b1[0-2]\d{3}\b/g) || [];
+                        evalVals = fallbackMatches.map(n => parseInt(n, 10)).filter(n => n >= 4000 && n <= 12000);
+                        if (evalVals.length > 3) evalVals = evalVals.slice(0, 3);
                     }
 
-                    // 🛠️ CASE 3: DEF가 범인인가?
-                    // 조건: 소수점이 안 나오는 정수(isInteger)이고, 200~1500 사이이며, 나머지 HP/ATK는 정상 범위일 것
-                    else if (!healed && Number.isInteger(expectedDef) && expectedDef >= 200 && expectedDef <= 1500 &&
-                             hp >= 1000 && hp <= 6000 && atk >= 200 && atk <= 1500) {
-                        statNumbers[g*3+2] = expectedDef; // 배열 수정
-                        evalWarnings.push(`그룹 ${g+1} DEF복구(${def}➔${expectedDef})`);
-                        healed = true;
-                    }
+                    if (evalVals.length === 3) {
+                        for (let g = 0; g < 3; g++) {
+                            let hp = statNumbers[g*3];
+                            let atk = statNumbers[g*3+1];
+                            let def = statNumbers[g*3+2];
 
-                    // 🚨 3가지 경우 모두 실패했다면 (숫자 2개 이상이 동시에 박살 났거나 조건 미달)
-                    if (healed) {
-                        healedCount++;
+                            const calcEval = hp + (atk + def) * 4;
+                            const realEval = evalVals[g];
+
+                            if (calcEval !== realEval) {
+                                const expectedHp = realEval - ((atk + def) * 4);
+                                const expectedAtk = (realEval - hp) / 4 - def;
+                                const expectedDef = (realEval - hp) / 4 - atk;
+
+                                let healed = false;
+
+                                if (expectedHp >= 1000 && expectedHp <= 6000 && 
+                                    atk >= 200 && atk <= 1500 && def >= 200 && def <= 1500) {
+                                    statNumbers[g*3] = expectedHp;
+                                    evalWarnings.push(`그룹 ${g+1} HP복구(${hp}➔${expectedHp})`);
+                                    healed = true;
+                                }
+                                
+                                else if (!healed && Number.isInteger(expectedAtk) && expectedAtk >= 200 && expectedAtk <= 1500 &&
+                                         hp >= 1000 && hp <= 6000 && def >= 200 && def <= 1500) {
+                                    statNumbers[g*3+1] = expectedAtk;
+                                    evalWarnings.push(`그룹 ${g+1} ATK복구(${atk}➔${expectedAtk})`);
+                                    healed = true;
+                                }
+
+                                else if (!healed && Number.isInteger(expectedDef) && expectedDef >= 200 && expectedDef <= 1500 &&
+                                         hp >= 1000 && hp <= 6000 && atk >= 200 && atk <= 1500) {
+                                    statNumbers[g*3+2] = expectedDef;
+                                    evalWarnings.push(`그룹 ${g+1} DEF복구(${def}➔${expectedDef})`);
+                                    healed = true;
+                                }
+
+                                if (healed) {
+                                    healedCount++;
+                                } else {
+                                    evalWarnings.push(`그룹 ${g+1} 복구 불가`);
+                                }
+                            }
+                        }
                     } else {
-                        evalWarnings.push(`그룹 ${g+1} 복구 불가 (2개 이상 파손)`);
+                        for (let g = 0; g < 3; g++) {
+                            const hp = statNumbers[g*3], atk = statNumbers[g*3+1], def = statNumbers[g*3+2];
+                            const calcEval = hp + (atk + def) * 4;
+                            if (evalVals.length > 0) {
+                                const nearestEval = evalVals.reduce((a, b) => Math.abs(a - calcEval) < Math.abs(b - calcEval) ? a : b);
+                                if (Math.abs(nearestEval - calcEval) > 50) evalWarnings.push(`그룹 ${g+1} 수치 불일치`);
+                            }
+                        }
                     }
-                }
-            }
-        } else {
-            // Eval 값을 3개 다 찾지 못했을 때의 예비 경고 시스템 (기존 유지)
-            for (let g = 0; g < 3; g++) {
-                const hp = statNumbers[g*3], atk = statNumbers[g*3+1], def = statNumbers[g*3+2];
-                const calcEval = hp + (atk + def) * 4;
-                if (evalVals.length > 0) {
-                    const nearestEval = evalVals.reduce((a, b) => Math.abs(a - calcEval) < Math.abs(b - calcEval) ? a : b);
-                    if (Math.abs(nearestEval - calcEval) > 50) evalWarnings.push(`그룹 ${g+1} 수치 불일치`);
-                }
-            }
-        }
 
-        // 4. 상태 메시지(UI) 업데이트
-        if (evalWarnings.length > 0) {
-            if (healedCount > 0) {
-                // 성공적으로 치유했을 때는 초록색으로 기분 좋게 알림
-                statusDiv.innerHTML = `✨ AI 인식 수정 완료: ${evalWarnings.join(', ')}`;
-                statusDiv.style.color = "#4ade80"; 
-            } else {
-                statusDiv.innerHTML = `⚠️ 인식 불일치: ${evalWarnings.join(', ')}`;
-                statusDiv.style.color = "#fca5a5"; 
-            }
-        } else {
-            statusDiv.innerHTML = "계산 완료 ✅";
-            statusDiv.style.color = "#94a3b8"; 
-        }
-            
+                    if (evalWarnings.length > 0) {
+                        if (healedCount > 0) {
+                            statusDiv.innerHTML = `✨ AI 인식 수정 완료: ${evalWarnings.join(', ')}`;
+                            statusDiv.style.color = "#4ade80"; 
+                        } else {
+                            statusDiv.innerHTML = `⚠️ 인식 불일치: ${evalWarnings.join(', ')}`;
+                            statusDiv.style.color = "#fca5a5"; 
+                        }
+                    } else {
+                        statusDiv.innerHTML = "계산 완료 ✅";
+                        statusDiv.style.color = "#94a3b8"; 
+                    }
+                        
                     let html = '<div class="groups-wrapper">';
                     const colors = ['group-1', 'group-2', 'group-3']; 
                     let totalBival = 0;
@@ -984,6 +921,16 @@
                     html += '</div>';
                     currentCalculatedBival = totalBival;
 
+                    // ✨ 디버깅용 흑백 이미지 토글 창 추가 (총합 비밸 바로 위)
+                    html += `
+                        <div style="margin-top: 25px; text-align: center;">
+                            <button class="toggle-debug-btn" onclick="const wrapper = document.getElementById('debugImageWrapper'); wrapper.style.display = wrapper.style.display === 'none' ? 'block' : 'none'; this.innerText = wrapper.style.display === 'none' ? '👀 AI 인식용 이미지 확인하기 ▼' : '👀 AI 인식용 이미지 닫기 ▲';">👀 AI 인식용 이미지 확인하기 ▼</button>
+                            <div id="debugImageWrapper" style="display: none; margin-top: 15px;">
+                                <img src="${processedImgSrc}" style="max-width: 100%; border: 1px solid #444; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.5);">
+                            </div>
+                        </div>
+                    `;
+
                     html += `
                         <div class="total-bival-box">
                             🏆 이번 주 총합 비밸
@@ -996,7 +943,18 @@
                     `;
                     parsedResults.innerHTML = html;
                 } else {
-                    parsedResults.innerHTML = '<div style="background:#3a1616; color:#fca5a5; padding:15px; border-radius:8px; text-align:center; font-weight:bold;">❌ 스탯을 안정적으로 추출하지 못했습니다.<br>스크린샷이 덱 설정 화면 전체를 포함하는지 확인해 주세요.</div>';
+                    // 실패했을 때도 디버깅용 이미지를 확인할 수 있도록 추가
+                    parsedResults.innerHTML = `
+                        <div style="background:#3a1616; color:#fca5a5; padding:15px; border-radius:8px; text-align:center; font-weight:bold; margin-bottom: 20px;">
+                            ❌ 스탯을 안정적으로 추출하지 못했습니다.<br>스크린샷이 덱 설정 화면 전체를 포함하는지 확인해 주세요.
+                        </div>
+                        <div style="text-align: center;">
+                            <button class="toggle-debug-btn" onclick="const wrapper = document.getElementById('debugImageWrapper'); wrapper.style.display = wrapper.style.display === 'none' ? 'block' : 'none'; this.innerText = wrapper.style.display === 'none' ? '👀 AI 인식용 이미지 확인하기 ▼' : '👀 AI 인식용 이미지 닫기 ▲';">👀 AI 인식용 이미지 확인하기 ▼</button>
+                            <div id="debugImageWrapper" style="display: none; margin-top: 15px;">
+                                <img src="${processedImgSrc}" style="max-width: 100%; border: 1px solid #444; border-radius: 8px;">
+                            </div>
+                        </div>
+                    `;
                     statusDiv.innerHTML = "인식 실패 ❌";
                 }
                 
