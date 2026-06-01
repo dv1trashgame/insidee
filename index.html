@@ -486,7 +486,7 @@
                     tempCtx.drawImage(img, 0, 0);
                     const tempData = tempCtx.getImageData(0, 0, img.width, img.height).data;
 
-                    // 1. 가로줄 평균 밝기 계산 (중앙 50% 영역만 스캔하여 양옆 시간/배터리 노이즈 무시)
+                    // 1. 위아래(Y축) 경계선 찾기 (기존의 완벽한 샌드위치 스캐너)
                     const rowBrightness = new Float32Array(img.height);
                     const startX = Math.floor(img.width * 0.25);
                     const endX = Math.floor(img.width * 0.75);
@@ -501,61 +501,115 @@
                         rowBrightness[y] = sum / scanWidth;
                     }
 
-                    // 2. ✨ 영욱님 아이디어: '가운데서 시작하기' (Center Anchor)
-                    // 아이폰 홈바, 안드로이드 네비게이션 바 등 화면 테두리의 모든 노이즈를 피하기 위해
-                    // 무조건 스탯창이 존재하는 '화면 높이의 65% 지점' 한가운데서 탐색을 시작합니다.
-                    let anchorY = Math.floor(img.height * 0.65);
-
-                    // 만약 65% 지점이 우연히 밝은색(CRI 박스 등)이라면, 어두운 스탯창이 나올 때까지 위로 살짝 올립니다.
-                    while (rowBrightness[anchorY] > 100 && anchorY > img.height * 0.4) {
-                        anchorY--;
+                    let gameTop = 0;
+                    let gameBottom = img.height - 1;
+                    for (let y = 0; y < img.height; y++) {
+                        if (rowBrightness[y] > 15) { gameTop = y; break; }
+                    }
+                    for (let y = img.height - 1; y >= 0; y--) {
+                        if (rowBrightness[y] > 15) { gameBottom = y; break; }
                     }
 
-                    // 3. 닻에서 위로(UP) 올라가며 Eval 박스 찾기
-                    let evalTopY = anchorY;
-                    let phaseUp = 0; 
+                    let statBottomY = gameBottom;
+                    let statTopY = gameBottom; 
+                    let evalTopY = gameTop;
                     
-                    for (let y = anchorY; y > Math.floor(img.height * 0.2); y--) {
-                        if (phaseUp === 0 && rowBrightness[y] > 105) {
-                            phaseUp = 1; // 어두운 스탯을 지나 밝은 Eval 박스 진입
-                        } else if (phaseUp === 1 && rowBrightness[y] < 95) {
-                            evalTopY = y; // 다시 어두워지는 드래곤 배경 진입 -> 상단 경계선 확정!
+                    let phase = 0; 
+                    let darkBlockHeight = 0;
+                    let tempStatBottomY = 0;
+
+                    for (let y = gameBottom; y >= gameTop; y--) {
+                        let b = rowBrightness[y];
+                        if (phase === 0) {
+                            if (b > 110) phase = 1; 
+                        } else if (phase === 1) {
+                            if (b < 105) { 
+                                phase = 2;
+                                tempStatBottomY = y;
+                                darkBlockHeight = 1;
+                            }
+                        } else if (phase === 2) {
+                            if (b < 105) {
+                                darkBlockHeight++;
+                            } else if (b > 110) { 
+                                if (darkBlockHeight > img.height * 0.04) {
+                                    statBottomY = tempStatBottomY;
+                                    statTopY = y; 
+                                    phase = 3; 
+                                } else {
+                                    phase = 1; 
+                                }
+                            }
+                        } else if (phase === 3) {
+                            if (b < 100) { 
+                                evalTopY = y;
+                                break; 
+                            }
+                        }
+                    }
+
+                    // 2. ✨ NEW: 좌우(X축) 경계선 완벽하게 찾기
+                    // 찾은 Eval 박스(밝은 베이지색) 구역만 가로로 쭉 스캔해서 가장자리를 오려냅니다!
+                    const evalRowBrightness = new Float32Array(img.width);
+                    for (let x = 0; x < img.width; x++) {
+                        let sum = 0;
+                        let count = 0;
+                        for (let y = evalTopY; y < statTopY; y++) {
+                            const i = (y * img.width + x) * 4;
+                            sum += 0.299 * tempData[i] + 0.587 * tempData[i+1] + 0.114 * tempData[i+2];
+                            count++;
+                        }
+                        evalRowBrightness[x] = sum / count;
+                    }
+
+                    let cropLeft = 0;
+                    let cropRight = img.width;
+
+                    // 왼쪽에서부터 스캔: 어두운 배경을 뚫고 처음으로 밝아지는 곳(그룹 1 왼쪽 끝)
+                    for (let x = 0; x < Math.floor(img.width / 2); x++) {
+                        if (evalRowBrightness[x] > 125) { 
+                            cropLeft = x;
                             break;
                         }
                     }
 
-                    // 4. 닻에서 아래로(DOWN) 내려가며 스탯창 바닥 찾기
-                    let statBottomY = anchorY;
-                    for (let y = anchorY; y < img.height * 0.95; y++) {
-                        if (rowBrightness[y] > 105) { 
-                            statBottomY = y; // 어두운 스탯을 지나 밝은 CRI 박스 진입 -> 하단 경계선 확정!
+                    // 오른쪽에서부터 스캔: 어두운 배경을 뚫고 처음으로 밝아지는 곳(그룹 3 오른쪽 끝)
+                    for (let x = img.width - 1; x > Math.floor(img.width / 2); x--) {
+                        if (evalRowBrightness[x] > 125) {
+                            cropRight = x;
                             break;
                         }
                     }
 
-                    // 5. ✨ 크롭 범위 대폭 확장 (위아래 15픽셀씩 넉넉하게 자르기)
-                    const cropTop = Math.max(0, evalTopY - 15);
-                    const cropBottom = Math.min(img.height, statBottomY + 15); 
+                    // 3. 최종 크롭 범위 확정 (여백 살짝 추가)
+                    cropLeft = Math.max(0, cropLeft - 5);
+                    cropRight = Math.min(img.width, cropRight + 5);
+                    const cropW = cropRight - cropLeft;
+
+                    const cropTop = Math.max(0, evalTopY - 2);
+                    const cropBottom = Math.min(img.height, statBottomY + 2); 
                     const cropH = cropBottom - cropTop;
 
-                    // 6. 해상도 3배 뻥튀기 및 40px 광활한 인공 여백 추가
+                    // 4. ✨ 상하좌우 '사방 40픽셀' 광활한 여백 제공!
                     const scale = 3; 
                     const pad = 40; 
                     const canvas = document.createElement('canvas');
-                    canvas.width = img.width * scale;
+                    
+                    // 캔버스 가로 길이에도 패딩(pad)을 적용해 줍니다.
+                    canvas.width = (cropW + pad * 2) * scale;
                     canvas.height = (cropH + pad * 2) * scale;
                     const ctx = canvas.getContext('2d');
                     
-                    // 도화지를 하얗게 채우고, 넉넉하게 크롭된 '컬러 원본' 이미지를 얹습니다.
                     ctx.fillStyle = 'white';
                     ctx.fillRect(0, 0, canvas.width, canvas.height);
                     ctx.imageSmoothingEnabled = false; 
-                    ctx.drawImage(img, 0, cropTop, img.width, cropH, 0, pad * scale, canvas.width, cropH * scale);
+                    
+                    // ✨ 자른 이미지를 캔버스의 정중앙(pad만큼 띄워서)에 배치합니다.
+                    ctx.drawImage(img, cropLeft, cropTop, cropW, cropH, pad * scale, pad * scale, cropW * scale, cropH * scale);
 
-                    // 🚨 흑백 필터 전면 삭제! (사용자 요청에 따라 순수 컬러 이미지만 반환)
+                    // 컬러 원본 이미지 그대로 추출
                     const dataUrl = canvas.toDataURL('image/png');
                     
-                    // 디버깅 창 렌더링
                     const debugImg = document.getElementById('debugProcessedImage');
                     if (debugImg) {
                         debugImg.src = dataUrl;
