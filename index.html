@@ -575,7 +575,7 @@
                                 binary = gray < 100 ? 0 : 255;
                             } else {
                                 // 얇은 하얀색 글씨 뭉개짐 방지용 임계값 115
-                                binary = gray > 115 ? 0 : 255; 
+                                binary = gray > 125 ? 0 : 255; 
                             }
                             data[i] = data[i+1] = data[i+2] = binary;
                         }
@@ -599,15 +599,15 @@
         function parseStatsFromOCRText(rawOCR) {
             let text = rawOCR;
 
-            // 1. 스마트 문맥 치환 (숫자와 붙어있는 특정 알파벳만 정밀 복원)
-            // S가 숫자와 붙어있으면 5로 복원 (예: S00 -> 500, 178S -> 1785)
-            text = text.replace(/([0-9])S/g, '$15').replace(/S([0-9])/g, '5$1');
-            
-            // M, N, m이 숫자와 붙어있으면 11로 복원 (예: 21M -> 2111, M72 -> 1172)
-            text = text.replace(/([0-9])[MNm]/g, '$111').replace(/[MNm]([0-9])/g, '11$1');
-            
-            // O, o, l, I 는 0과 1로 (비교적 안전함)
-            text = text.replace(/[Oo]/g, '0').replace(/[Il|]/g, '1');
+            // 1. 영어 찌꺼기를 숫자로 강제 변환 (자가 치유 로직을 발동시키기 위한 미끼)
+            // S, s -> 5 / B -> 8
+            text = text.replace(/[Ss]/g, '5').replace(/B/g, '8');
+            // o, O, D, d, Q, g -> 0 (실제 숫자가 아니어도 됨. 자가치유가 고쳐줄 예정)
+            text = text.replace(/[OoDdQqg]/g, '0');
+            // M, N, m -> 11
+            text = text.replace(/[MNm]/g, '11');
+            // I, l, | -> 1
+            text = text.replace(/[Il|]/g, '1');
 
             // 2. 위에서 복원하지 않은 나머지 쓰레기 알파벳들 떼어내기
             text = text.replace(/([0-9]+)[a-zA-Z]+/g, '$1 ');
@@ -619,9 +619,8 @@
             allNums = allNums.map(n => {
                 if (n >= 10000 && n <= 19999) {
                     const candidate = n % 10000;
-                    if (candidate >= 1000) return candidate; // 17200 -> 7200
+                    if (candidate >= 1000) return candidate; 
                 }
-                // 렉스톤 오류 방어: 28446 처럼 가운데 숫자가 중복으로 씹힌 경우 (2846으로 복구)
                 if (n >= 20000 && n <= 99999) {
                     const str = n.toString();
                     if(str[2] === str[3]) { 
@@ -631,7 +630,7 @@
                 return n;
             });
         
-            // 이후 로직은 기존과 동일 (9개 숫자 추출 및 Eval 검증)
+            // 4. 추출 로직
             for (const line of text.split('\n')) {
                 const lineNums = (line.match(/\d+/g) || [])
                     .map(n => parseInt(n, 10))
@@ -659,7 +658,7 @@
         
             return null;
         }
-
+        
         const imageInput = document.getElementById('imageInput');
         const imagePreview = document.getElementById('imagePreview');
         const extractBtn = document.getElementById('extractBtn');
