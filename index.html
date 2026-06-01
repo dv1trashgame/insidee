@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>드래곤빌리지 스탯 & Eval 자동 계산기</title>
+    <title>인사이드 세팅 계산기</title>
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <style>
         /* 전체 패딩 및 박스 사이징 초기화로 픽셀 밀림 방지 */
@@ -177,8 +177,8 @@
 <body>
 
     <h2>
-        🐉 스탯 & Eval 계산기
-        <button id="openLeaderboardBtn" class="leaderboard-btn">🏆 명예의 전당 (순위표)</button>
+        INSIDE 스탯 계산기
+        <button id="openLeaderboardBtn" class="leaderboard-btn">🏆 주간 랭킹 (순위표)</button>
     </h2>
     
     <div id="sysNotice" class="buff-info">
@@ -188,7 +188,7 @@
     <div id="leaderboardModal" class="modal">
         <div class="modal-content">
             <span class="close-btn" id="closeModalBtn">&times;</span>
-            <h3 style="margin-top: 0; color: #f59e0b; text-align: center;">🏆 주간 비밸 명예의 전당</h3>
+            <h3 style="margin-top: 0; color: #f59e0b; text-align: center;">🏆 주간 랭킹 (순위표)</h3>
             <p style="text-align: center; font-size: 13px; color: #94a3b8; margin-bottom: 15px;">서버에서 데이터를 불러오는 중입니다...</p>
             <div style="overflow-x: auto;">
                 <table class="rank-table">
@@ -415,13 +415,13 @@
                         g3: currentG3
                     })
                 });
-                alert(`축하합니다! ${nickname}님의 기록이 명예의 전당에 등록되었습니다 🎉`);
+                alert(`${nickname} 비밸 주랭 등록 완료`);
                 submitBtn.innerText = "등록 완료 ✅";
                 modal.style.display = "block";
                 loadLeaderboard();
             } catch (error) {
                 alert("등록에 실패했습니다. 다시 시도해주세요.");
-                submitBtn.innerText = "명예의 전당에 기록 등록하기";
+                submitBtn.innerText = "길전 주랭 등록하기";
                 submitBtn.disabled = false;
             }
         }
@@ -855,7 +855,7 @@
         if (evalWarnings.length > 0) {
             if (healedCount > 0) {
                 // 성공적으로 치유했을 때는 초록색으로 기분 좋게 알림
-                statusDiv.innerHTML = `✨ AI 자가 치유 완료: ${evalWarnings.join(', ')}`;
+                statusDiv.innerHTML = `✨ AI 인식 수정 완료: ${evalWarnings.join(', ')}`;
                 statusDiv.style.color = "#4ade80"; 
             } else {
                 statusDiv.innerHTML = `⚠️ 인식 불일치: ${evalWarnings.join(', ')}`;
@@ -1004,7 +1004,7 @@
 
             } catch (error) {
                 console.error(error);
-                statusDiv.innerHTML = "오류가 발생했습니다. 다시 시도해주세요.";
+                statusDiv.innerHTML = "오류가 발생했습니다. 관리자에게 문의 해주세요.";
             } finally {
                 extractBtn.disabled = false;
             }
