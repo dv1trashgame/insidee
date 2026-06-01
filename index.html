@@ -572,7 +572,7 @@
                             
                             let binary;
                             if (isEvalBox) {
-                                binary = gray < 100 ? 0 : 255;
+                                binary = gray < 85 ? 0 : 255;
                             } else {
                                 // 얇은 하얀색 글씨 뭉개짐 방지용 임계값 115
                                 binary = gray > 125 ? 0 : 255; 
