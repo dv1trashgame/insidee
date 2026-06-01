@@ -496,7 +496,7 @@
                         const inverted = 255 - gray;
                         
                         // ✨ 임계값 상향 (85 -> 105): 7이 1로 깎이거나 Eval이 지워지는 현상 방지
-                        const binary = inverted > 105 ? 255 : 0; 
+                        const binary = inverted > 95 ? 255 : 0; 
                         
                         data[i] = data[i + 1] = data[i + 2] = binary;
                     }
@@ -629,7 +629,7 @@
                 statusDiv.innerHTML = "OCR 스탯 인식 중... ⏳";
                 const processedImgSrc = await preprocessImageForOCR(imagePreview.src);
                 const worker = await Tesseract.createWorker('eng');
-                await worker.setParameters({ tessedit_pageseg_mode: '6' });
+                await worker.setParameters({ tessedit_pageseg_mode: '11' });
                 const ret = await worker.recognize(processedImgSrc);
                 await worker.terminate();
                 
