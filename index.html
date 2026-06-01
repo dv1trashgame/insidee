@@ -282,6 +282,9 @@
         <div id="parsedResults"></div>
         <h4 style="margin-top: 35px; font-size: 13px; color: #94a3b8; margin-bottom:5px;">전체 인식된 텍스트 (로그 확인용)</h4>
         <textarea id="rawText" class="raw-text" readonly></textarea>
+        
+        <h4 style="margin-top: 20px; font-size: 13px; color: #94a3b8; margin-bottom:5px;">👀 AI 인식용 흑백 변환 이미지 (디버깅용)</h4>
+        <img id="debugProcessedImage" style="max-width: 100%; border: 1px solid #444; border-radius: 8px; display: none;">
     </div>
 
     <script>
@@ -498,7 +501,16 @@
                         data[i] = data[i + 1] = data[i + 2] = binary;
                     }
                     ctx.putImageData(imageData, 0, 0);
-                    resolve(canvas.toDataURL('image/png'));
+                    const dataUrl = canvas.toDataURL('image/png');
+                    
+                    // 흑백 이미지를 디버깅 창에 표시
+                    const debugImg = document.getElementById('debugProcessedImage');
+                    if(debugImg) {
+                        debugImg.src = dataUrl;
+                        debugImg.style.display = 'block';
+                    }
+                    
+                    resolve(dataUrl);
                 };
                 img.src = imgSrc;
             });
@@ -506,11 +518,19 @@
 
         // 🔧 [수정 2] 개선된 파싱 로직 추가
         function parseStatsFromOCRText(rawOCR) {
-            // 1. 위험한 무지성 치환(m, n -> 11 / S -> 5) 전면 폐기
-            // 형태가 매우 비슷한 문자만 최소한으로 보정합니다.
-            let text = rawOCR.replace(/O/gi, '0').replace(/[Il]/g, '1');
-        
-            // 2. 숫자와 알파벳이 붙어버린 경우 분리 (예: "1785S" ➔ "1785 S")
+            let text = rawOCR;
+
+            // 1. 스마트 문맥 치환 (숫자와 붙어있는 특정 알파벳만 정밀 복원)
+            // S가 숫자와 붙어있으면 5로 복원 (예: S00 -> 500, 178S -> 1785)
+            text = text.replace(/([0-9])S/g, '$15').replace(/S([0-9])/g, '5$1');
+            
+            // M, N, m이 숫자와 붙어있으면 11로 복원 (예: 21M -> 2111, M72 -> 1172)
+            text = text.replace(/([0-9])[MNm]/g, '$111').replace(/[MNm]([0-9])/g, '11$1');
+            
+            // O, o, l, I 는 0과 1로 (비교적 안전함)
+            text = text.replace(/[Oo]/g, '0').replace(/[Il|]/g, '1');
+
+            // 2. 위에서 복원하지 않은 나머지 쓰레기 알파벳들 떼어내기
             text = text.replace(/([0-9]+)[a-zA-Z]+/g, '$1 ');
             text = text.replace(/[a-zA-Z]+([0-9]+)/g, ' $1');
         
@@ -636,31 +656,59 @@
         // 3. ✨ 핵심: 자가 치유(Self-Healing) 역산 로직
         if (evalVals.length === 3) {
             for (let g = 0; g < 3; g++) {
-                const hp = statNumbers[g*3];
-                const atk = statNumbers[g*3+1];
-                const def = statNumbers[g*3+2];
+                let hp = statNumbers[g*3];
+                let atk = statNumbers[g*3+1];
+                let def = statNumbers[g*3+2];
 
                 const calcEval = hp + (atk + def) * 4;
-                const realEval = evalVals[g]; // 화면 좌측부터 순서대로 1:1 매칭
+                const realEval = evalVals[g]; // 화면 좌측부터 순서대로 매칭
 
-                if (Math.abs(realEval - calcEval) > 50) {
-                    // 계산된 비밸과 실제 비밸이 다르면 역산으로 HP 추적
-                    // 공식: HP = Eval - ((ATK + DEF) * 4)
+                // 계산된 비밸과 실제 비밸이 단 1이라도 다르면 즉시 역산 돌입
+                if (calcEval !== realEval) {
+                    // 각 스탯이 범인일 경우를 가정한 3가지 예상값 계산
                     const expectedHp = realEval - ((atk + def) * 4);
+                    const expectedAtk = (realEval - hp) / 4 - def;
+                    const expectedDef = (realEval - hp) / 4 - atk;
 
-                    // 역산된 HP가 정상적인 드래곤 체력 범위(500 ~ 9000) 안이라면 덮어쓰기 진행
-                    if (expectedHp >= 500 && expectedHp <= 9000) {
-                        statNumbers[g*3] = expectedHp; // 🚨 실제 배열의 에러 값(1111)을 진짜 체력(3171)으로 교체!
+                    let healed = false;
+
+                    // 🛠️ CASE 1: HP가 범인인가?
+                    // 조건: 예상 HP가 1000~6000 사이이고, 나머지 ATK/DEF는 정상 범위(200~1500)일 것
+                    if (expectedHp >= 1000 && expectedHp <= 6000 && 
+                        atk >= 200 && atk <= 1500 && def >= 200 && def <= 1500) {
+                        statNumbers[g*3] = expectedHp; // 배열 수정
+                        evalWarnings.push(`그룹 ${g+1} HP복구(${hp}➔${expectedHp})`);
+                        healed = true;
+                    }
+                    
+                    // 🛠️ CASE 2: ATK가 범인인가?
+                    // 조건: 소수점이 안 나오는 정수(isInteger)이고, 200~1500 사이이며, 나머지 HP/DEF는 정상 범위일 것
+                    else if (!healed && Number.isInteger(expectedAtk) && expectedAtk >= 200 && expectedAtk <= 1500 &&
+                             hp >= 1000 && hp <= 6000 && def >= 200 && def <= 1500) {
+                        statNumbers[g*3+1] = expectedAtk; // 배열 수정
+                        evalWarnings.push(`그룹 ${g+1} ATK복구(${atk}➔${expectedAtk})`);
+                        healed = true;
+                    }
+
+                    // 🛠️ CASE 3: DEF가 범인인가?
+                    // 조건: 소수점이 안 나오는 정수(isInteger)이고, 200~1500 사이이며, 나머지 HP/ATK는 정상 범위일 것
+                    else if (!healed && Number.isInteger(expectedDef) && expectedDef >= 200 && expectedDef <= 1500 &&
+                             hp >= 1000 && hp <= 6000 && atk >= 200 && atk <= 1500) {
+                        statNumbers[g*3+2] = expectedDef; // 배열 수정
+                        evalWarnings.push(`그룹 ${g+1} DEF복구(${def}➔${expectedDef})`);
+                        healed = true;
+                    }
+
+                    // 🚨 3가지 경우 모두 실패했다면 (숫자 2개 이상이 동시에 박살 났거나 조건 미달)
+                    if (healed) {
                         healedCount++;
-                        evalWarnings.push(`그룹 ${g+1} 복구됨(${hp}➔${expectedHp})`);
                     } else {
-                        // 역산 값이 음수이거나 너무 크면 ATK, DEF 쪽이 잘못 인식된 것
-                        evalWarnings.push(`그룹 ${g+1} 불일치 주의`);
+                        evalWarnings.push(`그룹 ${g+1} 복구 불가 (2개 이상 파손)`);
                     }
                 }
             }
         } else {
-            // Eval 값을 3개 다 찾지 못했을 때의 예비 경고 시스템
+            // Eval 값을 3개 다 찾지 못했을 때의 예비 경고 시스템 (기존 유지)
             for (let g = 0; g < 3; g++) {
                 const hp = statNumbers[g*3], atk = statNumbers[g*3+1], def = statNumbers[g*3+2];
                 const calcEval = hp + (atk + def) * 4;
