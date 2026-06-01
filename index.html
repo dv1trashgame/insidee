@@ -486,13 +486,18 @@
                     tempCtx.drawImage(img, 0, 0);
                     const tempData = tempCtx.getImageData(0, 0, img.width, img.height).data;
 
-                    // 1. 위아래(Y축) 경계선 찾기 (기존의 완벽한 샌드위치 스캐너)
-                    const rowBrightness = new Float32Array(img.height);
+                    // 1. ✨ 영욱님 아이디어: 상하단 N% 원천 차단 (안전 구역 설정)
+                    // 위에서 20%, 아래서 15%는 아예 스캔 대상에서 제외합니다.
+                    const safeTop = Math.floor(img.height * 0.20);
+                    const safeBottom = Math.floor(img.height * 0.85);
+
+                    // 좌우 노이즈를 피하기 위해 가운데 50% 영역만 밝기 조사
                     const startX = Math.floor(img.width * 0.25);
                     const endX = Math.floor(img.width * 0.75);
                     const scanWidth = endX - startX;
+                    const rowBrightness = new Float32Array(img.height);
 
-                    for (let y = 0; y < img.height; y++) {
+                    for (let y = safeTop; y <= safeBottom; y++) {
                         let sum = 0;
                         for (let x = startX; x < endX; x++) {
                             const i = (y * img.width + x) * 4;
@@ -501,55 +506,38 @@
                         rowBrightness[y] = sum / scanWidth;
                     }
 
-                    let gameTop = 0;
-                    let gameBottom = img.height - 1;
-                    for (let y = 0; y < img.height; y++) {
-                        if (rowBrightness[y] > 15) { gameTop = y; break; }
-                    }
-                    for (let y = img.height - 1; y >= 0; y--) {
-                        if (rowBrightness[y] > 15) { gameBottom = y; break; }
-                    }
-
-                    let statBottomY = gameBottom;
-                    let statTopY = gameBottom; 
-                    let evalTopY = gameTop;
+                    // 2. ✨ '가장 뚱뚱한 어둠(스탯 박스)' 찾기
+                    let maxDarkHeight = 0;
+                    let statTopY = safeTop;
+                    let statBottomY = safeBottom;
                     
-                    let phase = 0; 
-                    let darkBlockHeight = 0;
-                    let tempStatBottomY = 0;
+                    let currentDarkHeight = 0;
+                    let currentBottom = safeBottom;
 
-                    for (let y = gameBottom; y >= gameTop; y--) {
-                        let b = rowBrightness[y];
-                        if (phase === 0) {
-                            if (b > 110) phase = 1; 
-                        } else if (phase === 1) {
-                            if (b < 105) { 
-                                phase = 2;
-                                tempStatBottomY = y;
-                                darkBlockHeight = 1;
+                    for (let y = safeBottom; y >= safeTop; y--) {
+                        if (rowBrightness[y] < 95) { // 스탯 박스처럼 어두운 픽셀
+                            if (currentDarkHeight === 0) currentBottom = y;
+                            currentDarkHeight++;
+                        } else { // 밝은 픽셀(CRI 박스나 Eval 박스)을 만나면
+                            if (currentDarkHeight > maxDarkHeight) {
+                                maxDarkHeight = currentDarkHeight;
+                                statBottomY = currentBottom; // 스탯 박스 바닥 확정
+                                statTopY = y + 1; // 스탯 박스 천장 확정
                             }
-                        } else if (phase === 2) {
-                            if (b < 105) {
-                                darkBlockHeight++;
-                            } else if (b > 110) { 
-                                if (darkBlockHeight > img.height * 0.04) {
-                                    statBottomY = tempStatBottomY;
-                                    statTopY = y; 
-                                    phase = 3; 
-                                } else {
-                                    phase = 1; 
-                                }
-                            }
-                        } else if (phase === 3) {
-                            if (b < 100) { 
-                                evalTopY = y;
-                                break; 
-                            }
+                            currentDarkHeight = 0;
                         }
                     }
 
-                    // 2. ✨ NEW: 좌우(X축) 경계선 완벽하게 찾기
-                    // 찾은 Eval 박스(밝은 베이지색) 구역만 가로로 쭉 스캔해서 가장자리를 오려냅니다!
+                    // 3. 스탯 박스 천장에서 위로 올라가며 Eval 박스 천장 찾기
+                    let evalTopY = statTopY;
+                    for (let y = statTopY - 1; y >= safeTop; y--) {
+                        if (rowBrightness[y] < 95) { // 드래곤의 어두운 배경을 만나면 컷!
+                            evalTopY = y;
+                            break;
+                        }
+                    }
+
+                    // 4. 좌우(X축) 경계선 찾기
                     const evalRowBrightness = new Float32Array(img.width);
                     for (let x = 0; x < img.width; x++) {
                         let sum = 0;
@@ -562,40 +550,25 @@
                         evalRowBrightness[x] = sum / count;
                     }
 
-                    let cropLeft = 0;
-                    let cropRight = img.width;
-
-                    // 왼쪽에서부터 스캔: 어두운 배경을 뚫고 처음으로 밝아지는 곳(그룹 1 왼쪽 끝)
+                    let cropLeft = 0; let cropRight = img.width;
                     for (let x = 0; x < Math.floor(img.width / 2); x++) {
-                        if (evalRowBrightness[x] > 125) { 
-                            cropLeft = x;
-                            break;
-                        }
+                        if (evalRowBrightness[x] > 115) { cropLeft = x; break; }
                     }
-
-                    // 오른쪽에서부터 스캔: 어두운 배경을 뚫고 처음으로 밝아지는 곳(그룹 3 오른쪽 끝)
                     for (let x = img.width - 1; x > Math.floor(img.width / 2); x--) {
-                        if (evalRowBrightness[x] > 125) {
-                            cropRight = x;
-                            break;
-                        }
+                        if (evalRowBrightness[x] > 115) { cropRight = x; break; }
                     }
 
-                    // 3. 최종 크롭 범위 확정 (여백 살짝 추가)
+                    // 5. 크롭 범위 확정 및 3배 확대
                     cropLeft = Math.max(0, cropLeft - 5);
                     cropRight = Math.min(img.width, cropRight + 5);
                     const cropW = cropRight - cropLeft;
-
                     const cropTop = Math.max(0, evalTopY - 2);
                     const cropBottom = Math.min(img.height, statBottomY + 2); 
                     const cropH = cropBottom - cropTop;
 
-                    // 4. ✨ 상하좌우 '사방 40픽셀' 광활한 여백 제공!
                     const scale = 3; 
                     const pad = 40; 
                     const canvas = document.createElement('canvas');
-                    
-                    // 캔버스 가로 길이에도 패딩(pad)을 적용해 줍니다.
                     canvas.width = (cropW + pad * 2) * scale;
                     canvas.height = (cropH + pad * 2) * scale;
                     const ctx = canvas.getContext('2d');
@@ -603,11 +576,34 @@
                     ctx.fillStyle = 'white';
                     ctx.fillRect(0, 0, canvas.width, canvas.height);
                     ctx.imageSmoothingEnabled = false; 
-                    
-                    // ✨ 자른 이미지를 캔버스의 정중앙(pad만큼 띄워서)에 배치합니다.
                     ctx.drawImage(img, cropLeft, cropTop, cropW, cropH, pad * scale, pad * scale, cropW * scale, cropH * scale);
 
-                    // 컬러 원본 이미지 그대로 추출
+                    // 6. ✨ 흑백 금지! '소프트 반전(Grayscale Invert)' 기법 적용
+                    // 글씨를 깎아내는 하드코딩 흑백 필터를 없애고, 색상만 부드럽게 반전시킵니다.
+                    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                    const data = imageData.data;
+                    const splitY = (statTopY - cropTop + pad) * scale;
+
+                    for (let y = 0; y < canvas.height; y++) {
+                        const isEvalBox = y < splitY;
+                        for (let x = 0; x < canvas.width; x++) {
+                            const i = (y * canvas.width + x) * 4;
+                            const r = data[i], g = data[i+1], b = data[i+2];
+                            
+                            // 컬러를 부드러운 회색조(Grayscale)로 변경
+                            let gray = 0.299 * r + 0.587 * g + 0.114 * b;
+                            
+                            if (!isEvalBox) {
+                                // 🔽 스탯 박스 영역만 색상을 수학적으로 뒤집음 (어두운 배경 -> 밝은 배경)
+                                gray = 255 - gray; 
+                            }
+
+                            // 변경된 회색 톤을 그대로 적용 (거친 흑백이 아님!)
+                            data[i] = data[i+1] = data[i+2] = gray;
+                        }
+                    }
+
+                    ctx.putImageData(imageData, 0, 0);
                     const dataUrl = canvas.toDataURL('image/png');
                     
                     const debugImg = document.getElementById('debugProcessedImage');
