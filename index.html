@@ -501,7 +501,7 @@
                         rowBrightness[y] = sum / scanWidth;
                     }
 
-                    // 2. 진짜 게임 화면 상하단 찾기 (위아래 검은 레터박스 무시)
+                    // 2. 진짜 게임 화면 상하단 찾기 (레터박스 무시)
                     let gameTop = 0;
                     let gameBottom = img.height - 1;
                     for (let y = 0; y < img.height; y++) {
@@ -511,9 +511,9 @@
                         if (rowBrightness[y] > 15) { gameBottom = y; break; }
                     }
 
-                    // 3. ✨ 바텀업(Bottom-Up) 두께 스캐너
-                    // 화면 맨 밑바닥(gameBottom)에서부터 위로 올라가며 스탯창을 찾습니다.
+                    // 3. ✨ 바텀업(Bottom-Up) 두께 스캐너 + 경계선 추출
                     let statBottomY = gameBottom;
+                    let statTopY = gameBottom; // 스탯창과 Eval창의 경계선
                     let evalTopY = gameTop;
                     
                     let phase = 0; 
@@ -524,11 +524,9 @@
                         let b = rowBrightness[y];
 
                         if (phase === 0) {
-                            // [1단계] 밝은 곳(CRI 박스 또는 배치하기 버튼) 진입 대기
                             if (b > 110) phase = 1; 
                         } 
                         else if (phase === 1) {
-                            // [2단계] 어두운 곳(스탯창 하단) 진입 -> 두께 측정 시작
                             if (b < 105) { 
                                 phase = 2;
                                 tempStatBottomY = y;
@@ -536,53 +534,73 @@
                             }
                         } 
                         else if (phase === 2) {
-                            // [3단계] 어두운 구역 내부 -> 계속 두께를 잰다
                             if (b < 105) {
                                 darkBlockHeight++;
                             } else if (b > 110) { 
-                                // 어두운 구역이 끝나고 다시 밝은 곳(Eval 박스)을 만남!
-                                // 측정된 두께가 이미지 전체 높이의 4% 이상인가? (진짜 스탯창인지 얇은 틈새인지 판별)
+                                // 두께가 4% 이상이면 진짜 스탯창으로 판정
                                 if (darkBlockHeight > img.height * 0.04) {
-                                    statBottomY = tempStatBottomY; // 찐 스탯창 확정!
-                                    phase = 3; // 이제 Eval 박스의 꼭대기를 찾으러 갑니다.
+                                    statBottomY = tempStatBottomY;
+                                    statTopY = y; // ✨ 스탯창 꼭대기 == Eval 박스 바닥 (필터 경계선!)
+                                    phase = 3; 
                                 } else {
-                                    // 너무 얇다! 이건 버튼 사이의 틈새다. 무시하고 다시 찾는다.
                                     phase = 1; 
                                 }
                             }
                         } 
                         else if (phase === 3) {
-                            // [4단계] Eval 박스를 지나쳐서 어두운 드래곤 배경을 만나면 컷!
                             if (b < 100) { 
                                 evalTopY = y;
-                                break; // 완벽하게 다 찾았습니다. 스캔 종료!
+                                break; 
                             }
                         }
                     }
 
-                    // 4. 완벽한 크롭 범위 확정 (여유 공간 2픽셀 추가)
+                    // 4. 크롭 범위 확정
                     const cropTop = Math.max(0, evalTopY - 2);
                     const cropBottom = Math.min(img.height, statBottomY + 2); 
                     const cropH = cropBottom - cropTop;
 
-                    // 5. 해상도 3배 뻥튀기 캔버스 생성 및 넓은 여백(40px)
+                    // 5. 해상도 3배 뻥튀기 및 40픽셀 광활한 여백 추가
                     const scale = 3; 
                     const pad = 40; 
                     const canvas = document.createElement('canvas');
                     canvas.width = img.width * scale;
-                    // 위아래로 40픽셀의 광활한 여백(Tesseract의 숨통)을 제공합니다.
                     canvas.height = (cropH + pad * 2) * scale;
                     const ctx = canvas.getContext('2d');
                     
-                    // 도화지를 하얗게 채우고, 크롭한 '컬러' 이미지를 얹어줍니다.
                     ctx.fillStyle = 'white';
                     ctx.fillRect(0, 0, canvas.width, canvas.height);
                     ctx.imageSmoothingEnabled = false; 
                     ctx.drawImage(img, 0, cropTop, img.width, cropH, 0, pad * scale, canvas.width, cropH * scale);
 
+                    // 6. ✨ 화려한 귀환: 상하 분리형 황금비율 흑백 필터
+                    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                    const data = imageData.data;
+                    
+                    // 패딩(pad)만큼 이미지가 내려갔으므로, 경계선(splitY)도 맞춰서 계산
+                    const splitY = (statTopY - cropTop + pad) * scale;
+
+                    for (let y = 0; y < canvas.height; y++) {
+                        const isEvalBox = y < splitY;
+                        for (let x = 0; x < canvas.width; x++) {
+                            const i = (y * canvas.width + x) * 4;
+                            const gray = 0.299 * data[i] + 0.587 * data[i+1] + 0.114 * data[i+2];
+                            
+                            let binary;
+                            if (isEvalBox) {
+                                // 🔼 Eval 박스: '6'이 '4'로 뭉치지 않게 날카로운 85 유지
+                                binary = gray < 85 ? 0 : 255;
+                            } else {
+                                // 🔽 스탯 박스: 얇은 글씨 끊어짐 방지용 125 유지
+                                binary = gray > 125 ? 0 : 255; 
+                            }
+                            data[i] = data[i+1] = data[i+2] = binary;
+                        }
+                    }
+
+                    ctx.putImageData(imageData, 0, 0);
                     const dataUrl = canvas.toDataURL('image/png');
                     
-                    // 디버깅 창 렌더링
                     const debugImg = document.getElementById('debugProcessedImage');
                     if (debugImg) {
                         debugImg.src = dataUrl;
