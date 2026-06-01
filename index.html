@@ -486,7 +486,6 @@
                     tempCtx.drawImage(img, 0, 0);
                     const tempData = tempCtx.getImageData(0, 0, img.width, img.height).data;
 
-                    // 1. 가로줄 평균 밝기 계산 (가운데 50% 영역만 스캔)
                     const rowBrightness = new Float32Array(img.height);
                     const startX = Math.floor(img.width * 0.25);
                     const endX = Math.floor(img.width * 0.75);
@@ -501,11 +500,18 @@
                         rowBrightness[y] = sum / scanWidth;
                     }
 
-                    // 2. ✨ '빛의 닻(Bright Anchor)' 내리기
-                    // 화면의 45% ~ 80% 구간 (이름표를 피한 안전 구역)
-                    // 이 구역에서 가장 밝은 베이지색 픽셀의 연속 = 무조건 Eval 박스 중앙입니다.
-                    let searchStart = Math.floor(img.height * 0.45);
-                    let searchEnd = Math.floor(img.height * 0.80);
+                    let gameTop = 0;
+                    let gameBottom = img.height - 1;
+                    for (let y = 0; y < img.height; y++) {
+                        if (rowBrightness[y] > 15) { gameTop = y; break; }
+                    }
+                    for (let y = img.height - 1; y >= 0; y--) {
+                        if (rowBrightness[y] > 15) { gameBottom = y; break; }
+                    }
+                    const gameHeight = gameBottom - gameTop;
+
+                    let searchStart = gameTop + Math.floor(gameHeight * 0.45);
+                    let searchEnd = gameTop + Math.floor(gameHeight * 0.80);
                     let maxBrightness = 0;
                     let evalMidY = searchStart;
 
@@ -516,53 +522,55 @@
                         }
                     }
 
-                    // 3. ✨ 닻(Eval 중앙)에서 위아래로 뻗어나가며 경계선 스캔
-                    
-                    // [위로 스캔] Eval 상단: 밝기가 떨어지는 드래곤 배경 진입점
                     let evalTopY = evalMidY;
-                    for (let y = evalMidY; y > Math.floor(img.height * 0.3); y--) {
+                    for (let y = evalMidY; y > gameTop + Math.floor(gameHeight * 0.2); y--) {
                         if (rowBrightness[y] < maxBrightness - 40 || rowBrightness[y] < 100) {
                             evalTopY = y;
                             break;
                         }
                     }
 
-                    // [아래로 스캔] 스탯 상단: 밝은 Eval에서 어두운 스탯 박스 진입점
                     let statTopY = evalMidY;
-                    for (let y = evalMidY; y < img.height; y++) {
+                    for (let y = evalMidY; y < gameBottom; y++) {
                         if (rowBrightness[y] < 110) {
                             statTopY = y;
                             break;
                         }
                     }
 
-                    // [아래로 스캔 연장] CRI 상단: 어두운 스탯을 지나 다시 밝은 CRI 진입점
                     let criTopY = statTopY + 10;
-                    for (let y = statTopY + 5; y < img.height; y++) {
+                    for (let y = statTopY + 5; y < gameBottom; y++) {
                         if (rowBrightness[y] > 110) {
                             criTopY = y;
                             break;
                         }
                     }
 
-                    // 4. 완벽한 크롭 범위 확정 (여백 아주 살짝)
-                    const cropTop = Math.max(0, evalTopY - 5);
+                    // ✨ 타이트하게 자르되, 나중에 캔버스에 그릴 때 인위적인 '하얀 여백(pad)'을 줍니다.
+                    const cropTop = Math.max(0, evalTopY - 2); 
                     const cropBottom = Math.min(img.height, criTopY + 2);
                     const cropH = cropBottom - cropTop;
 
-                    // 5. 해상도 3배 뻥튀기 (자간 뭉침 방지)
                     const scale = 3; 
+                    const pad = 15; // 상하 15픽셀 하얀색 인공 여백
                     const canvas = document.createElement('canvas');
                     canvas.width = img.width * scale;
-                    canvas.height = cropH * scale;
+                    // 여백 공간만큼 캔버스 세로 길이를 늘려줍니다.
+                    canvas.height = (cropH + pad * 2) * scale;
                     const ctx = canvas.getContext('2d');
-                    ctx.imageSmoothingEnabled = false; 
-                    ctx.drawImage(img, 0, cropTop, img.width, cropH, 0, 0, canvas.width, canvas.height);
+                    
+                    // ✨ 도화지 전체를 하얗게 칠함 (Tesseract가 제일 좋아하는 상태)
+                    ctx.fillStyle = 'white';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-                    // 6. 흑백 통일 필터 적용
+                    // 중앙에 크롭 이미지 렌더링 (y좌표를 pad만큼 띄워서 그립니다)
+                    ctx.imageSmoothingEnabled = false; 
+                    ctx.drawImage(img, 0, cropTop, img.width, cropH, 0, pad * scale, canvas.width, cropH * scale);
+
                     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
                     const data = imageData.data;
-                    const splitY = (statTopY - cropTop) * scale;
+                    // pad만큼 그림이 밑으로 밀렸으므로 경계선(splitY)도 맞춰서 더해줍니다.
+                    const splitY = (statTopY - cropTop + pad) * scale; 
 
                     for (let y = 0; y < canvas.height; y++) {
                         const isEvalBox = y < splitY;
@@ -572,9 +580,9 @@
                             
                             let binary;
                             if (isEvalBox) {
-                                binary = gray < 85 ? 0 : 255;
+                                binary = gray < 90 ? 0 : 255;
                             } else {
-                                // 얇은 하얀색 글씨 뭉개짐 방지용 임계값 115
+                                // ✨ 임계값 상향 115 -> 125: 'Bod(864)' 떡짐 현상 방지
                                 binary = gray > 125 ? 0 : 255; 
                             }
                             data[i] = data[i+1] = data[i+2] = binary;
