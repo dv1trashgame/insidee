@@ -486,7 +486,7 @@
                     tempCtx.drawImage(img, 0, 0);
                     const tempData = tempCtx.getImageData(0, 0, img.width, img.height).data;
 
-                    // 1. 가로줄 평균 밝기 계산 (중앙 50% 영역만 스캔)
+                    // 1. 가로줄 평균 밝기 계산 (중앙 50% 영역 스캔)
                     const rowBrightness = new Float32Array(img.height);
                     const startX = Math.floor(img.width * 0.25);
                     const endX = Math.floor(img.width * 0.75);
@@ -501,85 +501,78 @@
                         rowBrightness[y] = sum / scanWidth;
                     }
 
-                    // 2. 진짜 게임 화면 상하단 찾기 (위아래 검은 레터박스 무시)
-                    let gameTop = 0;
-                    let gameBottom = img.height - 1;
-                    for (let y = 0; y < img.height; y++) {
-                        if (rowBrightness[y] > 15) { gameTop = y; break; }
-                    }
-                    for (let y = img.height - 1; y >= 0; y--) {
-                        if (rowBrightness[y] > 15) { gameBottom = y; break; }
-                    }
-                    const gameHeight = gameBottom - gameTop;
+                    // 2. ✨ '샌드위치 패턴' 매칭 (비율 무관, 무조건 스탯 박스 찾기)
+                    // 패턴: 밝음(Eval) -> 어두움(Stat) -> 밝음(CRI)
+                    let bestScore = -9999;
+                    let statMidY = Math.floor(img.height * 0.6); // 기본값
 
-                    // 3. ✨ 빛의 닻 내리기 (탐색 범위 대폭 수정!)
-                    // CRI 박스가 더 밝아서 닻이 끌려가는 현상을 막기 위해,
-                    // 오직 Eval 박스가 존재하는 42% ~ 54% 구간에서만 닻을 내립니다.
-                    let searchStart = gameTop + Math.floor(gameHeight * 0.42);
-                    let searchEnd = gameTop + Math.floor(gameHeight * 0.54);
-                    let maxBrightness = 0;
-                    let evalMidY = searchStart;
+                    const searchStart = Math.floor(img.height * 0.2); // 넉넉하게 20% 부터 끝까지
+                    const searchEnd = Math.floor(img.height * 0.85);
+                    
+                    // 스탯창 중앙에서 Eval/CRI까지의 대략적인 거리 (이미지 높이의 3.5%)
+                    const offset = Math.floor(img.height * 0.035);
 
                     for (let y = searchStart; y < searchEnd; y++) {
-                        if (rowBrightness[y] > maxBrightness) {
-                            maxBrightness = rowBrightness[y];
-                            evalMidY = y;
+                        // 범위를 벗어나면 패스
+                        if (y - offset < 0 || y + offset >= img.height) continue;
+                        
+                        const evalCandidate = rowBrightness[y - offset]; // 위쪽 (Eval 예상)
+                        const statCandidate = rowBrightness[y];          // 현재 (Stat 예상)
+                        const criCandidate = rowBrightness[y + offset];  // 아래쪽 (CRI 예상)
+                        
+                        // 스탯창은 어둡고, 위아래는 밝아야 샌드위치 점수가 높음
+                        const score = evalCandidate + criCandidate - (statCandidate * 2);
+                        
+                        if (score > bestScore) {
+                            bestScore = score;
+                            statMidY = y;
                         }
                     }
 
-                    // 4. 닻(Eval 중앙)에서 위아래로 뻗어나가며 경계선 스캔
-                    let evalTopY = evalMidY;
-                    for (let y = evalMidY; y > gameTop + Math.floor(gameHeight * 0.2); y--) {
-                        if (rowBrightness[y] < maxBrightness - 40 || rowBrightness[y] < 100) {
-                            evalTopY = y;
+                    // 3. 찾은 스탯창 중앙(statMidY)에서 위로 올라가며 Eval 상단(드래곤 배경) 찾기
+                    let evalTopY = statMidY;
+                    let phase = 0; 
+                    
+                    for (let y = statMidY; y > Math.floor(img.height * 0.1); y--) {
+                        if (phase === 0 && rowBrightness[y] > 100) {
+                            phase = 1; // Eval 박스 진입 성공
+                        } else if (phase === 1 && rowBrightness[y] < 90) {
+                            evalTopY = y; // 드래곤 짙은 배경 진입 -> 여기서 컷!
                             break;
                         }
                     }
 
-                    let statTopY = evalMidY;
-                    for (let y = evalMidY; y < gameBottom; y++) {
-                        if (rowBrightness[y] < 110) {
-                            statTopY = y;
-                            break;
-                        }
-                    }
-
-                    let criTopY = statTopY + 10;
-                    for (let y = statTopY + 5; y < gameBottom; y++) {
+                    // 4. 스탯창 중앙(statMidY)에서 아래로 내려가며 CRI 상단(스탯창 하단) 찾기
+                    let statBottomY = statMidY;
+                    for (let y = statMidY; y < img.height; y++) {
                         if (rowBrightness[y] > 110) {
-                            criTopY = y;
+                            statBottomY = y; // 밝은 CRI 박스 진입 -> 여기서 컷!
                             break;
                         }
                     }
 
-                    // 5. 완벽한 크롭 범위 확정
+                    // 5. 완벽한 크롭 범위 확정 (✨ CRI/AVD 박스는 과감하게 버립니다!)
                     const cropTop = Math.max(0, evalTopY - 2);
-                    const cropBottom = Math.min(img.height, criTopY + 2);
+                    const cropBottom = Math.min(img.height, statBottomY + 2); 
                     const cropH = cropBottom - cropTop;
 
-                    // 6. ✨ 해상도 3배 뻥튀기 캔버스 생성 (인공 여백 대폭 확장!)
+                    // 6. 해상도 3배 뻥튀기 캔버스 생성 및 넓은 여백(40px)
                     const scale = 3; 
-                    
-                    // 기존 15 -> 40으로 증가!
-                    // 위아래로 넓은 도화지를 깔아주어 Tesseract가 숨 쉴 공간(여백)을 넉넉하게 줍니다.
                     const pad = 40; 
-                    
                     const canvas = document.createElement('canvas');
                     canvas.width = img.width * scale;
-                    // 여백 공간(pad * 2)만큼 캔버스 세로 길이를 늘려줍니다.
                     canvas.height = (cropH + pad * 2) * scale;
                     const ctx = canvas.getContext('2d');
                     
-                    // 배경을 하얗게 채우고, 그 위에 크롭한 '원본 컬러 이미지'를 얹습니다.
+                    // 도화지를 하얗게 채우고, 크롭한 '컬러' 이미지를 올립니다.
                     ctx.fillStyle = 'white';
                     ctx.fillRect(0, 0, canvas.width, canvas.height);
                     ctx.imageSmoothingEnabled = false; 
                     ctx.drawImage(img, 0, cropTop, img.width, cropH, 0, pad * scale, canvas.width, cropH * scale);
 
-                    // 🚨 흑백 필터 로직 전면 삭제 유지
-
                     const dataUrl = canvas.toDataURL('image/png');
                     
+                    // 디버깅 창에 결과물 렌더링
                     const debugImg = document.getElementById('debugProcessedImage');
                     if (debugImg) {
                         debugImg.src = dataUrl;
