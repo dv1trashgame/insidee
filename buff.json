@@ -27,10 +27,10 @@
   },
   "buff": [
     { "e": "악몽", "stat": "def", "percent": 20 },
-    { "t": "공격형", "stat": "def", "percent": 20 }
+    { "t": "공격형", "stat": "atk", "percent": 20 }
   ],
   "nerf": [
-    { "e": "불", "stat": "def", "percent": 20 },
-    { "t": "방어형", "stat": "atk", "percent": 20 }
+    { "e": "어둠", "stat": "atk", "percent": 20 },
+    { "t": "체력형", "stat": "def", "percent": 20 }
   ]
 }
