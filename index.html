@@ -486,7 +486,7 @@
                     tempCtx.drawImage(img, 0, 0);
                     const tempData = tempCtx.getImageData(0, 0, img.width, img.height).data;
 
-                    // 1. 가로줄 평균 밝기 (가운데 50% 영역 스캔)
+                    // 1. 가로줄 평균 밝기 계산 (가운데 50% 영역 스캔)
                     const rowBrightness = new Float32Array(img.height);
                     const startX = Math.floor(img.width * 0.25);
                     const endX = Math.floor(img.width * 0.75);
@@ -501,55 +501,61 @@
                         rowBrightness[y] = sum / scanWidth;
                     }
 
-                    // 2. ✨ 영욱님의 완벽한 아이디어: 상하단 노이즈 원천 차단 (Safe Zone)
-                    const safeTop = Math.floor(img.height * 0.20);
-                    const safeBottom = Math.floor(img.height * 0.85);
+                    // 2. 진짜 게임 화면(gameHeight) 구하기 (위아래 레터박스 무시)
+                    let gameTop = 0;
+                    let gameBottom = img.height - 1;
+                    for (let y = 0; y < img.height; y++) {
+                        if (rowBrightness[y] > 15) { gameTop = y; break; }
+                    }
+                    for (let y = img.height - 1; y >= 0; y--) {
+                        if (rowBrightness[y] > 15) { gameBottom = y; break; }
+                    }
+                    const gameHeight = gameBottom - gameTop;
 
-                    // 3. ✨ 영광의 '바텀업 샌드위치 스캐너' 부활 (드래곤 머리통 절대 회피)
-                    let statBottomY = safeBottom;
-                    let statTopY = safeBottom;
-                    let evalTopY = safeTop;
-                    
-                    let phase = 0; 
-                    let darkBlockHeight = 0;
-                    let tempStatBottomY = 0;
+                    // 3. ✨ NEW: '3점 탐침(3-Point Probe)' 알고리즘
+                    // 게임 화면 비율을 기준으로 [Eval - Stat - CRI]의 황금 간격을 계산합니다.
+                    const unit = gameHeight * 0.01; // 1% 높이
+                    const offsetEval = Math.floor(unit * 1.5);
+                    const offsetStat = Math.floor(unit * 4.0);
+                    const offsetCri  = Math.floor(unit * 8.5);
 
-                    for (let y = safeBottom; y >= safeTop; y--) {
-                        let b = rowBrightness[y];
+                    let bestScore = -99999;
+                    let statTopY = gameTop + Math.floor(gameHeight * 0.5); // 찾은 경계선 (Eval과 Stat의 사이)
 
-                        if (phase === 0) {
-                            if (b > 110) phase = 1; // 밝은 곳(CRI) 대기
-                        } 
-                        else if (phase === 1) {
-                            if (b < 105) { // 어두운 곳(스탯창 바닥) 진입
-                                phase = 2;
-                                tempStatBottomY = y;
-                                darkBlockHeight = 1;
-                            }
-                        } 
-                        else if (phase === 2) {
-                            if (b < 105) {
-                                darkBlockHeight++;
-                            } else if (b > 110) { // 다시 밝은 곳(Eval) 진입
-                                // 두께가 이미지의 2.5% 이상이면 스탯창으로 인정 (얇은 선 노이즈 방어)
-                                if (darkBlockHeight > img.height * 0.025) {
-                                    statBottomY = tempStatBottomY;
-                                    statTopY = y; // ✨ Eval과 스탯창의 완벽한 경계선
-                                    phase = 3; 
-                                } else {
-                                    phase = 1; // 너무 얇으면 캔슬하고 다시 찾음
-                                }
-                            }
-                        } 
-                        else if (phase === 3) {
-                            if (b < 100) { // 드래곤 어두운 배경 진입
-                                evalTopY = y;
-                                break; 
-                            }
+                    // 화면의 30% ~ 80% 구간을 스캔하며 가장 완벽한 샌드위치를 찾습니다.
+                    for (let y = gameTop + Math.floor(gameHeight * 0.3); y < gameTop + Math.floor(gameHeight * 0.8); y++) {
+                        const bEval = rowBrightness[y - offsetEval] || 0;
+                        const bStat = rowBrightness[y + offsetStat] || 0;
+                        const bCri  = rowBrightness[y + offsetCri]  || 0;
+
+                        // Eval은 밝게(+), Stat은 어둡게(-), CRI는 밝게(+) 나오는 곳이 최고 점수!
+                        // 어두운 Stat 부분의 가중치를 2배로 주어 오작동을 완벽히 방어합니다.
+                        const score = bEval - (bStat * 2) + bCri;
+
+                        if (score > bestScore) {
+                            bestScore = score;
+                            statTopY = y;
                         }
                     }
 
-                    // 4. 좌우(X축) 크롭 경계선 찾기 (쓰레기 UI 제거)
+                    // 4. 찾은 완벽한 기준선(statTopY)에서 위아래 경계 찾기
+                    let evalTopY = statTopY;
+                    for (let y = statTopY; y >= gameTop; y--) {
+                        if (rowBrightness[y] < 95) { // 위로 올라가다 드래곤 배경(어두움) 만나면 컷!
+                            evalTopY = y;
+                            break;
+                        }
+                    }
+
+                    let statBottomY = statTopY;
+                    for (let y = statTopY; y <= gameBottom; y++) {
+                        if (rowBrightness[y] > 105) { // 아래로 내려가다 CRI 박스(밝음) 만나면 컷!
+                            statBottomY = y;
+                            break;
+                        }
+                    }
+
+                    // 5. 좌우(X축) 경계선 찾기 (양옆 찌꺼기 UI 날리기)
                     const evalRowBrightness = new Float32Array(img.width);
                     for (let x = 0; x < img.width; x++) {
                         let sum = 0;
@@ -571,7 +577,7 @@
                         if (evalRowBrightness[x] > 115) { cropRight = x; break; }
                     }
 
-                    // 5. 완벽한 크롭 범위 및 캔버스 설정
+                    // 6. 크롭 범위 확정 및 캔버스 설정
                     cropLeft = Math.max(0, cropLeft - 5);
                     cropRight = Math.min(img.width, cropRight + 5);
                     const cropW = cropRight - cropLeft;
@@ -592,8 +598,7 @@
                     ctx.imageSmoothingEnabled = false; 
                     ctx.drawImage(img, cropLeft, cropTop, cropW, cropH, pad * scale, pad * scale, cropW * scale, cropH * scale);
 
-                    // 6. ✨ 흑백 금지! '소프트 반전(Grayscale Invert)' 기법 
-                    // 하드코딩 흑백 필터를 없애고, 스탯 박스만 부드러운 회색조로 반전시킵니다.
+                    // 7. 소프트 반전(Grayscale Invert) 유지 (흑백 필터 아님!)
                     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
                     const data = imageData.data;
                     const splitY = (statTopY - cropTop + pad) * scale;
@@ -605,10 +610,8 @@
                             let gray = 0.299 * data[i] + 0.587 * data[i+1] + 0.114 * data[i+2];
                             
                             if (!isEvalBox) {
-                                // 하단 스탯 박스만 색상 반전 (어두움->밝음)
-                                gray = 255 - gray; 
+                                gray = 255 - gray; // 하단 스탯창만 색상 반전
                             }
-
                             data[i] = data[i+1] = data[i+2] = gray;
                         }
                     }
