@@ -575,7 +575,7 @@
                                 binary = gray < 100 ? 0 : 255;
                             } else {
                                 // 얇은 하얀색 글씨 뭉개짐 방지용 임계값 115
-                                binary = gray > 150 ? 0 : 255; 
+                                binary = gray > 115 ? 0 : 255; 
                             }
                             data[i] = data[i+1] = data[i+2] = binary;
                         }
