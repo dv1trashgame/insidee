@@ -656,7 +656,10 @@
                 statusDiv.innerHTML = "OCR 스탯 인식 중... ⏳";
                 const processedImgSrc = await preprocessImageForOCR(imagePreview.src);
                 const worker = await Tesseract.createWorker('eng');
-                await worker.setParameters({ tessedit_pageseg_mode: '6' });
+                
+                // ✨ 원상 복구: 정렬된 표를 꼼꼼히 읽는 PSM 6 모드
+                await worker.setParameters({ tessedit_pageseg_mode: '6' }); 
+                
                 const ret = await worker.recognize(processedImgSrc);
                 await worker.terminate();
                 
