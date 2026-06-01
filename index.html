@@ -583,7 +583,7 @@
                                 binary = gray < 90 ? 0 : 255;
                             } else {
                                 // ✨ 임계값 상향 115 -> 125: 'Bod(864)' 떡짐 현상 방지
-                                binary = gray > 125 ? 0 : 255; 
+                                binary = gray > 130 ? 0 : 255; 
                             }
                             data[i] = data[i+1] = data[i+2] = binary;
                         }
