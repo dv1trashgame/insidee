@@ -480,8 +480,11 @@
                 const img = new Image();
                 img.onload = () => {
                     const canvas = document.createElement('canvas');
-                    const cropY = img.height * 0.33;
-                    const cropH = img.height * 0.52;
+                    
+                    // 기기 비율을 타지 않는 넉넉한 '안전 마진' 크롭
+                    const cropY = img.height * 0.42; 
+                    const cropH = img.height * 0.45; 
+                    
                     canvas.width  = img.width  * 3;
                     canvas.height = cropH * 3;
         
@@ -490,20 +493,44 @@
                     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
                     const data = imageData.data;
         
-                    for (let i = 0; i < data.length; i += 4) {
-                        const r = data[i], g = data[i + 1], b = data[i + 2];
-                        const gray = 0.299 * r + 0.587 * g + 0.114 * b;
-                        const inverted = 255 - gray;
-                        
-                        // ✨ 임계값 상향 (85 -> 105): 7이 1로 깎이거나 Eval이 지워지는 현상 방지
-                        const binary = inverted > 95 ? 255 : 0; 
-                        
-                        data[i] = data[i + 1] = data[i + 2] = binary;
+                    // ✨ 1단계: 각 가로줄(Row)의 '평균 밝기' 계산
+                    const rowBrightness = new Float32Array(canvas.height);
+                    for (let y = 0; y < canvas.height; y++) {
+                        let sum = 0;
+                        for (let x = 0; x < canvas.width; x++) {
+                            const i = (y * canvas.width + x) * 4;
+                            sum += 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+                        }
+                        // 해당 가로줄의 평균 밝기 저장
+                        rowBrightness[y] = sum / canvas.width;
                     }
+        
+                    // ✨ 2단계: 평균 밝기에 따라 '동적 반전 필터' 적용
+                    for (let y = 0; y < canvas.height; y++) {
+                        // 현재 가로줄이 밝은 바탕(Eval)인지 어두운 바탕(스탯)인지 판별 (경계값: 120)
+                        const isBrightBackground = rowBrightness[y] > 120;
+                        
+                        for (let x = 0; x < canvas.width; x++) {
+                            const i = (y * canvas.width + x) * 4;
+                            const gray = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+                            
+                            let binary;
+                            if (isBrightBackground) {
+                                // 🔼 바탕이 밝은 경우(Eval): 어두운 글씨(gray < 110)를 검은색(0)으로
+                                binary = gray < 110 ? 0 : 255;
+                            } else {
+                                // 🔽 바탕이 어두운 경우(스탯): 밝은 글씨(gray > 150)를 검은색(0)으로 반전
+                                binary = gray > 150 ? 0 : 255;
+                            }
+                            
+                            data[i] = data[i + 1] = data[i + 2] = binary;
+                        }
+                    }
+                    
                     ctx.putImageData(imageData, 0, 0);
                     const dataUrl = canvas.toDataURL('image/png');
                     
-                    // 흑백 이미지를 디버깅 창에 표시
+                    // 디버깅 창에 결과물 띄우기
                     const debugImg = document.getElementById('debugProcessedImage');
                     if(debugImg) {
                         debugImg.src = dataUrl;
@@ -629,7 +656,7 @@
                 statusDiv.innerHTML = "OCR 스탯 인식 중... ⏳";
                 const processedImgSrc = await preprocessImageForOCR(imagePreview.src);
                 const worker = await Tesseract.createWorker('eng');
-                await worker.setParameters({ tessedit_pageseg_mode: '11' });
+                await worker.setParameters({ tessedit_pageseg_mode: '6' });
                 const ret = await worker.recognize(processedImgSrc);
                 await worker.terminate();
                 
