@@ -6,7 +6,14 @@
     <title>인사이드 세팅 계산기</title>
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <style>
+        /* 전체 패딩 및 박스 사이징 초기화로 픽셀 밀림 방지 */
         * { box-sizing: border-box; }
+
+        /* ✨ 모바일에서 순위표 모달 띄울 때 화면이 가로로 늘어나는 현상 완벽 방지 */
+        html, body {
+            overflow-x: hidden;
+            width: 100%;
+        }
 
         body { font-family: 'Pretendard', 'Malgun Gothic', sans-serif; max-width: 1000px; margin: 0 auto; padding: 30px 20px; background-color: #1e1e1e; color: #e0e0e0; line-height: 1.6; }
         h2 { color: #ffffff; text-align: center; font-weight: 800; margin-bottom: 30px; letter-spacing: -0.5px; position: relative; }
@@ -150,7 +157,10 @@
             .total-bival-box { padding: 12px 5px; font-size: 16px; margin-top: 15px; border-radius: 6px; }
             .total-bival-box span { font-size: 22px; margin-top: 4px; }
 
-            .modal-content { padding: 15px 4px; width: 98%; }
+            /* ✨ 모바일 모달 너비 고정 */
+            .modal-content { padding: 15px 4px; width: 95%; max-width: 100vw; box-sizing: border-box; overflow-x: hidden; }
+            /* ✨ 긴 글자 줄바꿈 강제 (가로 밀림 방지) */
+            .rank-table { word-break: break-all; }
             .rank-table th, .rank-table td { padding: 6px 1px; font-size: 10px; }
             
             .rank-td-cell { font-size: 11px; }
@@ -167,8 +177,8 @@
             .submit-section input, .submit-section button { width: 100%; margin-bottom: 5px; }
             
             /* ✨ 상세 정보 카드를 세로로 쌓고, 가로 넘침(스크롤) 완벽 차단 */
-            .details-container { flex-direction: column; gap: 6px; width: 100%; }
-            .detail-card { min-width: 0; width: 100%; margin: 0; box-sizing: border-box; }
+            .details-container { flex-direction: column; gap: 6px; width: 100%; box-sizing: border-box; }
+            .detail-card { min-width: 0 !important; width: 100%; margin: 0; box-sizing: border-box; overflow: hidden; }
         }
     </style>
 </head>
@@ -371,9 +381,9 @@
                     const g2Eval = calcEval(row.g2);
                     const g3Eval = calcEval(row.g3);
                     
-const totalEval = g1Eval + g2Eval + g3Eval;
+                    const totalEval = g1Eval + g2Eval + g3Eval;
 
-                    // ✨ NEW: 드래곤 이름 옆에 아이콘을 예쁘게 달아주는 함수
+                    // ✨ NEW: 드래곤 이름 옆에 아이콘을 띄워주는 렌더링 함수
                     const renderDragonName = (name) => {
                         if (!name || name === '-') return `🐲 -`;
                         return `<img src="./images/icons/${name}.png" style="width:16px; height:16px; border-radius:3px; vertical-align:middle; margin-right:4px;" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';"><span style="display:none;">🐲</span>${name}`;
@@ -910,6 +920,8 @@ const totalEval = g1Eval + g2Eval + g3Eval;
 
                             let buffElements = new Set();
                             let buffTypes = new Set();
+                            let nerfElements = new Set();
+                            let nerfTypes = new Set();
                             
                             if (weeklyData.base_stats && weeklyData.base_stats[dragonGrade]) {
                                 const baseStats = weeklyData.base_stats[dragonGrade][tType];
@@ -928,12 +940,13 @@ const totalEval = g1Eval + g2Eval + g3Eval;
                                     }
                                     if (weeklyData.nerf) {
                                         weeklyData.nerf.forEach(n => {
+                                            if(n.e) nerfElements.add(n.e);
+                                            if(n.t) nerfTypes.add(n.t);
                                             if (n.e === eType || n.t === tType) {
                                                 let amount = Math.floor(baseStats[n.stat] * (n.percent / 100));
                                                 if (n.stat === 'hp') buff_hp -= amount;
                                                 if (n.stat === 'atk') buff_atk -= amount;
                                                 if (n.stat === 'def') buff_def -= amount;
-                                                dragonNerfCount++; 
                                             }
                                         });
                                     }
@@ -941,6 +954,8 @@ const totalEval = g1Eval + g2Eval + g3Eval;
                             }
                             if (buffElements.has(eType)) dragonBuffCount++;
                             if (buffTypes.has(tType)) dragonBuffCount++;
+                            if (nerfElements.has(eType)) dragonNerfCount++; 
+                            if (nerfTypes.has(tType)) dragonNerfCount++;    
                         }
                         
                         currentTotalBuffCount += dragonBuffCount;
