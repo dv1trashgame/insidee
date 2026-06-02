@@ -165,7 +165,10 @@
             .detail-toggle-btn { padding: 5px 2px; font-size: 9px; width: 95%; }
             
             .submit-section input, .submit-section button { width: 100%; margin-bottom: 5px; }
-            .details-container { flex-direction: column; }
+            
+            /* ✨ 상세 정보 카드를 세로로 쌓고, 가로 넘침(스크롤) 완벽 차단 */
+            .details-container { flex-direction: column; gap: 6px; width: 100%; }
+            .detail-card { min-width: 0; width: 100%; margin: 0; box-sizing: border-box; }
         }
     </style>
 </head>
@@ -368,7 +371,13 @@
                     const g2Eval = calcEval(row.g2);
                     const g3Eval = calcEval(row.g3);
                     
-                    const totalEval = g1Eval + g2Eval + g3Eval;
+const totalEval = g1Eval + g2Eval + g3Eval;
+
+                    // ✨ NEW: 드래곤 이름 옆에 아이콘을 예쁘게 달아주는 함수
+                    const renderDragonName = (name) => {
+                        if (!name || name === '-') return `🐲 -`;
+                        return `<img src="./images/icons/${name}.png" style="width:16px; height:16px; border-radius:3px; vertical-align:middle; margin-right:4px;" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';"><span style="display:none;">🐲</span>${name}`;
+                    };
 
                     const formatDetailStat = (icon, base, buff) => {
                         let buffHtml = '';
@@ -401,7 +410,7 @@
                             <td colspan="5">
                                 <div class="details-container">
                                     <div class="detail-card">
-                                        <span class="d-name">🐲 ${row.g1?.name || '-'}</span>
+                                        <span class="d-name">${renderDragonName(row.g1?.name)}</span>
                                         <div style="display:flex; justify-content:space-around; margin:8px 0; padding-bottom:6px; border-bottom: 1px dashed #444;">
                                             ${formatDetailStat('♥ HP', row.g1?.base_hp, row.g1?.buff_hp)}
                                             ${formatDetailStat('⚔ ATK', row.g1?.base_atk, row.g1?.buff_atk)}
@@ -413,7 +422,7 @@
                                         </div>
                                     </div>
                                     <div class="detail-card">
-                                        <span class="d-name">🐲 ${row.g2?.name || '-'}</span>
+                                        <span class="d-name">${renderDragonName(row.g2?.name)}</span>
                                         <div style="display:flex; justify-content:space-around; margin:8px 0; padding-bottom:6px; border-bottom: 1px dashed #444;">
                                             ${formatDetailStat('♥ HP', row.g2?.base_hp, row.g2?.buff_hp)}
                                             ${formatDetailStat('⚔ ATK', row.g2?.base_atk, row.g2?.buff_atk)}
@@ -425,7 +434,7 @@
                                         </div>
                                     </div>
                                     <div class="detail-card">
-                                        <span class="d-name">🐲 ${row.g3?.name || '-'}</span>
+                                        <span class="d-name">${renderDragonName(row.g3?.name)}</span>
                                         <div style="display:flex; justify-content:space-around; margin:8px 0; padding-bottom:6px; border-bottom: 1px dashed #444;">
                                             ${formatDetailStat('♥ HP', row.g3?.base_hp, row.g3?.buff_hp)}
                                             ${formatDetailStat('⚔ ATK', row.g3?.base_atk, row.g3?.buff_atk)}
