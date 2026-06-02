@@ -6,7 +6,6 @@
     <title>인사이드 세팅 계산기</title>
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <style>
-        /* 전체 패딩 및 박스 사이징 초기화로 픽셀 밀림 방지 */
         * { box-sizing: border-box; }
 
         body { font-family: 'Pretendard', 'Malgun Gothic', sans-serif; max-width: 1000px; margin: 0 auto; padding: 30px 20px; background-color: #1e1e1e; color: #e0e0e0; line-height: 1.6; }
@@ -112,11 +111,9 @@
         .autocomplete-item { padding: 12px 14px; cursor: pointer; border-bottom: 1px solid #444; font-size: 14px; color: #cbd5e1; }
         .autocomplete-item:hover { background-color: #3d3d3d; font-weight: bold; color: #60a5fa; }
 
-        /* ✨ 디버깅용 흑백 이미지 토글 버튼 디자인 (얇고 심플하게) */
         .toggle-debug-btn { background: transparent; border: 1px solid #555; color: #94a3b8; padding: 6px 16px; border-radius: 20px; font-size: 13px; cursor: pointer; margin-top: 0; width: auto; font-weight: normal; transition: all 0.2s; }
         .toggle-debug-btn:hover { background: #333; color: #fff; border-color: #777; }
 
-        /* 📱 모바일 반응형 지원 */
         @media (max-width: 800px) {
             body { padding: 10px 5px; }
             h2 { font-size: 20px; padding-top: 40px; margin-bottom: 20px; }
@@ -287,6 +284,8 @@
         
         let currentCalculatedBival = 0; 
         let currentTotalBuffCount = 0;
+        let currentTotalNerfCount = 0; 
+        
         let currentG1 = {}, currentG2 = {}, currentG3 = {}; 
 
         const modal = document.getElementById("leaderboardModal");
@@ -353,7 +352,6 @@
                     const buffBadge = `<span class="buff-badge ${buffClass}">${buffText}</span>`;
                     const bivalText = `<span class="score-text">${Number(row.score).toLocaleString()}</span>`;
                     
-                    // 비밸 계산 함수
                     const calcBival = (g) => {
                         if(!g || !g.base_hp) return 0;
                         return (Number(g.base_hp) + Number(g.buff_hp)) * (Number(g.base_atk) + Number(g.buff_atk)) * (Number(g.base_def) + Number(g.buff_def));
@@ -362,7 +360,6 @@
                     const g2Bival = calcBival(row.g2);
                     const g3Bival = calcBival(row.g3);
 
-                    // ✨ NEW: 원본 스탯 기반 Eval 계산 함수 추가
                     const calcEval = (g) => {
                         if(!g || !g.base_hp) return 0;
                         return Number(g.base_hp) + (Number(g.base_atk) + Number(g.base_def)) * 4;
@@ -371,7 +368,6 @@
                     const g2Eval = calcEval(row.g2);
                     const g3Eval = calcEval(row.g3);
                     
-                    // ✨ NEW: 3그룹 총합 Eval
                     const totalEval = g1Eval + g2Eval + g3Eval;
 
                     const formatDetailStat = (icon, base, buff) => {
@@ -453,6 +449,7 @@
                 tbody.innerHTML = `<tr><td colspan="5" style="color:#fca5a5;">순위표를 불러오는 데 실패했습니다.</td></tr>`;
             }
         }
+
         async function submitScoreToDB() {
             const nickname = document.getElementById("nicknameInput").value.trim();
             if(!nickname) { alert("닉네임을 입력해주세요!"); return; }
@@ -470,6 +467,7 @@
                         nickname: nickname, 
                         score: currentCalculatedBival,
                         totalBuffCount: currentTotalBuffCount,
+                        totalNerfCount: currentTotalNerfCount, 
                         g1: currentG1,
                         g2: currentG2,
                         g3: currentG3
@@ -763,7 +761,9 @@
             extractBtn.disabled = true;
             statusDiv.innerHTML = "스탯 인식 중... ⏳";
             parsedResults.innerHTML = '';
+            
             currentTotalBuffCount = 0; 
+            currentTotalNerfCount = 0; 
             
             const selectedNames = [
                 document.getElementById('preInput1').value.trim() || "그룹 1",
@@ -888,7 +888,9 @@
                         const calculatedEval = base_hp + ((base_atk + base_def) * 4);
                         let buff_hp = 0, buff_atk = 0, buff_def = 0;
                         let infoBadge = `<span class="dragon-type" style="visibility:hidden;">[미지정/미지정]</span>`; 
+                        
                         let dragonBuffCount = 0;
+                        let dragonNerfCount = 0;
                         
                         const dragonInfo = dragonDB[dragonName];
                         if (dragonInfo) {
@@ -922,6 +924,7 @@
                                                 if (n.stat === 'hp') buff_hp -= amount;
                                                 if (n.stat === 'atk') buff_atk -= amount;
                                                 if (n.stat === 'def') buff_def -= amount;
+                                                dragonNerfCount++; 
                                             }
                                         });
                                     }
@@ -932,6 +935,8 @@
                         }
                         
                         currentTotalBuffCount += dragonBuffCount;
+                        currentTotalNerfCount += dragonNerfCount;
+
                         let final_hp = base_hp + buff_hp;
                         let final_atk = base_atk + buff_atk;
                         let final_def = base_def + buff_def;
@@ -940,11 +945,11 @@
                         totalBival += groupBival;
                         
                         let currentGroupData = { 
-                        name: dragonName, 
-                        base_hp: base_hp, buff_hp: buff_hp, 
-                        base_atk: base_atk, buff_atk: buff_atk, 
-                        base_def: base_def, buff_def: buff_def, 
-                        bival: groupBival 
+                            name: dragonName, 
+                            base_hp: base_hp, buff_hp: buff_hp, 
+                            base_atk: base_atk, buff_atk: buff_atk, 
+                            base_def: base_def, buff_def: buff_def, 
+                            bival: groupBival 
                         };
                         if (groupNum === 1) currentG1 = currentGroupData;
                         if (groupNum === 2) currentG2 = currentGroupData;
@@ -996,7 +1001,6 @@
                     html += '</div>';
                     currentCalculatedBival = totalBival;
 
-                    // ✨ 디버깅용 흑백 이미지 토글 창 추가 (총합 비밸 바로 위)
                     html += `
                         <div style="margin-top: 25px; text-align: center;">
                             <button class="toggle-debug-btn" onclick="const wrapper = document.getElementById('debugImageWrapper'); wrapper.style.display = wrapper.style.display === 'none' ? 'block' : 'none'; this.innerText = wrapper.style.display === 'none' ? '스탯 확인용 이미지 표시하기 ▼' : '스탯 확인용 이미지 닫기 ▲';">스탯 확인용 이미지 표시하기 ▼</button>
@@ -1018,7 +1022,6 @@
                     `;
                     parsedResults.innerHTML = html;
                 } else {
-                    // 실패했을 때도 디버깅용 이미지를 확인할 수 있도록 추가
                     parsedResults.innerHTML = `
                         <div style="background:#3a1616; color:#fca5a5; padding:15px; border-radius:8px; text-align:center; font-weight:bold; margin-bottom: 20px;">
                             ❌ 스탯을 안정적으로 추출하지 못했습니다.<br>스크린샷이 덱 설정 화면 전체를 포함하는지 확인해 주세요.
