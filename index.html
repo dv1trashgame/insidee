@@ -9,25 +9,28 @@
         * { box-sizing: border-box; }
         body { font-family: 'Pretendard', 'Malgun Gothic', sans-serif; max-width: 800px; margin: 0 auto; padding: 30px 20px; background-color: #1e1e1e; color: #e0e0e0; line-height: 1.6; }
         h2 { color: #ffffff; text-align: center; font-weight: 800; margin-bottom: 30px; letter-spacing: -0.5px; }
+        
         .upload-section, .result-section { background: #252525; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); margin-bottom: 25px; border: 1px solid #333; }
+        
         #imagePreview { width: 100%; height: auto; margin-top: 15px; border-radius: 8px; display: none; border: 1px solid #444; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        
         button { background: #5c9d46; color: white; padding: 16px 20px; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; margin-top: 20px; font-weight: bold; width: 100%; box-shadow: 0 4px 10px rgba(92, 157, 70, 0.2); transition: all 0.2s ease; }
         button:hover { background: #4d8639; transform: translateY(-2px); }
         button:disabled { background: #333333; cursor: not-allowed; }
-        #status { margin-top: 20px; color: #94a3b8; font-weight: bold; text-align: center; font-size: 15px; }
+        
         .stat-container { display: flex; flex-direction: column; gap: 15px; margin-bottom: 25px; }
         .stat-row { display: flex; justify-content: space-between; align-items: center; background: #1a1a1a; padding: 15px 20px; border-radius: 8px; border: 1px solid #444; }
-        .stat-label { font-size: 16px; font-weight: bold; color: #cbd5e1; }
         .stat-sum { font-size: 20px; font-weight: 900; color: #ffffff; }
+        
         .total-bival-box { background: linear-gradient(135deg, #ef4444, #f97316); color: white; padding: 25px; border-radius: 12px; text-align: center; margin-top: 15px; font-size: 20px; font-weight: 900; }
         .total-bival-box span { font-size: 36px; display: block; margin-top: 8px; color: #fef08a; }
+
         .toggle-debug-btn { background: transparent; border: 1px solid #555; color: #94a3b8; padding: 6px 16px; border-radius: 20px; font-size: 13px; cursor: pointer; margin-top: 10px; }
     </style>
 </head>
 <body>
     <h2>⚔️ 상대방 스탯 (비밸) 계산기</h2>
     <div class="upload-section">
-        <p style="margin-top:0; font-weight:800; color: #e2e8f0; font-size:15px; margin-bottom:12px;">1. 길드 매치 화면 업로드</p>
         <input type="file" id="imageInput" accept="image/*">
         <img id="imagePreview" alt="원본 이미지">
         <button id="extractBtn" disabled>2. 스탯 추출 및 계산하기</button>
@@ -51,31 +54,42 @@
                 const img = new Image();
                 img.onload = () => {
                     const canvas = document.createElement('canvas');
-                    // 첫 번째 방식의 전체 박스 크롭 좌표 사용
+                    const scale = 6.5;
                     const cropLeft = Math.floor(img.width * 0.61), cropTop = Math.floor(img.height * 0.73);
                     const cropRight = Math.floor(img.width * 0.90), cropBottom = Math.floor(img.height * 0.95);
-                    const scale = 6.5;
                     canvas.width = (cropRight - cropLeft) * scale;
                     canvas.height = (cropBottom - cropTop) * scale;
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, cropLeft, cropTop, cropRight - cropLeft, cropBottom - cropTop, 0, 0, canvas.width, canvas.height);
 
-                    const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
-                    // 첫 번째 방식의 대비 공식 (밝은 글씨를 까맣게 반전)
-                    for (let i = 0; i < data.length; i += 4) {
-                        let gray = 255 - (0.299 * data[i] + 0.587 * data[i+1] + 0.114 * data[i+2]);
-                        gray = (259 * (80 + 255)) / (255 * (259 - 80)) * (gray - 128) + 128;
-                        data[i] = data[i+1] = data[i+2] = Math.min(255, Math.max(0, gray));
+                    const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                    const data = imgData.data;
+                    const splitY = canvas.height * 0.4; // 상단 40%(체력)와 하단 60%(공/방) 기준점
+
+                    for (let y = 0; y < canvas.height; y++) {
+                        for (let x = 0; x < canvas.width; x++) {
+                            const i = (y * canvas.width + x) * 4;
+                            let gray = 255 - (0.299 * data[i] + 0.587 * data[i+1] + 0.114 * data[i+2]);
+                            
+                            if (y < splitY) {
+                                // 상단: 원래의 부드러운 대비 공식
+                                gray = (259 * (80 + 255)) / (255 * (259 - 80)) * (gray - 128) + 128;
+                            } else {
+                                // 하단: 강한 이진화 적용 (130 이상이면 검정, 아니면 흰색)
+                                gray = gray > 130 ? 0 : 255;
+                            }
+                            data[i] = data[i+1] = data[i+2] = Math.min(255, Math.max(0, gray));
+                        }
                     }
-                    ctx.putImageData(new ImageData(data, canvas.width, canvas.height), 0, 0);
+                    ctx.putImageData(imgData, 0, 0);
                     resolve(canvas.toDataURL('image/png'));
                 };
                 img.src = imgSrc;
             });
         }
 
+        // 스탯 추출 로직 (동일)
         function parseStatsFromOCRText(rawOCR) {
-            // 숫자만 추출
             let allNums = (rawOCR.match(/\d+/g) || []).map(n => parseInt(n, 10));
             if (allNums.length >= 6) {
                 let nums = allNums.slice(-6); 
@@ -84,7 +98,7 @@
             return null;
         }
 
-        // 이벤트 리스너 및 계산 로직 (기존과 동일)
+        // 실행 이벤트 및 결과 렌더링 (동일)
         document.getElementById('imageInput').addEventListener('change', (e) => {
             const reader = new FileReader();
             reader.onload = (e) => {
