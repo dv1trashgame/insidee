@@ -560,9 +560,9 @@ function doSimTop(ownedAcc, bufCombos, pends, pool, allocs){
             for(let i=0;i<alloc.length;i++){gH+=alloc[i]*pool[i].h;gA+=alloc[i]*pool[i].a;gD+=alloc[i]*pool[i].d;}
             
             for(const buf of bufCombos){
-              const bufH=Math.floor(buf.h*bh*.2);
-              const bufA=Math.floor(buf.a*ba*.2);
-              const bufD=Math.floor(buf.d*bd*.2);
+              const bufH = Math.floor(bh * 0.2) * buf.h;
+              const bufA = Math.floor(ba * 0.2) * buf.a;
+              const bufD = Math.floor(bd * 0.2) * buf.d;
               
               const fH=calcStat(bh,gH,24,aH,sPct.hp,pH,sP.hp,sB.hp,COLL.hp,bufH);
               const fA=calcStat(ba,gA,6,aA,sPct.atk,pA,sP.atk,sB.atk,COLL.atk,bufA);
@@ -595,9 +595,9 @@ function doSimAvg(ownedAcc, bufCombos, pends, pool, allocs){
     const bufResults=[];
 
     for(const buf of bufCombos){
-      const bufH=Math.floor(buf.h*bh*.2);
-      const bufA=Math.floor(buf.a*ba*.2);
-      const bufD=Math.floor(buf.d*bd*.2);
+  const bufH = Math.floor(bh * 0.2) * buf.h;
+  const bufA = Math.floor(ba * 0.2) * buf.a;
+  const bufD = Math.floor(bd * 0.2) * buf.d;
       const top5=[];
       let minBV=-Infinity;
 
