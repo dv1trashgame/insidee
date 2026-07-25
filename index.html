@@ -321,7 +321,9 @@ function updateUIs() {
 
   renderSpirit();
 }
-
+function onGemLvl(lv) { S.gemLevel = lv; qSave(); }
+function onAccLvl(lv) { S.accLevel = lv; qSave(); }
+function onPendType(t) { S.pendType = t; qSave(); }
 // 스탯에 따른 색상을 반환하는 헬퍼 함수
 function getStatColor(stat) {
   if(stat === 'hp') return '#8B7500'; // 체력: 어두운 노랑
