@@ -325,7 +325,18 @@ function onGemLvl(lv) { S.gemLevel = lv; qSave(); }
 function onAccLvl(lv) { S.accLevel = lv; qSave(); }
 function onPendType(t) { S.pendType = t; qSave(); }
 /* ==================== (여기서부터 복사) ==================== */
+function spPresetLabel(type) { return type==='%'?'%':type==='+'?'+':'-'; }
 
+function isSpiritPresetActive(preset) {
+  return preset.types.every((type,i)=>{ const cur=S.spirit.opts[i]||{}; return cur.type===type; });
+}
+
+function applySpiritPreset(id) {
+  const preset=SP_PRESETS.find(p=>p.id===id);
+  if(!preset)return;
+  S.spirit.opts=preset.types.map((type,i)=>({ stat:S.spirit.opts[i]?.stat||'', type }));
+  renderSpirit(); qSave();
+}
 // 스탯에 따른 세련된 스타일을 반환하는 헬퍼 함수 (기존 느낌 복구)
 function getStatStyle(stat) {
   if(stat === 'hp') return 'background: rgba(251, 191, 36, 0.15); border: 1px solid #fbbf24; color: #fbbf24;';
