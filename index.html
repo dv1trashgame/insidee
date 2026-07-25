@@ -165,6 +165,11 @@ table.rtbl{width:100%;border-collapse:collapse;min-width:640px}
     </div>
 
     <!-- 안내 문구 (컬렉션 고정) -->
+    <!-- 안내 문구 (컬렉션 고정) 바로 아래에 추가 -->
+    <!-- 📊 버프효율 분석표 버튼 추가 -->
+    <button class="btn-sim" id="btn-table-sim" onclick="runTableSim()">📊 정령 버프효율 분석표 생성</button>
+    <div id="table-res-wrap" style="margin-top: 14px; overflow-x: auto; display: none;"></div>
+    
     <div style="font-size:12px; color:var(--dim); text-align:center; margin-bottom: 20px;">
       * 컬렉션은 <strong>체력 260, 공격 60, 방어 60</strong>으로 자동 고정 적용됩니다.
     </div>
@@ -509,7 +514,158 @@ function calcPendPct(pend){
   }
   return{pH,pA,pD};
 }
+// ================================================================
+// 분석표 생성 (버프 효율)
+// ================================================================
 
+function runTableSim() {
+  const btn = document.getElementById('btn-table-sim');
+  btn.disabled = true;
+  btn.textContent = '⏳ 분석표 생성 중...';
+
+  setTimeout(() => {
+    try {
+      const ownedAcc = ACC_DB.filter(a => getAccNum(a.n) === S.accLevel);
+      const pends = getPends();
+      const pool = buildPool();
+      const allocs = genAllocs(); 
+      const {plus:sP, pct:sPct, bonus:sB} = procSpirit();
+
+      // 표에 들어갈 모든 버프 경우의 수 정의
+      const buffs = {
+        b0: {h:0, a:0, d:0},
+        b1_h: {h:1, a:0, d:0}, b1_a: {h:0, a:1, d:0}, b1_d: {h:0, a:0, d:1},
+        b2_hh: {h:2, a:0, d:0}, b2_aa: {h:0, a:2, d:0}, b2_dd: {h:0, a:0, d:2},
+        b2_ha: {h:1, a:1, d:0}, b2_hd: {h:1, a:0, d:1}, b2_ad: {h:0, a:1, d:1},
+      };
+
+      const maxBVs = {}; 
+      DTYPES.forEach(dt => {
+        maxBVs[dt] = {};
+        for(let key in buffs) maxBVs[dt][key] = -Infinity;
+        
+        const bs = BASE[simGrade][dt];
+        const bh = bs.hp, ba = bs.atk, bd = bs.def;
+
+        ownedAcc.forEach(acc => {
+          ['hp','atk','def'].forEach(enc => {
+            const aH = acc.hp + (enc==='hp'?0.21:0);
+            const aA = acc.atk + (enc==='atk'?0.21:0);
+            const aD = acc.def + (enc==='def'?0.21:0);
+
+            pends.forEach(pend => {
+              const {pH, pA, pD} = calcPendPct(pend);
+
+              allocs.forEach(alloc => {
+                let gH=0, gA=0, gD=0;
+                for(let i=0; i<alloc.length; i++){
+                  gH += alloc[i]*pool[i].h;
+                  gA += alloc[i]*pool[i].a;
+                  gD += alloc[i]*pool[i].d;
+                }
+
+                for(let key in buffs) {
+                  const buf = buffs[key];
+                  
+                  // 2버프 로직 반영 (20%를 구한 후 횟수 곱하기)
+                  const bufH = Math.floor(bh * 0.2) * buf.h;
+                  const bufA = Math.floor(ba * 0.2) * buf.a;
+                  const bufD = Math.floor(bd * 0.2) * buf.d;
+
+                  const fH = calcStat(bh, gH, 24, aH, sPct.hp, pH, sP.hp, sB.hp, COLL.hp, bufH);
+                  const fA = calcStat(ba, gA,  6, aA, sPct.atk, pA, sP.atk, sB.atk, COLL.atk, bufA);
+                  const fD = calcStat(bd, gD,  6, aD, sPct.def, pD, sP.def, sB.def, COLL.def, bufD);
+                  
+                  const bv = fH * fA * fD;
+                  if(bv > maxBVs[dt][key]) {
+                    maxBVs[dt][key] = bv;
+                  }
+                }
+              });
+            });
+          });
+        });
+      });
+
+      renderAnalysisTable(maxBVs);
+
+    } catch(e) {
+      alert('오류: ' + e.message);
+    }
+    btn.disabled = false;
+    btn.textContent = '📊 정령 버프효율 분석표 생성';
+  }, 20);
+}
+
+function renderAnalysisTable(maxBVs) {
+  const wrap = document.getElementById('table-res-wrap');
+  const fBV = v => Number((v/1e6).toFixed(1));
+
+  const rowsData = [
+    { id: '노버프', type: 'b0', bottomBorder: '2px solid white' },
+    { id: '체', type: 'b1_h', bottomBorder: '1px solid #555' },
+    { id: '공', type: 'b1_a', bottomBorder: '1px solid #555' },
+    { id: '방', type: 'b1_d', bottomBorder: '1px solid #555' },
+    { id: '1벞', type: 'avg1', bottomBorder: '2px solid white' },
+    { id: '체_체', type: 'b2_hh', bottomBorder: '1px solid #555' },
+    { id: '공_공', type: 'b2_aa', bottomBorder: '1px solid #555' },
+    { id: '방_방', type: 'b2_dd', bottomBorder: '1px solid #555' },
+    { id: '체_공', type: 'b2_ha', bottomBorder: '1px solid #555' },
+    { id: '체_방', type: 'b2_hd', bottomBorder: '1px solid #555' },
+    { id: '공_방', type: 'b2_ad', bottomBorder: '1px solid #555' },
+    { id: '2벞', type: 'avg2', bottomBorder: '2px solid white' },
+    { id: '고점', type: 'peak', bottomBorder: '1px solid #555' },
+    { id: '저점', type: 'bottom', bottomBorder: '2px solid white' }
+  ];
+
+  let html = `
+  <table style="width:100%; border-collapse: collapse; border: 2px solid white; color: white; background: #111; font-family: 'Malgun Gothic', sans-serif; text-align: center; font-size: 14px;">
+    <thead>
+      <tr>
+         <th colspan="7" style="background: white; color: black; padding: 8px; font-size: 16px; font-weight: 800; border: 2px solid white;">&lt;_정령 버프효율 분석표_&gt;</th>
+      </tr>
+      <tr>
+         <th style="border: 1px solid #777; padding: 8px; background: #222; border-bottom: 2px solid white;">/</th>
+         <th style="border: 1px solid #777; padding: 8px; background: #222; border-bottom: 2px solid white;">체력</th>
+         <th style="border: 1px solid #777; padding: 8px; background: #222; border-bottom: 2px solid white;">공격</th>
+         <th style="border: 1px solid #777; padding: 8px; background: #222; border-bottom: 2px solid white;">방어</th>
+         <th style="border: 1px solid #777; padding: 8px; background: #222; border-bottom: 2px solid white;">체공</th>
+         <th style="border: 1px solid #777; padding: 8px; background: #222; border-bottom: 2px solid white;">체방</th>
+         <th style="border: 1px solid #777; padding: 8px; background: #222; border-bottom: 2px solid white;">공방</th>
+      </tr>
+    </thead>
+    <tbody>
+  `;
+
+  rowsData.forEach(row => {
+    html += `<tr><th style="border: 1px solid #555; border-bottom: ${row.bottomBorder}; padding: 8px; background: #222;">${row.id}</th>`;
+    
+    // 체력형, 공격형, 방어형, 체공형, 체방형, 공방형 순서대로 렌더링
+    DTYPES.forEach(dt => {
+      let val = 0;
+      const bvs = maxBVs[dt];
+      
+      if(row.type === 'avg1') {
+        val = (bvs.b1_h + bvs.b1_a + bvs.b1_d) / 3;
+      } else if(row.type === 'avg2') {
+        val = (bvs.b2_hh + bvs.b2_aa + bvs.b2_dd) * (1/9) + (bvs.b2_ha + bvs.b2_hd + bvs.b2_ad) * (2/9);
+      } else if(row.type === 'peak') {
+        val = Math.max(bvs.b2_hh, bvs.b2_aa, bvs.b2_dd, bvs.b2_ha, bvs.b2_hd, bvs.b2_ad);
+      } else if(row.type === 'bottom') {
+        val = Math.min(bvs.b2_hh, bvs.b2_aa, bvs.b2_dd, bvs.b2_ha, bvs.b2_hd, bvs.b2_ad);
+      } else {
+        val = bvs[row.type];
+      }
+      
+      html += `<td style="border: 1px solid #555; border-bottom: ${row.bottomBorder}; padding: 8px;">${fBV(val)}</td>`;
+    });
+    html += `</tr>`;
+  });
+
+  html += `</tbody></table>`;
+  wrap.innerHTML = html;
+  wrap.style.display = 'block';
+}
 // ================================================================
 // 시뮬레이션 실행 및 계산 
 // ================================================================
