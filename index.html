@@ -463,19 +463,19 @@ function getPends() {
    return pends;
 }
 
-/* 스탯 산출 공식 */
+/* 스탯 산출 공식 (엑셀 원본 완벽 동기화) */
 function calcStat(B, G, P, AP, SP, PP, SL, SB, C, BU) {
   // 1. INT((기본스탯+젬+물약)*(1+장신구+인첸트))
   const step1 = Math.floor((B + G + P) * (1 + AP));
   
-  // 2. INT(step1 * (1+정령퍼옵)) + INT(정령플옵*(1+정령퍼옵)) + 정령부가옵
-  const step2 = Math.floor(step1 * (1 + SP)) + Math.floor(SL * (1 + SP)) + SB;
+  // 2. INT( step1*(1+정령퍼옵) + 정령플옵*(1+정령퍼옵) ) + 정령부가옵
+  // 엑셀과 동일하게 두 값을 먼저 더한 후 Math.floor(INT) 처리
+  const step2 = Math.floor(step1 * (1 + SP) + SL * (1 + SP)) + SB;
   
   // 3. INT( step2 * (1+펜던트) )
   const step3 = Math.floor(step2 * (1 + PP));
   
   // 4. 최종 합산: + INT(용스탯*버프) + 컬렉션
-  // (BU 인자는 이미 시뮬레이션 루프에서 INT(용스탯*버프)로 계산되어 전달됨)
   return step3 + BU + C;
 }
 
