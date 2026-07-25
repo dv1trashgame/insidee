@@ -324,95 +324,85 @@ function updateUIs() {
 function onGemLvl(lv) { S.gemLevel = lv; qSave(); }
 function onAccLvl(lv) { S.accLevel = lv; qSave(); }
 function onPendType(t) { S.pendType = t; qSave(); }
-// 스탯에 따른 색상을 반환하는 헬퍼 함수
-function getStatColor(stat) {
-  if(stat === 'hp') return '#8B7500'; // 체력: 어두운 노랑
-  if(stat === 'atk') return '#8B0000'; // 공격: 어두운 빨강
-  if(stat === 'def') return '#003366'; // 방어: 어두운 파랑
-  return '#333333'; // 선택 안됨: 짙은 회색
+/* ==================== (여기서부터 복사) ==================== */
+
+// 스탯에 따른 세련된 스타일을 반환하는 헬퍼 함수 (기존 느낌 복구)
+function getStatStyle(stat) {
+  if(stat === 'hp') return 'background: rgba(251, 191, 36, 0.15); border: 1px solid #fbbf24; color: #fbbf24;';
+  if(stat === 'atk') return 'background: rgba(248, 113, 113, 0.15); border: 1px solid #f87171; color: #f87171;';
+  if(stat === 'def') return 'background: rgba(96, 165, 250, 0.15); border: 1px solid #60a5fa; color: #60a5fa;';
+  return 'background: var(--sf); border: 1px solid var(--bd); color: var(--text);';
 }
 
-// 엑셀 표 형태의 정령 옵션 UI 렌더링
+// 엑셀 표의 직관적인 구조(2열)를 유지하면서 기존 다크 테마 감성을 살린 UI 렌더링
 function renderSpirit() {
   const el = document.getElementById('sp-bd');
   if(!el) return;
   const sp = S.spirit;
 
-  const makeStatSel = (idx, val) => {
-    const bg = getStatColor(val);
-    return `<select onchange="onSpOpt(${idx},'stat',this.value)" style="width:45%; background:${bg}; color:white; border:1px solid #777; border-radius:15px; padding:4px; text-align:center; font-size:13px; font-weight:bold; cursor:pointer;">
-      <option value="" style="background:#333" ${!val?'selected':''}>-</option>
-      <option value="hp" style="background:#8B7500" ${val==='hp'?'selected':''}>체력</option>
-      <option value="atk" style="background:#8B0000" ${val==='atk'?'selected':''}>공격</option>
-      <option value="def" style="background:#003366" ${val==='def'?'selected':''}>방어</option>
-    </select>`;
+  // 1. 올퍼, 막플 등 프리셋 버튼 복구
+  const presets = SP_PRESETS.map(p => {
+    const desc = p.types.map(spPresetLabel).join('');
+    return `<button class="sp-preset-btn ${isSpiritPresetActive(p) ? 'active' : ''}" onclick="applySpiritPreset('${p.id}')">
+      <span class="sp-preset-name">${p.name}</span>
+      <span class="sp-preset-desc">${desc}</span>
+    </button>`;
+  }).join('');
+
+  // 2. 1~4옵션 각각의 셀을 생성하는 함수 (기존 느낌의 UI + 수치 표시 복구)
+  const makeOptCell = (idx, o) => {
+    const v = (o.stat && o.type) ? fmtSpVal(idx+1, o.stat, o.type) : '';
+    return `
+      <div style="background: var(--sf2); border: 1px solid var(--bd); border-radius: 6px; padding: 10px; display: flex; flex-direction: column; gap: 8px;">
+        <div style="text-align: center; font-size: 11px; font-weight: 800; color: var(--dim);">${idx+1}옵션</div>
+        <div style="display: flex; gap: 6px; align-items: center; justify-content: space-between;">
+          <select onchange="onSpOpt(${idx},'stat',this.value)" style="flex: 1; ${getStatStyle(o.stat)} padding: 4px; border-radius: 4px; font-size: 12px; font-weight: 800; outline: none; cursor: pointer;">
+            <option value="" style="background: var(--sf); color: var(--text);">-</option>
+            <option value="hp" style="background: var(--sf); color: #fbbf24;" ${o.stat==='hp'?'selected':''}>체력</option>
+            <option value="atk" style="background: var(--sf); color: #f87171;" ${o.stat==='atk'?'selected':''}>공격</option>
+            <option value="def" style="background: var(--sf); color: #60a5fa;" ${o.stat==='def'?'selected':''}>방어</option>
+          </select>
+          <select onchange="onSpOpt(${idx},'type',this.value)" style="flex: 1; background: var(--sf); border: 1px solid var(--bd); color: var(--text); padding: 4px; border-radius: 4px; font-size: 12px; outline: none; cursor: pointer;">
+            <option value="" ${!o.type?'selected':''}>(-)</option>
+            <option value="+" ${o.type==='+'?'selected':''}>+</option>
+            <option value="%" ${o.type==='%'?'selected':''}>%</option>
+          </select>
+          <span class="sp-oval" style="min-width: 42px; text-align: right; font-size: 11px; color: var(--green);">${v}</span>
+        </div>
+      </div>
+    `;
   };
 
-  const makeTypeSel = (idx, val) => {
-    return `<select onchange="onSpOpt(${idx},'type',this.value)" style="width:45%; background:#333; color:white; border:1px solid #777; border-radius:15px; padding:4px; text-align:center; font-size:13px; font-weight:bold; cursor:pointer;">
-      <option value="" ${!val?'selected':''}> ( - ) </option>
-      <option value="+" ${val==='+'?'selected':''}> ( + ) </option>
-      <option value="%" ${val==='%'?'selected':''}> ( % ) </option>
-    </select>`;
-  };
-
+  // 3. 전체 레이아웃 조합 (CSS Grid 사용)
   let html = `
-  <table style="width: 100%; border-collapse: collapse; text-align: center; font-family: 'Malgun Gothic', sans-serif;">
-    <thead>
-      <tr>
-        <th colspan="2" style="background: white; color: black; border: 2px solid white; padding: 8px; font-size: 15px; font-weight: 800;">정령 옵션</th>
-      </tr>
-    </thead>
-    <tbody>
+    <div class="sp-preset-grid" style="margin-bottom: 12px;">${presets}</div>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
+      ${makeOptCell(0, sp.opts[0] || {stat:'', type:''})}
+      ${makeOptCell(1, sp.opts[1] || {stat:'', type:''})}
+      ${makeOptCell(2, sp.opts[2] || {stat:'', type:''})}
+      ${makeOptCell(3, sp.opts[3] || {stat:'', type:''})}
+    </div>
   `;
 
-  for (let i = 0; i < 4; i+=2) {
-    const o1 = sp.opts[i] || {stat:'', type:''};
-    const o2 = sp.opts[i+1] || {stat:'', type:''};
-    
-    html += `
-      <tr>
-        <td style="background: #ccc; color: black; border: 2px solid white; padding: 6px; width: 50%; font-size: 13px; font-weight: 700;">${i+1} 옵션</td>
-        <td style="background: #ccc; color: black; border: 2px solid white; padding: 6px; width: 50%; font-size: 13px; font-weight: 700;">${i+2}옵션</td>
-      </tr>
-      <tr>
-        <td style="background: black; border: 2px solid white; padding: 8px;">
-          <div style="display:flex; justify-content:space-around; align-items:center;">
-            ${makeStatSel(i, o1.stat)}
-            ${makeTypeSel(i, o1.type)}
-          </div>
-        </td>
-        <td style="background: black; border: 2px solid white; padding: 8px;">
-          <div style="display:flex; justify-content:space-around; align-items:center;">
-            ${makeStatSel(i+1, o2.stat)}
-            ${makeTypeSel(i+1, o2.type)}
-          </div>
-        </td>
-      </tr>
-    `;
-  }
-
-  // 부가옵션 (마지막 줄)
+  // 4. 부가옵션 영역
   const bStat = sp.bonus;
-  const bBg = getStatColor(bStat);
   html += `
-      <tr>
-        <td style="background: #ccc; color: black; border: 2px solid white; padding: 6px; font-size: 13px; font-weight: 700;">정령 부가옵</td>
-        <td style="background: black; border: 2px solid white; padding: 8px;">
-           <select onchange="onSpBonus(this.value)" style="width:95%; background:${bBg}; color:white; border:1px solid #777; border-radius:15px; padding:4px; text-align:center; font-size:13px; font-weight:bold; cursor:pointer;">
-              <option value="" style="background:#333" ${!bStat?'selected':''}>-</option>
-              <option value="hp" style="background:#8B7500" ${bStat==='hp'?'selected':''}>체력 (+40)</option>
-              <option value="atk" style="background:#8B0000" ${bStat==='atk'?'selected':''}>공격 (+10)</option>
-              <option value="def" style="background:#003366" ${bStat==='def'?'selected':''}>방어 (+10)</option>
-           </select>
-        </td>
-      </tr>
-    </tbody>
-  </table>
+    <div style="background: var(--sf2); border: 1px solid var(--bd); border-radius: 6px; padding: 10px; display: flex; align-items: center; justify-content: space-between;">
+      <div style="font-size: 11px; font-weight: 800; color: var(--dim); width: 60px; text-align: center;">부가옵션</div>
+      <select onchange="onSpBonus(this.value)" style="flex: 1; max-width: 200px; ${getStatStyle(bStat)} padding: 4px; border-radius: 4px; font-size: 12px; font-weight: 800; outline: none; cursor: pointer;">
+        <option value="" style="background: var(--sf); color: var(--text);">-</option>
+        <option value="hp" style="background: var(--sf); color: #fbbf24;" ${bStat==='hp'?'selected':''}>체력 (+40)</option>
+        <option value="atk" style="background: var(--sf); color: #f87171;" ${bStat==='atk'?'selected':''}>공격 (+10)</option>
+        <option value="def" style="background: var(--sf); color: #60a5fa;" ${bStat==='def'?'selected':''}>방어 (+10)</option>
+      </select>
+      <div style="min-width: 42px;"></div>
+    </div>
   `;
 
   el.innerHTML = html;
 }
+
+/* ==================== (여기까지 복사) ==================== */
 
 function resetSpirit() {
   if(!confirm('정령 옵션을 초기화하시겠습니까?'))return;
