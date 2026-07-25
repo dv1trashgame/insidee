@@ -118,47 +118,41 @@ table.rtbl{width:100%;border-collapse:collapse;min-width:640px}
   <button class="tab-btn" id="tab-btn-sim" onclick="switchTab('sim')">시뮬레이터 (결과)</button>
 </div>
 
-<!-- ■ 내 스펙 간편 설정 탭 -->
-<div id="tab-spec" class="tc active"><div class="ti">
-  <div style="max-width: 800px; margin: 0 auto; background: #111; padding: 14px; border-radius: 8px; border: 1px solid #333;">
-    
-    <!-- 상단 스펙 설정 테이블 -->
-    <table style="width: 100%; border-collapse: collapse; text-align: center; margin-bottom: 20px; font-family: 'Malgun Gothic', sans-serif;">
-      <thead>
-        <tr>
-          <th style="background: #ccc; color: black; border: 2px solid white; padding: 6px; font-size: 13px;">젬 수치</th>
-          <th style="background: #ccc; color: black; border: 2px solid white; padding: 6px; font-size: 13px;">장신구 수치</th>
-          <th style="background: #ccc; color: black; border: 2px solid white; padding: 6px; font-size: 13px;">펜던트</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td style="background: black; border: 2px solid white; padding: 4px;">
-            <select onchange="onGemLvl(parseInt(this.value))" id="sel-gem-lv" style="width:100%; background:black; color:white; border:none; text-align:center; font-size:15px; font-weight:bold; cursor:pointer;">
-              <option value="38">38</option>
-              <option value="40">40</option>
-              <option value="42">42</option>
-              <option value="44">44</option>
-            </select>
-          </td>
-          <td style="background: black; border: 2px solid white; padding: 4px;">
-            <!-- 시뮬레이터가 해당 등급의 모든 장신구를 계산하므로 직관적인 텍스트로 표기 -->
-            <select onchange="onAccLvl(parseInt(this.value))" id="sel-acc-lv" style="width:100%; background:black; color:white; border:none; text-align:center; font-size:14px; cursor:pointer;">
-              <option value="17">17등급 장신구 풀 (전체)</option>
-              <option value="18">18등급 장신구 풀 (전체)</option>
-              <option value="19">19등급 장신구 풀 (전체)</option>
-              <option value="20">20등급 장신구 풀 (전체)</option>
-            </select>
-          </td>
-          <td style="background: black; border: 2px solid white; padding: 4px;">
-            <select onchange="onPendType(this.value)" id="sel-pend-type" style="width:100%; background:black; color:white; border:none; text-align:center; font-size:14px; cursor:pointer;">
-              <option value="달">달의 펜던트 (2옵션)</option>
-              <option value="태양">태양의 펜던트 (3옵션)</option>
-            </select>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+<!-- 상단 스펙 간편 설정 UI (다크 테마) -->
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px;">
+      
+      <div style="background: var(--sf2); border: 1px solid var(--bd); border-radius: 6px; padding: 10px; display: flex; flex-direction: column; gap: 8px;">
+        <div style="text-align: center; font-size: 12px; font-weight: 800; color: var(--dim);">젬 수치</div>
+        <select onchange="onGemLvl(parseInt(this.value))" id="sel-gem-lv" style="width:100%; background: var(--sf); color: var(--text); border: 1px solid var(--bd); border-radius: 4px; padding: 6px; text-align:center; font-size:14px; font-weight:bold; cursor:pointer; outline:none;">
+          <option value="38">38</option>
+          <option value="40">40</option>
+          <option value="42">42</option>
+          <option value="44">44</option>
+        </select>
+      </div>
+
+      <div style="background: var(--sf2); border: 1px solid var(--bd); border-radius: 6px; padding: 10px; display: flex; flex-direction: column; gap: 8px;">
+        <div style="text-align: center; font-size: 12px; font-weight: 800; color: var(--dim);">장신구 수치</div>
+        <select onchange="onAccLvl(parseInt(this.value))" id="sel-acc-lv" style="width:100%; background: var(--sf); color: var(--text); border: 1px solid var(--bd); border-radius: 4px; padding: 6px; text-align:center; font-size:14px; font-weight:bold; cursor:pointer; outline:none;">
+          <option value="17">17등급 풀 (전체)</option>
+          <option value="18">18등급 풀 (전체)</option>
+          <option value="19">19등급 풀 (전체)</option>
+          <option value="20">20등급 풀 (전체)</option>
+        </select>
+      </div>
+
+      <div style="background: var(--sf2); border: 1px solid var(--bd); border-radius: 6px; padding: 10px; display: flex; flex-direction: column; gap: 8px;">
+        <div style="text-align: center; font-size: 12px; font-weight: 800; color: var(--dim);">펜던트</div>
+        <select onchange="onPendType(this.value)" id="sel-pend-type" style="width:100%; background: var(--sf); color: var(--text); border: 1px solid var(--bd); border-radius: 4px; padding: 6px; text-align:center; font-size:14px; font-weight:bold; cursor:pointer; outline:none;">
+          <option value="달">달의 펜던트 (2옵)</option>
+          <option value="태양">태양의 펜던트 (3옵)</option>
+        </select>
+      </div>
+      
+    </div>
+
+    <!-- 정령 옵션 테이블이 렌더링될 영역 -->
+    <div id="sp-bd"></div>
 
     <!-- 정령 옵션 테이블이 렌더링될 영역 -->
     <div id="sp-bd"></div>
@@ -346,12 +340,13 @@ function getStatStyle(stat) {
 }
 
 // 엑셀 표의 직관적인 구조(2열)를 유지하면서 기존 다크 테마 감성을 살린 UI 렌더링
+// 엑셀 표의 직관적인 구조(2열)를 유지하면서 기존 다크 테마 감성을 살린 UI 렌더링
 function renderSpirit() {
   const el = document.getElementById('sp-bd');
   if(!el) return;
   const sp = S.spirit;
 
-  // 1. 올퍼, 막플 등 프리셋 버튼 복구
+  // 1. 올퍼, 막플 등 프리셋 버튼
   const presets = SP_PRESETS.map(p => {
     const desc = p.types.map(spPresetLabel).join('');
     return `<button class="sp-preset-btn ${isSpiritPresetActive(p) ? 'active' : ''}" onclick="applySpiritPreset('${p.id}')">
@@ -360,25 +355,23 @@ function renderSpirit() {
     </button>`;
   }).join('');
 
-  // 2. 1~4옵션 각각의 셀을 생성하는 함수 (기존 느낌의 UI + 수치 표시 복구)
+  // 2. 1~4옵션 각각의 셀 생성 (수치 표시 제거, 디자인 다듬기)
   const makeOptCell = (idx, o) => {
-    const v = (o.stat && o.type) ? fmtSpVal(idx+1, o.stat, o.type) : '';
     return `
       <div style="background: var(--sf2); border: 1px solid var(--bd); border-radius: 6px; padding: 10px; display: flex; flex-direction: column; gap: 8px;">
         <div style="text-align: center; font-size: 11px; font-weight: 800; color: var(--dim);">${idx+1}옵션</div>
         <div style="display: flex; gap: 6px; align-items: center; justify-content: space-between;">
-          <select onchange="onSpOpt(${idx},'stat',this.value)" style="flex: 1; ${getStatStyle(o.stat)} padding: 4px; border-radius: 4px; font-size: 12px; font-weight: 800; outline: none; cursor: pointer;">
+          <select onchange="onSpOpt(${idx},'stat',this.value)" style="flex: 1; ${getStatStyle(o.stat)} padding: 6px; border-radius: 4px; font-size: 13px; font-weight: 800; outline: none; cursor: pointer;">
             <option value="" style="background: var(--sf); color: var(--text);">-</option>
             <option value="hp" style="background: var(--sf); color: #fbbf24;" ${o.stat==='hp'?'selected':''}>체력</option>
             <option value="atk" style="background: var(--sf); color: #f87171;" ${o.stat==='atk'?'selected':''}>공격</option>
             <option value="def" style="background: var(--sf); color: #60a5fa;" ${o.stat==='def'?'selected':''}>방어</option>
           </select>
-          <select onchange="onSpOpt(${idx},'type',this.value)" style="flex: 1; background: var(--sf); border: 1px solid var(--bd); color: var(--text); padding: 4px; border-radius: 4px; font-size: 12px; outline: none; cursor: pointer;">
+          <select onchange="onSpOpt(${idx},'type',this.value)" style="flex: 1; background: var(--sf); border: 1px solid var(--bd); color: var(--text); padding: 6px; border-radius: 4px; font-size: 13px; font-weight: 800; outline: none; cursor: pointer;">
             <option value="" ${!o.type?'selected':''}>(-)</option>
             <option value="+" ${o.type==='+'?'selected':''}>+</option>
             <option value="%" ${o.type==='%'?'selected':''}>%</option>
           </select>
-          <span class="sp-oval" style="min-width: 42px; text-align: right; font-size: 11px; color: var(--green);">${v}</span>
         </div>
       </div>
     `;
@@ -395,18 +388,17 @@ function renderSpirit() {
     </div>
   `;
 
-  // 4. 부가옵션 영역
+  // 4. 부가옵션 영역 (디자인 다듬기)
   const bStat = sp.bonus;
   html += `
-    <div style="background: var(--sf2); border: 1px solid var(--bd); border-radius: 6px; padding: 10px; display: flex; align-items: center; justify-content: space-between;">
-      <div style="font-size: 11px; font-weight: 800; color: var(--dim); width: 60px; text-align: center;">부가옵션</div>
-      <select onchange="onSpBonus(this.value)" style="flex: 1; max-width: 200px; ${getStatStyle(bStat)} padding: 4px; border-radius: 4px; font-size: 12px; font-weight: 800; outline: none; cursor: pointer;">
+    <div style="background: var(--sf2); border: 1px solid var(--bd); border-radius: 6px; padding: 10px; display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+      <div style="font-size: 11px; font-weight: 800; color: var(--dim); min-width: 60px; text-align: center;">부가옵션</div>
+      <select onchange="onSpBonus(this.value)" style="flex: 1; ${getStatStyle(bStat)} padding: 6px; border-radius: 4px; font-size: 13px; font-weight: 800; outline: none; cursor: pointer;">
         <option value="" style="background: var(--sf); color: var(--text);">-</option>
         <option value="hp" style="background: var(--sf); color: #fbbf24;" ${bStat==='hp'?'selected':''}>체력 (+40)</option>
         <option value="atk" style="background: var(--sf); color: #f87171;" ${bStat==='atk'?'selected':''}>공격 (+10)</option>
         <option value="def" style="background: var(--sf); color: #60a5fa;" ${bStat==='def'?'selected':''}>방어 (+10)</option>
       </select>
-      <div style="min-width: 42px;"></div>
     </div>
   `;
 
