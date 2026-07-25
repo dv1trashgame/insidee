@@ -541,110 +541,202 @@ function calcPendPct(pend){
   return{pH,pA,pD};
 }
 // ================================================================
-// 분석표 생성 (버프 효율)
+// 분석표 생성 (3888개 전체 정령 연산 및 등수 기능 포함)
 // ================================================================
+
+window.tableSimData = null; // 모드 전환을 위한 전역 변수
 
 function runTableSim() {
   const btn = document.getElementById('btn-table-sim');
   btn.disabled = true;
-  btn.textContent = '⏳ 분석표 생성 중...';
+  btn.textContent = '⏳ 분석표 생성 중... (3888개 정령 연산 진행 중)';
 
   setTimeout(() => {
     try {
+      S.gemLevel = parseInt(document.getElementById('sel-gem-lv').value);
+      S.accLevel = parseInt(document.getElementById('sel-acc-lv').value);
+      S.pendType = document.getElementById('sel-pend-type').value;
+
       const ownedAcc = ACC_DB.filter(a => getAccNum(a.n) === S.accLevel);
       const pends = getPends();
       const pool = buildPool();
       const allocs = genAllocs(); 
-      const {plus:sP, pct:sPct, bonus:sB} = procSpirit();
+      const userSp = procSpirit(); // 유저가 현재 설정한 정령
 
-      // 표에 들어갈 모든 버프 경우의 수 정의
-      const buffs = {
-        b0: {h:0, a:0, d:0},
-        b1_h: {h:1, a:0, d:0}, b1_a: {h:0, a:1, d:0}, b1_d: {h:0, a:0, d:1},
-        b2_hh: {h:2, a:0, d:0}, b2_aa: {h:0, a:2, d:0}, b2_dd: {h:0, a:0, d:2},
-        b2_ha: {h:1, a:1, d:0}, b2_hd: {h:1, a:0, d:1}, b2_ad: {h:0, a:1, d:1},
-      };
+      // 10가지 버프 종류 미리 정의
+      const buffsArr = [
+        {h:0, a:0, d:0}, // 0: 노버프
+        {h:1, a:0, d:0}, {h:0, a:1, d:0}, {h:0, a:0, d:1}, // 1~3: 1벞
+        {h:2, a:0, d:0}, {h:0, a:2, d:0}, {h:0, a:0, d:2}, // 4~6: 2벞 중복
+        {h:1, a:1, d:0}, {h:1, a:0, d:1}, {h:0, a:1, d:1}  // 7~9: 2벞 분산
+      ];
 
-      const maxBVs = {}; 
-      DTYPES.forEach(dt => {
-        maxBVs[dt] = {};
-        for(let key in buffs) maxBVs[dt][key] = -Infinity;
-        
+      // 3888가지 정령의 모든 경우의 수 생성
+      const allSpirits = generateAllSpirits(); 
+      const allRowBVs = []; 
+      const userRowBVs = [];
+
+      DTYPES.forEach((dt) => {
         const bs = BASE[simGrade][dt];
         const bh = bs.hp, ba = bs.atk, bd = bs.def;
-
+        
+        // 1. 계산 최적화를 위해 베이스 환경(장신구+젬+펜던트 4536가지) 선계산
+        const envs = [];
         ownedAcc.forEach(acc => {
           ['hp','atk','def'].forEach(enc => {
             const aH = acc.hp + (enc==='hp'?0.21:0);
             const aA = acc.atk + (enc==='atk'?0.21:0);
             const aD = acc.def + (enc==='def'?0.21:0);
-
             pends.forEach(pend => {
               const {pH, pA, pD} = calcPendPct(pend);
-
               allocs.forEach(alloc => {
                 let gH=0, gA=0, gD=0;
                 for(let i=0; i<alloc.length; i++){
-                  gH += alloc[i]*pool[i].h;
-                  gA += alloc[i]*pool[i].a;
-                  gD += alloc[i]*pool[i].d;
+                  gH += alloc[i]*pool[i].h; gA += alloc[i]*pool[i].a; gD += alloc[i]*pool[i].d;
                 }
-
-                for(let key in buffs) {
-                  const buf = buffs[key];
-                  
-                  // 2버프 로직 반영 (20%를 구한 후 횟수 곱하기)
-                  const bufH = Math.floor(bh * 0.2) * buf.h;
-                  const bufA = Math.floor(ba * 0.2) * buf.a;
-                  const bufD = Math.floor(bd * 0.2) * buf.d;
-
-                  const fH = calcStat(bh, gH, 24, aH, sPct.hp, pH, sP.hp, sB.hp, COLL.hp, bufH);
-                  const fA = calcStat(ba, gA,  6, aA, sPct.atk, pA, sP.atk, sB.atk, COLL.atk, bufA);
-                  const fD = calcStat(bd, gD,  6, aD, sPct.def, pD, sP.def, sB.def, COLL.def, bufD);
-                  
-                  const bv = fH * fA * fD;
-                  if(bv > maxBVs[dt][key]) {
-                    maxBVs[dt][key] = bv;
-                  }
-                }
+                envs.push({
+                   baseH: Math.floor((bh + gH + 24)*(1 + aH)),
+                   baseA: Math.floor((ba + gA +  6)*(1 + aA)),
+                   baseD: Math.floor((bd + gD +  6)*(1 + aD)),
+                   pH, pA, pD
+                });
               });
             });
           });
         });
+
+        // 10가지 버프의 실제 스탯 증가량 선계산
+        const BU_H = buffsArr.map(b => Math.floor(bh * 0.2) * b.h + COLL.hp);
+        const BU_A = buffsArr.map(b => Math.floor(ba * 0.2) * b.a + COLL.atk);
+        const BU_D = buffsArr.map(b => Math.floor(bd * 0.2) * b.d + COLL.def);
+
+        // 특정 정령 1개를 투입했을 때 14개 줄의 데이터를 뽑아내는 초고속 함수
+        const evalSpirit = (sp) => {
+           const sp_pH = 1 + sp.pct.hp, sp_pA = 1 + sp.pct.atk, sp_pD = 1 + sp.pct.def;
+           const sp_plusH = sp.plus.hp * sp_pH, sp_plusA = sp.plus.atk * sp_pA, sp_plusD = sp.plus.def * sp_pD;
+           const sp_bH = sp.bonus.hp, sp_bA = sp.bonus.atk, sp_bD = sp.bonus.def;
+
+           const maxBVs = new Float64Array(10); // 10가지 버프 최댓값 임시저장소
+
+           for(let j=0; j<envs.length; j++) {
+               const env = envs[j];
+               // 수식 최적화 (이전 calcStat 함수와 수학적으로 완벽히 동일한 원리)
+               const s3H = Math.floor( (Math.floor(env.baseH * sp_pH + sp_plusH) + sp_bH) * (1 + env.pH) );
+               const s3A = Math.floor( (Math.floor(env.baseA * sp_pA + sp_plusA) + sp_bA) * (1 + env.pA) );
+               const s3D = Math.floor( (Math.floor(env.baseD * sp_pD + sp_plusD) + sp_bD) * (1 + env.pD) );
+
+               for(let k=0; k<10; k++) {
+                   const bv = (s3H + BU_H[k]) * (s3A + BU_A[k]) * (s3D + BU_D[k]);
+                   if(bv > maxBVs[k]) maxBVs[k] = bv;
+               }
+           }
+
+           const rows = new Float64Array(14); // 표의 14개 줄(Row)
+           rows[0] = maxBVs[0]; // 노버프
+           rows[1] = maxBVs[1]; rows[2] = maxBVs[2]; rows[3] = maxBVs[3]; // 체, 공, 방
+           rows[4] = (maxBVs[1] + maxBVs[2] + maxBVs[3]) / 3; // 1벞 평균
+           rows[5] = maxBVs[4]; rows[6] = maxBVs[5]; rows[7] = maxBVs[6]; // 체_체, 공_공, 방_방
+           rows[8] = maxBVs[7]; rows[9] = maxBVs[8]; rows[10] = maxBVs[9]; // 체_공, 체_방, 공_방
+           rows[11] = (maxBVs[4]+maxBVs[5]+maxBVs[6])*(1/9) + (maxBVs[7]+maxBVs[8]+maxBVs[9])*(2/9); // 2벞 가중평균
+           rows[12] = Math.max(maxBVs[4], maxBVs[5], maxBVs[6], maxBVs[7], maxBVs[8], maxBVs[9]); // 고점
+           rows[13] = Math.min(maxBVs[4], maxBVs[5], maxBVs[6], maxBVs[7], maxBVs[8], maxBVs[9]); // 저점
+           return rows;
+        };
+
+        // 1. 유저의 현재 정령 데이터 뽑기
+        userRowBVs.push(evalSpirit(userSp));
+
+        // 2. 3888개 전체 정령 데이터 뽑기 (1억 번 이상의 연산을 단 몇 초만에 처리)
+        const dtAllRows = new Float64Array(3888 * 14);
+        for(let i=0; i<3888; i++) {
+           const rows = evalSpirit(allSpirits[i]);
+           for(let r=0; r<14; r++) { dtAllRows[i*14 + r] = rows[r]; }
+        }
+        allRowBVs.push(dtAllRows);
       });
 
-      renderAnalysisTable(maxBVs);
+      // 계산 끝! 렌더링 함수에 데이터를 넘김
+      window.tableSimData = { userRowBVs, allRowBVs, mode: 'bv' };
+      renderAnalysisTable();
 
     } catch(e) {
       alert('오류: ' + e.message);
     }
     btn.disabled = false;
     btn.textContent = '📊 정령 버프효율 분석표 생성';
-  }, 20);
+  }, 30); // 렌더링 딜레이를 살짝 주어 브라우저 멈춤 현상 완화
 }
 
-function renderAnalysisTable(maxBVs) {
+// 3888가지 정령을 모두 생성하는 헬퍼 함수
+function generateAllSpirits() {
+  const res = [];
+  const opts = [
+    {s:'hp', t:'+'}, {s:'hp', t:'%'}, {s:'atk', t:'+'}, 
+    {s:'atk', t:'%'}, {s:'def', t:'+'}, {s:'def', t:'%'}
+  ];
+  const bonuses = ['hp', 'atk', 'def'];
+  
+  for(let b of bonuses) {
+    for(let o1 of opts) {
+      for(let o2 of opts) {
+        for(let o3 of opts) {
+          for(let o4 of opts) {
+             const plus = {hp:0, atk:0, def:0}, pct = {hp:0, atk:0, def:0}, bonus = {hp:0, atk:0, def:0};
+             if(b === 'hp') bonus.hp = 40; if(b === 'atk') bonus.atk = 10; if(b === 'def') bonus.def = 10;
+
+             const applyOpt = (o, level) => { if(o.t === '+') plus[o.s] += SP_PLUS[o.s][level]; else pct[o.s] += SP_PCT[level]; };
+             applyOpt(o1, 1); applyOpt(o2, 2); applyOpt(o3, 3); applyOpt(o4, 4);
+             res.push({plus, pct, bonus});
+          }
+        }
+      }
+    }
+  }
+  return res;
+}
+
+// 토글 버튼 (모드 전환) 
+function toggleTableMode() {
+  if(!window.tableSimData) return;
+  const isRank = document.getElementById('chk-table-mode').checked;
+  window.tableSimData.mode = isRank ? 'rank' : 'bv';
+  renderAnalysisTable();
+}
+
+function renderAnalysisTable() {
   const wrap = document.getElementById('table-res-wrap');
+  if(!window.tableSimData) return;
+  const { userRowBVs, allRowBVs, mode } = window.tableSimData;
+
   const fBV = v => Number((v/1e6).toFixed(1));
 
   const rowsData = [
-    { id: '노버프', type: 'b0', bottomBorder: '2px solid white' },
-    { id: '체', type: 'b1_h', bottomBorder: '1px solid #555' },
-    { id: '공', type: 'b1_a', bottomBorder: '1px solid #555' },
-    { id: '방', type: 'b1_d', bottomBorder: '1px solid #555' },
-    { id: '1벞', type: 'avg1', bottomBorder: '2px solid white' },
-    { id: '체_체', type: 'b2_hh', bottomBorder: '1px solid #555' },
-    { id: '공_공', type: 'b2_aa', bottomBorder: '1px solid #555' },
-    { id: '방_방', type: 'b2_dd', bottomBorder: '1px solid #555' },
-    { id: '체_공', type: 'b2_ha', bottomBorder: '1px solid #555' },
-    { id: '체_방', type: 'b2_hd', bottomBorder: '1px solid #555' },
-    { id: '공_방', type: 'b2_ad', bottomBorder: '1px solid #555' },
-    { id: '2벞', type: 'avg2', bottomBorder: '2px solid white' },
-    { id: '고점', type: 'peak', bottomBorder: '1px solid #555' },
-    { id: '저점', type: 'bottom', bottomBorder: '2px solid white' }
+    { id: '노버프', rIdx: 0, bottomBorder: '2px solid white' },
+    { id: '체', rIdx: 1, bottomBorder: '1px solid #555' },
+    { id: '공', rIdx: 2, bottomBorder: '1px solid #555' },
+    { id: '방', rIdx: 3, bottomBorder: '1px solid #555' },
+    { id: '1벞', rIdx: 4, bottomBorder: '2px solid white' },
+    { id: '체_체', rIdx: 5, bottomBorder: '1px solid #555' },
+    { id: '공_공', rIdx: 6, bottomBorder: '1px solid #555' },
+    { id: '방_방', rIdx: 7, bottomBorder: '1px solid #555' },
+    { id: '체_공', rIdx: 8, bottomBorder: '1px solid #555' },
+    { id: '체_방', rIdx: 9, bottomBorder: '1px solid #555' },
+    { id: '공_방', rIdx: 10, bottomBorder: '1px solid #555' },
+    { id: '2벞', rIdx: 11, bottomBorder: '2px solid white' },
+    { id: '고점', rIdx: 12, bottomBorder: '1px solid #555' },
+    { id: '저점', rIdx: 13, bottomBorder: '2px solid white' }
   ];
 
   let html = `
+  <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom: 8px;">
+     <span style="font-size:12px; color:var(--dim); line-height: 1.3;">
+        3888개의 모든 정령 조합과 비교합니다.<br>버튼을 눌러 모드를 전환해보세요!
+     </span>
+     <label style="cursor:pointer; font-size:13px; font-weight:800; display:flex; align-items:center; gap:8px; background:var(--sf2); padding:8px 14px; border-radius:6px; border:1px solid var(--gold); color:var(--text); box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
+       <input type="checkbox" id="chk-table-mode" onchange="toggleTableMode()" ${mode === 'rank' ? 'checked' : ''} style="accent-color:var(--gold); width:18px; height:18px; cursor:pointer;">
+       전체 정령 중 내 등수 보기
+     </label>
+  </div>
   <table style="width:100%; border-collapse: collapse; border: 2px solid white; color: white; background: #111; font-family: 'Malgun Gothic', sans-serif; text-align: center; font-size: 14px;">
     <thead>
       <tr>
@@ -666,24 +758,26 @@ function renderAnalysisTable(maxBVs) {
   rowsData.forEach(row => {
     html += `<tr><th style="border: 1px solid #555; border-bottom: ${row.bottomBorder}; padding: 8px; background: #222;">${row.id}</th>`;
     
-    // 체력형, 공격형, 방어형, 체공형, 체방형, 공방형 순서대로 렌더링
-    DTYPES.forEach(dt => {
-      let val = 0;
-      const bvs = maxBVs[dt];
+    DTYPES.forEach((dt, dtIdx) => {
+      const userVal = userRowBVs[dtIdx][row.rIdx];
+      let displayStr = '';
       
-      if(row.type === 'avg1') {
-        val = (bvs.b1_h + bvs.b1_a + bvs.b1_d) / 3;
-      } else if(row.type === 'avg2') {
-        val = (bvs.b2_hh + bvs.b2_aa + bvs.b2_dd) * (1/9) + (bvs.b2_ha + bvs.b2_hd + bvs.b2_ad) * (2/9);
-      } else if(row.type === 'peak') {
-        val = Math.max(bvs.b2_hh, bvs.b2_aa, bvs.b2_dd, bvs.b2_ha, bvs.b2_hd, bvs.b2_ad);
-      } else if(row.type === 'bottom') {
-        val = Math.min(bvs.b2_hh, bvs.b2_aa, bvs.b2_dd, bvs.b2_ha, bvs.b2_hd, bvs.b2_ad);
+      if(mode === 'bv') {
+         displayStr = fBV(userVal);
       } else {
-        val = bvs[row.type];
+         // 등수(Rank) 산출 로직: 내 비밸보다 큰 값이 있을 때마다 등수 + 1
+         let rank = 1;
+         const allVals = allRowBVs[dtIdx];
+         for(let i=0; i<3888; i++) {
+            if(allVals[i*14 + row.rIdx] > userVal) rank++;
+         }
+         
+         // 1등인 경우 화려한 황금색, 아니면 일반 색상
+         if(rank === 1) displayStr = `<span style="color:var(--gold); font-weight:800; font-size:15px;">1</span><span style="font-size:11px; color:#ddd;">등</span>`;
+         else displayStr = `<span style="color:var(--text); font-weight:800;">${rank}</span><span style="font-size:11px; color:#aaa;">등</span>`;
       }
       
-      html += `<td style="border: 1px solid #555; border-bottom: ${row.bottomBorder}; padding: 8px;">${fBV(val)}</td>`;
+      html += `<td style="border: 1px solid #555; border-bottom: ${row.bottomBorder}; padding: 8px;">${displayStr}</td>`;
     });
     html += `</tr>`;
   });
