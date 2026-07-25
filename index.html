@@ -340,7 +340,6 @@ function getStatStyle(stat) {
 }
 
 // 엑셀 표의 직관적인 구조(2열)를 유지하면서 기존 다크 테마 감성을 살린 UI 렌더링
-// 엑셀 표의 직관적인 구조(2열)를 유지하면서 기존 다크 테마 감성을 살린 UI 렌더링
 function renderSpirit() {
   const el = document.getElementById('sp-bd');
   if(!el) return;
@@ -405,8 +404,6 @@ function renderSpirit() {
   el.innerHTML = html;
 }
 
-/* ==================== (여기까지 복사) ==================== */
-
 function resetSpirit() {
   if(!confirm('정령 옵션을 초기화하시겠습니까?'))return;
   S.spirit={level:1,maxLvl:false,opts:[{stat:'',type:''},{stat:'',type:''},{stat:'',type:''},{stat:'',type:''}],bonus:''};
@@ -435,8 +432,6 @@ function setBuf(b){
   simBuf=b;
   document.querySelectorAll('#buf-grp button').forEach(btn=>btn.classList.toggle('active',btn.textContent===b+'버프'));
 }
-
-// ================================================================
 // 시뮬레이션 데이터 준비 (Pool, Pendants, Allocations)
 // ================================================================
 
