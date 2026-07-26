@@ -833,7 +833,7 @@ function renderAnalysisTable() {
   const fBigInt = str => {
     const parts = str.split('.');
     if(parts.length === 2) {
-      return `<span style="font-size: calc(100% + 1.5px);">${parts[0]}</span>.${parts[1]}`;
+      return `<span style="font-size: calc(100% + 1px);">${parts[0]}</span>.${parts[1]}`;
     }
     return str;
   };
