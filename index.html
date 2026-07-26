@@ -631,15 +631,22 @@ function runTableSim() {
                }
            }
 
-           const rows = new Float64Array(14); // 표의 14개 줄(Row)
+          const rows = new Float64Array(14); // 표의 14개 줄(Row)
            rows[0] = maxBVs[0]; // 노버프
            rows[1] = maxBVs[1]; rows[2] = maxBVs[2]; rows[3] = maxBVs[3]; // 체, 공, 방
            rows[4] = (maxBVs[1] + maxBVs[2] + maxBVs[3]) / 3; // 1벞 평균
            rows[5] = maxBVs[4]; rows[6] = maxBVs[5]; rows[7] = maxBVs[6]; // 체_체, 공_공, 방_방
            rows[8] = maxBVs[7]; rows[9] = maxBVs[8]; rows[10] = maxBVs[9]; // 체_공, 체_방, 공_방
-           rows[11] = (maxBVs[4]+maxBVs[5]+maxBVs[6])*(1/9) + (maxBVs[7]+maxBVs[8]+maxBVs[9])*(2/9); // 2벞 가중평균
-           rows[12] = Math.max(maxBVs[4], maxBVs[5], maxBVs[6], maxBVs[7], maxBVs[8], maxBVs[9]); // 고점
-           rows[13] = Math.min(maxBVs[4], maxBVs[5], maxBVs[6], maxBVs[7], maxBVs[8], maxBVs[9]); // 저점
+           
+           // 2버프 6가지 결과를 배열로 만들어 내림차순(가장 큰 값이 맨 앞) 정렬
+           const b2Arr = [maxBVs[4], maxBVs[5], maxBVs[6], maxBVs[7], maxBVs[8], maxBVs[9]];
+           b2Arr.sort((a, b) => b - a);
+
+           // 요구사항에 맞춘 새로운 계산 로직
+           rows[11] = (b2Arr[0] + b2Arr[1] + b2Arr[2] + b2Arr[3] + b2Arr[4] + b2Arr[5]) / 6; // 2벞 단순 평균
+           rows[12] = (b2Arr[0] + b2Arr[1] + b2Arr[2]) / 3; // 고점: 상위 3개 평균
+           rows[13] = (b2Arr[3] + b2Arr[4] + b2Arr[5]) / 3; // 저점: 하위 3개 평균
+           
            return rows;
         };
 
