@@ -1020,9 +1020,10 @@ function fmtPend(p){
   return`<div style="display:flex;align-items:center;gap:8px">${img}<div style="color:var(--text)"><span class="pend-name-full">${p.type}의 펜던트</span><span class="pend-name-short">${shortType}</span><br><small>(${opts})</small></div></div>`;
 }
 
-function mkMobCard(rank,dc,dt,accImg,accName,enc,gems,pendMob,bufHtml,fH,fA,fD,bv){
+function mkMobCard(rank,dc,dt,accImg,accName,enc,gems,pendMob,bufHtml,fH,fA,fD,bv, rawAccName){
   const dtBadge=dt?`<span class="dtype-b" style="color:${dc};border-color:${dc};font-size:11px">${dt}</span>`:'';
-  return`<div style="padding:13px 14px;border-bottom:1px solid var(--bd);box-sizing:border-box;width:100%;overflow:hidden">
+  // 하이라이트 제어를 위해 class="res-item"과 data-acc 속성 추가
+  return`<div class="res-item" data-acc="${rawAccName}" style="padding:13px 14px;border-bottom:1px solid var(--bd);box-sizing:border-box;width:100%;overflow:hidden; transition: background-color 0.2s;">
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:9px;min-width:0">
       <span style="font-size:20px;width:26px;text-align:center;flex-shrink:0">${rank}</span>
       <div style="flex-shrink:0">${accImg}</div>
@@ -1047,7 +1048,146 @@ function mkMobCard(rank,dc,dt,accImg,accName,enc,gems,pendMob,bufHtml,fH,fA,fD,b
   </div>`;
 }
 
-// 너프(nerf) 매개변수를 추가하여 버프와 상쇄 계산을 수행
+// ================================================================
+// 시뮬레이션 일괄 실행 (분석표 + TOP 200 동시 연산)
+// ================================================================
+
+function runAllSims() {
+  const btn = document.getElementById('btn-run-all');
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = '⏳ 분석표 및 TOP 200 일괄 연산 중...';
+  }
+
+  // 시뮬레이터 탭에 정령 정보 및 하이라이트 UI 렌더링
+  renderSimSpiritDisplay();
+
+  setTimeout(() => {
+    try {
+      S.gemLevel = parseInt(document.getElementById('sel-gem-lv').value);
+      S.accLevel = parseInt(document.getElementById('sel-acc-lv').value);
+      S.pendType = document.getElementById('sel-pend-type').value;
+
+      const ownedAcc = ACC_DB.filter(a => getAccNum(a.n) === S.accLevel);
+      const pends = getPends();
+      const pool = buildPool();
+      const allocs = genAllocs();
+      const userSp = procSpirit();
+
+      // ==========================================================
+      // 1. 정령 버프효율 분석표 생성 로직
+      // ==========================================================
+      const buffsArr = [
+        {h:0, a:0, d:0}, {h:1, a:0, d:0}, {h:0, a:1, d:0}, {h:0, a:0, d:1},
+        {h:2, a:0, d:0}, {h:0, a:2, d:0}, {h:0, a:0, d:2},
+        {h:1, a:1, d:0}, {h:1, a:0, d:1}, {h:0, a:1, d:1}
+      ];
+
+      const allSpirits = generateAllSpirits();
+      const allRowBVs = [];
+      const userRowBVs = [];
+
+      DTYPES.forEach((dt) => {
+        const bs = BASE[simGrade][dt];
+        const bh = bs.hp, ba = bs.atk, bd = bs.def;
+
+        const envs = [];
+        ownedAcc.forEach(acc => {
+          ['hp','atk','def'].forEach(enc => {
+            const aH = acc.hp + (enc==='hp'?0.21:0);
+            const aA = acc.atk + (enc==='atk'?0.21:0);
+            const aD = acc.def + (enc==='def'?0.21:0);
+            pends.forEach(pend => {
+              const {pH, pA, pD} = calcPendPct(pend);
+              allocs.forEach(alloc => {
+                let gH=0, gA=0, gD=0;
+                for(let i=0; i<alloc.length; i++){
+                  gH += alloc[i]*pool[i].h; gA += alloc[i]*pool[i].a; gD += alloc[i]*pool[i].d;
+                }
+                envs.push({
+                   baseH: Math.floor((bh + gH + 24)*(1 + aH)),
+                   baseA: Math.floor((ba + gA +  6)*(1 + aA)),
+                   baseD: Math.floor((bd + gD +  6)*(1 + aD)),
+                   pH, pA, pD
+                });
+              });
+            });
+          });
+        });
+
+        const BU_H = buffsArr.map(b => Math.floor(bh * 0.2) * b.h + COLL.hp);
+        const BU_A = buffsArr.map(b => Math.floor(ba * 0.2) * b.a + COLL.atk);
+        const BU_D = buffsArr.map(b => Math.floor(bd * 0.2) * b.d + COLL.def);
+
+        const evalSpirit = (sp) => {
+           const sp_pH = 1 + sp.pct.hp, sp_pA = 1 + sp.pct.atk, sp_pD = 1 + sp.pct.def;
+           const sp_plusH = sp.plus.hp * sp_pH, sp_plusA = sp.plus.atk * sp_pA, sp_plusD = sp.plus.def * sp_pD;
+           const sp_bH = sp.bonus.hp, sp_bA = sp.bonus.atk, sp_bD = sp.bonus.def;
+
+           const maxBVs = new Float64Array(10);
+           for(let j=0; j<envs.length; j++) {
+               const env = envs[j];
+               const s3H = Math.floor( (Math.floor(env.baseH * sp_pH + sp_plusH) + sp_bH) * (1 + env.pH) );
+               const s3A = Math.floor( (Math.floor(env.baseA * sp_pA + sp_plusA) + sp_bA) * (1 + env.pA) );
+               const s3D = Math.floor( (Math.floor(env.baseD * sp_pD + sp_plusD) + sp_bD) * (1 + env.pD) );
+
+               for(let k=0; k<10; k++) {
+                   const bv = (s3H + BU_H[k]) * (s3A + BU_A[k]) * (s3D + BU_D[k]);
+                   if(bv > maxBVs[k]) maxBVs[k] = bv;
+               }
+           }
+
+           const rows = new Float64Array(14);
+           rows[0] = maxBVs[0];
+           rows[1] = maxBVs[1]; rows[2] = maxBVs[2]; rows[3] = maxBVs[3];
+           rows[4] = (maxBVs[1] + maxBVs[2] + maxBVs[3]) / 3;
+           rows[5] = maxBVs[4]; rows[6] = maxBVs[5]; rows[7] = maxBVs[6];
+           rows[8] = maxBVs[7]; rows[9] = maxBVs[8]; rows[10] = maxBVs[9];
+
+           const b2Arr = [maxBVs[4], maxBVs[5], maxBVs[6], maxBVs[7], maxBVs[8], maxBVs[9]];
+           b2Arr.sort((a, b) => b - a);
+
+           rows[11] = (b2Arr[0] + b2Arr[1] + b2Arr[2] + b2Arr[3] + b2Arr[4] + b2Arr[5]) / 6;
+           rows[12] = (b2Arr[0] + b2Arr[1] + b2Arr[2]) / 3;
+           rows[13] = (b2Arr[3] + b2Arr[4] + b2Arr[5]) / 3;
+
+           return rows;
+        };
+
+        userRowBVs.push(evalSpirit(userSp));
+        const dtAllRows = new Float64Array(3888 * 14);
+        for(let i=0; i<3888; i++) {
+           const rows = evalSpirit(allSpirits[i]);
+           for(let r=0; r<14; r++) { dtAllRows[i*14 + r] = rows[r]; }
+        }
+        allRowBVs.push(dtAllRows);
+      });
+
+      window.tableSimData = { userRowBVs, allRowBVs, mode: window.tableSimData ? window.tableSimData.mode : 'bv' };
+      renderAnalysisTable();
+
+      // ==========================================================
+      // 2. 단일 조건 TOP 200 계산 로직
+      // ==========================================================
+      const exactBufObj = parseExactBuf(simExactBuf);
+      const exactNerfObj = parseExactNerf(simExactNerf);
+      const top200 = doSimExact(ownedAcc, exactBufObj, exactNerfObj, pends, pool, allocs);
+      renderResTop(top200);
+
+      const rs = document.getElementById('res-sec');
+      rs.style.display = '';
+
+    } catch(e) {
+      console.error(e);
+      alert('오류: ' + e.message);
+    }
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = '📊 일괄 시뮬레이션 연산 (분석표 + TOP 200)';
+    }
+  }, 30);
+}
+
 function doSimExact(ownedAcc, buf, nerf, pends, pool, allocs){
   const {plus:sP, pct:sPct, bonus:sB} = procSpirit();
   const topList = [];
@@ -1057,7 +1197,6 @@ function doSimExact(ownedAcc, buf, nerf, pends, pool, allocs){
   const bs = BASE[simGrade][dt];
   const bh = bs.hp, ba = bs.atk, bd = bs.def;
   
-  // 버프(+)에서 너프(-)를 뺀 최종 증감치를 계산 (공식 동기화)
   const finalH = Math.floor(bh * 0.2) * buf.h - Math.floor(bh * 0.2) * nerf.h;
   const finalA = Math.floor(ba * 0.2) * buf.a - Math.floor(ba * 0.2) * nerf.a;
   const finalD = Math.floor(bd * 0.2) * buf.d - Math.floor(bd * 0.2) * nerf.d;
@@ -1090,7 +1229,7 @@ function doSimExact(ownedAcc, buf, nerf, pends, pool, allocs){
             }
             topList.splice(lo, 0, {
               bv, dt, accN:acc.n, enc, pend, 
-              bufLabel: buf.label, nerfLabel: nerf.label, // 렌더링용 정보 개별 저장
+              bufLabel: buf.label, nerfLabel: nerf.label,
               alloc:alloc.map((k,i)=>({k, g:pool[i]})).filter(x=>x.k>0), 
               fH, fA, fD
             });
@@ -1129,9 +1268,9 @@ function renderResTop(topList){
     mobHtml += mkMobCard(rank, dc, r.dt, aImg, fmtAccName(r.accN), fmtAccEnc(r.enc),
       fmtGem(r.alloc), fmtPendMob(r.pend), combinedBufHtml,
       r.fH.toLocaleString('ko-KR'), r.fA.toLocaleString('ko-KR'), r.fD.toLocaleString('ko-KR'),
-      formattedBv);
+      formattedBv, r.accN); // r.accN을 하이라이팅을 위한 raw data로 전달
       
-    pcHtml += `<tr>
+    pcHtml += `<tr class="res-item" data-acc="${r.accN}" style="transition: background-color 0.2s;">
       <td>${rank}</td>
       <td><span class="dtype-b" style="color:${dc};border-color:${dc}">${r.dt}</span></td>
       <td>
@@ -1152,9 +1291,121 @@ function renderResTop(topList){
     </tr>`;
   });
   el.innerHTML = mobHtml + '</div>' + pcHtml + '</tbody></table>';
+
+  // 테이블이 새로 그려졌으므로, 현재 드롭다운에 선택된 장신구가 있다면 다시 하이라이트 적용
+  const selAcc = document.getElementById('hl-acc-sel');
+  if(selAcc && selAcc.value) {
+    applyAccHighlight(selAcc.value);
+  }
 }
 
-document.addEventListener('DOMContentLoaded', doLoad);
+// ================================================================
+// 정령 정보 읽기 전용 및 장신구 하이라이트 렌더링 함수
+// ================================================================
+
+function renderSimSpiritDisplay() {
+  const el = document.getElementById('sim-spirit-display');
+  if(!el) return;
+  const sp = S.spirit;
+
+  const getOptText = (o) => {
+     if(!o || !o.stat || !o.type) return '<span style="color:var(--dimmer);">-</span>';
+     const st = o.stat==='hp'?'체':o.stat==='atk'?'공':'방';
+     const col = o.stat==='hp'?'#fbbf24':o.stat==='atk'?'#f87171':'#60a5fa';
+     return `<span style="color:${col}; font-weight:800; font-size:13px;">${st}${o.type}</span>`;
+  };
+
+  const makeOptCell = (idx, o) => {
+    return `
+      <div style="background: var(--sf2); border: 1px solid var(--bd); border-radius: 6px; padding: 10px; display: flex; flex-direction: column; gap: 8px;">
+        <div style="text-align: center; font-size: 11px; font-weight: 800; color: var(--dim);">${idx+1}옵션</div>
+        <div style="text-align: center;">${getOptText(o)}</div>
+      </div>
+    `;
+  };
+
+  let bHtml = '<span style="color:var(--dimmer);">-</span>';
+  if(sp.bonus) {
+     const st = sp.bonus==='hp'?'체':sp.bonus==='atk'?'공':'방';
+     const v = sp.bonus==='hp'?'+40':'+10';
+     const col = sp.bonus==='hp'?'#fbbf24':sp.bonus==='atk'?'#f87171':'#60a5fa';
+     bHtml = `<span style="color:${col}; font-weight:800; font-size:13px;">${st} (${v})</span>`;
+  }
+
+  let spiritHtml = `
+    <div class="sec-hd" style="border-radius: 8px 8px 0 0; margin-bottom: 0;">🔮 적용된 정령 정보 (수정 불가)</div>
+    <div class="sec-bd" style="background: var(--sf); border: 1px solid var(--bd); border-top: none; border-radius: 0 0 8px 8px; height: calc(100% - 32px); display:flex; flex-direction:column; justify-content:center;">
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
+        ${makeOptCell(0, sp.opts[0])}
+        ${makeOptCell(1, sp.opts[1])}
+        ${makeOptCell(2, sp.opts[2])}
+        ${makeOptCell(3, sp.opts[3])}
+      </div>
+      <div style="background: var(--sf2); border: 1px solid var(--bd); border-radius: 6px; padding: 10px; display: flex; align-items: center; justify-content: center; gap: 14px;">
+        <div style="font-size: 11px; font-weight: 800; color: var(--dim);">부가옵션</div>
+        <div>${bHtml}</div>
+      </div>
+    </div>
+  `;
+
+  // 장신구 하이라이트 드롭다운 동적 생성 (현재 선택된 17, 18, 19, 20등급 풀에 맞춤)
+  const ownedAcc = ACC_DB.filter(a => getAccNum(a.n) === S.accLevel);
+  let accOpts = '<option value="">-- 하이라이트 해제 --</option>';
+  ownedAcc.forEach(a => {
+     accOpts += `<option value="${a.n}">${a.n}</option>`;
+  });
+
+  let hlHtml = `
+    <div style="display:flex; flex-direction:column; min-width: 140px;">
+      <div class="sec-hd" style="border-radius: 8px 8px 0 0; margin-bottom: 0; justify-content: center; letter-spacing: 0;">🔍 지정 장신구 선택</div>
+      <div class="sec-bd" style="background: var(--sf); border: 1px solid var(--bd); border-top: none; border-radius: 0 0 8px 8px; flex: 1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap: 10px;">
+         
+         <div style="position: relative; width: 68px; height: 68px; border: 2px dashed var(--gold); border-radius: 8px; overflow: hidden; cursor: pointer; background: var(--bg); display:flex; align-items:center; justify-content:center; transition: all 0.2s;" onmouseover="this.style.backgroundColor='rgba(232,184,75,0.1)'" onmouseout="this.style.backgroundColor='var(--bg)'">
+           <img id="hl-acc-img" src="" style="width: 100%; height: 100%; object-fit: contain; display: none; z-index: 1;">
+           <div id="hl-acc-placeholder" style="position: absolute; width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:var(--gold); font-size:28px; font-weight:800; line-height:1; z-index: 0;">+</div>
+           <!-- 투명한 select 태그가 십자 상자를 완전히 덮고 있어서 클릭 시 드롭다운이 열립니다 -->
+           <select id="hl-acc-sel" onchange="applyAccHighlight(this.value)" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; z-index: 2;">
+              ${accOpts}
+           </select>
+         </div>
+         <div style="font-size:11px; color:var(--dim); text-align:center; word-break:keep-all;">클릭하여 선택<br>(목록 하이라이트)</div>
+      </div>
+    </div>
+  `;
+
+  el.innerHTML = `<div style="display: flex; gap: 14px; flex-wrap: wrap;">
+     <div style="flex: 1; min-width: 250px; display:flex; flex-direction:column;">${spiritHtml}</div>
+     ${hlHtml}
+  </div>`;
+  el.style.display = 'block';
+}
+
+function applyAccHighlight(accName) {
+   const imgEl = document.getElementById('hl-acc-img');
+   const phEl = document.getElementById('hl-acc-placeholder');
+   
+   if(!accName) {
+      imgEl.style.display = 'none';
+      phEl.style.display = 'flex';
+   } else {
+      const acc = ACC_DB.find(x => x.n === accName);
+      if(acc && acc.img) {
+         imgEl.src = acc.img;
+         imgEl.style.display = 'block';
+         phEl.style.display = 'none';
+      }
+   }
+
+   // 200위 결과 리스트에서 장신구 이름이 일치하는 행을 찾아 황금색으로 하이라이팅
+   const items = document.querySelectorAll('.res-item');
+   items.forEach(el => {
+      if(accName && el.getAttribute('data-acc') === accName) {
+         el.style.backgroundColor = 'rgba(232, 184, 75, 0.15)'; 
+      } else {
+         el.style.backgroundColor = ''; 
+      }
+   });
+}
 
 document.addEventListener('DOMContentLoaded', doLoad);
 </script>
