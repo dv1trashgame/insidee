@@ -179,9 +179,11 @@ table.rtbl{width:100%;border-collapse:collapse;min-width:640px}
 <div id="tab-sim" class="tc"><div class="ti ti-sim">
 
   <div class="sec">
-    <div class="sec-hd">⚙ 시뮬레이션 환경</div>
+    <div class="sec-hd">⚙ 시뮬레이션 환경 (지정 200위 검색)</div>
     <div class="sec-bd">
-      <div class="sim-cfg">
+      <div class="sim-cfg" style="grid-template-columns: 1fr; display: flex; flex-direction: column; gap: 14px;">
+        
+        <!-- 1. 등급 선택 -->
         <div>
           <div class="cfg-lbl">드래곤 등급</div>
           <div class="btn-grp" id="grd-grp">
@@ -190,28 +192,46 @@ table.rtbl{width:100%;border-collapse:collapse;min-width:640px}
             <button class="active" onclick="setGrade('9.0')">9.0</button>
           </div>
         </div>
+
+        <!-- 2. 타입 선택 (신규) -->
         <div>
-          <div class="cfg-lbl">길드 버프</div>
-          <div class="btn-grp" id="buf-grp">
-            <button onclick="setBuf(0)">0버프</button>
-            <button onclick="setBuf(1)">1버프</button>
-            <button class="active" onclick="setBuf(2)">2버프</button>
+          <div class="cfg-lbl">드래곤 타입</div>
+          <div class="btn-grp" id="type-grp" style="flex-wrap: wrap;">
+            <button class="active" onclick="setType('체력형')">체력형</button>
+            <button onclick="setType('공격형')">공격형</button>
+            <button onclick="setType('방어형')">방어형</button>
+            <button onclick="setType('체공형')">체공형</button>
+            <button onclick="setType('체방형')">체방형</button>
+            <button onclick="setType('공방형')">공방형</button>
           </div>
         </div>
+
+        <!-- 3. 정확한 버프 선택 (신규) -->
+        <div>
+          <div class="cfg-lbl">적용 버프 (택 1)</div>
+          <div class="btn-grp" id="exact-buf-grp" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px;">
+            <button class="active" onclick="setExactBuf('노버프')">노버프</button>
+            <button onclick="setExactBuf('체')">체 1벞</button>
+            <button onclick="setExactBuf('공')">공 1벞</button>
+            <button onclick="setExactBuf('방')">방 1벞</button>
+            <button onclick="setExactBuf('체+체')">체+체</button>
+            <button onclick="setExactBuf('공+공')">공+공</button>
+            <button onclick="setExactBuf('방+방')">방+방</button>
+            <button onclick="setExactBuf('체+공')">체+공</button>
+            <button onclick="setExactBuf('체+방')">체+방</button>
+            <button onclick="setExactBuf('공+방')">공+방</button>
+          </div>
+        </div>
+        
       </div>
     </div>
   </div>
 
-  <button class="btn-sim" id="sim-btn" onclick="runSim()">🐉 조합 및 시뮬레이션 실행</button>
+  <button class="btn-sim" id="sim-btn" onclick="runSim()">🐉 단일 조건 TOP 200 계산 실행</button>
 
   <div class="sec" id="res-sec" style="display:none">
-    <div class="sec-hd">🏆 시뮬레이션 결과 — TOP 10</div>
-    <div style="display:flex;border-bottom:1px solid var(--bd)">
-      <button class="res-tab-btn" id="res-tab-btn-avg" onclick="switchResTab('avg')">최종 점수 (가중평균)</button>
-      <button class="res-tab-btn" id="res-tab-btn-top" onclick="switchResTab('top')">최고 B-Val (고점)</button>
-    </div>
-    <div id="res-top" style="display:none"><div class="res-wrap"><div id="res-body-top"></div></div></div>
-    <div id="res-avg"><div class="res-wrap"><div id="res-body-avg"></div></div></div>
+    <div class="sec-hd">🏆 지정 조건 시뮬레이션 결과 — TOP 200</div>
+    <div id="res-top"><div class="res-wrap"><div id="res-body-top"></div></div></div>
   </div>
 
 </div></div>
@@ -294,7 +314,7 @@ const mkState=()=>({
 });
 
 let S = mkState();
-let simGrade = '9.0', simBuf = 2;
+let simGrade = '9.0', simType = '체력형', simExactBuf = '노버프';
 const SAVE_KEY = 'dv1sim_calc_v4';
 
 function doLoad() {
@@ -438,9 +458,30 @@ function setGrade(g){
   simGrade=g;
   document.querySelectorAll('#grd-grp button').forEach(b=>b.classList.toggle('active',b.textContent===g));
 }
-function setBuf(b){
-  simBuf=b;
-  document.querySelectorAll('#buf-grp button').forEach(btn=>btn.classList.toggle('active',btn.textContent===b+'버프'));
+function setType(t){
+  simType = t;
+  document.querySelectorAll('#type-grp button').forEach(b => b.classList.toggle('active', b.textContent === t));
+}
+
+function setExactBuf(val){
+  simExactBuf = val;
+  const map = {'노버프':'노버프', '체':'체 1벞', '공':'공 1벞', '방':'방 1벞'};
+  const targetText = map[val] || val;
+  document.querySelectorAll('#exact-buf-grp button').forEach(b => {
+     b.classList.toggle('active', b.textContent === targetText);
+  });
+}
+
+// 텍스트로 들어온 버프를 스탯으로 변환
+function parseExactBuf(bStr){
+  if(bStr === '노버프') return {h:0, a:0, d:0, label:'노버프'};
+  let h=0, a=0, d=0;
+  bStr.split('+').forEach(s => {
+    if(s==='체') h++;
+    if(s==='공') a++;
+    if(s==='방') d++;
+  });
+  return {h, a, d, label: bStr};
 }
 // 시뮬레이션 데이터 준비 (Pool, Pendants, Allocations)
 // ================================================================
@@ -954,118 +995,124 @@ function switchResTab(t){
 }
 
 // ================================================================
-// 출력 포매팅 헬퍼
+// 시뮬레이션 실행 및 계산 (단일 조건 TOP 200 전용)
 // ================================================================
 
-const STAT_COL={체:'#fbbf24',공:'#f87171',방:'#60a5fa'};
-function fmtBufLabel(label){
-  if(label==='버프 없음')return`<span style="color:var(--dim)">버프 없음</span>`;
-  return label.split('+').map((s,i)=>{
-    const trimmed=s.trim();
-    const col=STAT_COL[trimmed]||'#fff';
-    return(i>0?`<span style="color:var(--text)">+</span>`:'')+`<span style="color:${col};font-weight:700">${trimmed}</span>`;
-  }).join('');
+function runSim(){
+  const btn = document.getElementById('sim-btn');
+  btn.disabled = true; 
+  btn.textContent = '⏳ 지정 조건 경우의 수 계산 중...';
+  
+  setTimeout(() => {
+    try {
+      // 계산 전 화면 값 동기화
+      S.gemLevel = parseInt(document.getElementById('sel-gem-lv').value);
+      S.accLevel = parseInt(document.getElementById('sel-acc-lv').value);
+      S.pendType = document.getElementById('sel-pend-type').value;
+
+      const exactBufObj = parseExactBuf(simExactBuf);
+      const ownedAcc = ACC_DB.filter(a => getAccNum(a.n) === S.accLevel);
+      const pends = getPends();
+      const pool = buildPool();
+      const allocs = genAllocs(); 
+      
+      const top200 = doSimExact(ownedAcc, exactBufObj, pends, pool, allocs);
+      renderResTop(top200);
+      
+      const rs = document.getElementById('res-sec');
+      rs.style.display = '';
+      rs.scrollIntoView({behavior:'smooth', block:'start'});
+    } catch(e) {
+      console.error(e);
+      alert('오류: ' + e.message);
+    }
+    btn.disabled = false; 
+    btn.textContent = '🐉 단일 조건 TOP 200 계산 실행';
+  }, 20);
 }
 
-function fmtAccName(name){
-  return name.replace(/[체공방]/g,s=>{
-    const col=s==='체'?'#fbbf24':s==='공'?'#f87171':'#60a5fa';
-    return`<span style="color:${col}">${s}</span>`;
-  });
-}
+function doSimExact(ownedAcc, buf, pends, pool, allocs){
+  const {plus:sP, pct:sPct, bonus:sB} = procSpirit();
+  const topList = [];
+  let minBV = -Infinity;
 
-function fmtAccEnc(enc){
-  if(enc==='none')return'<span class="enc-b enc-none">없음</span>';
-  const col=enc==='hp'?'#fbbf24':enc==='atk'?'#f87171':'#60a5fa';
-  const lbl=enc==='hp'?'체':enc==='atk'?'공':'방';
-  return`<span class="enc-b" style="border-color:${col};color:${col}">${lbl} +21%</span>`;
-}
+  const dt = simType; // 선택한 단일 타입
+  const bs = BASE[simGrade][dt];
+  const bh = bs.hp, ba = bs.atk, bd = bs.def;
+  
+  const bufH = Math.floor(bh * 0.2) * buf.h;
+  const bufA = Math.floor(ba * 0.2) * buf.a;
+  const bufD = Math.floor(bd * 0.2) * buf.d;
 
-function fmtGem(alloc){
-  if(!alloc||!alloc.length)return'<span style="color:var(--dimmer)">없음</span>';
-  const bySt={hp:[],atk:[],def:[]};
-  alloc.forEach(({k,g})=>{for(let i=0;i<k;i++)bySt[g.s].push(g.lv);});
-  const cols={hp:'var(--hpc)',atk:'var(--atc)',def:'var(--dfc)'};
-  const parts=[];
-  for(const s of SKEYS){
-    const lvs=bySt[s].sort((a,b)=>b-a);
-    if(lvs.length)parts.push(`<span class="gem-tag" style="color:${cols[s]}">${SK[s]}${lvs.length}(${lvs[0]})</span>`);
+  for(const acc of ownedAcc){
+    for(const enc of ['hp','atk','def']){
+      const aH = acc.hp + (enc==='hp'?0.21:0);
+      const aA = acc.atk + (enc==='atk'?0.21:0);
+      const aD = acc.def + (enc==='def'?0.21:0);
+      
+      for(const pend of pends){
+        const {pH, pA, pD} = calcPendPct(pend);
+        for(const alloc of allocs){
+          let gH=0, gA=0, gD=0;
+          for(let i=0; i<alloc.length; i++){
+            gH += alloc[i]*pool[i].h; gA += alloc[i]*pool[i].a; gD += alloc[i]*pool[i].d;
+          }
+          
+          const fH = calcStat(bh, gH, 24, aH, sPct.hp, pH, sP.hp, sB.hp, COLL.hp, bufH);
+          const fA = calcStat(ba, gA, 6, aA, sPct.atk, pA, sP.atk, sB.atk, COLL.atk, bufA);
+          const fD = calcStat(bd, gD, 6, aD, sPct.def, pD, sP.def, sB.def, COLL.def, bufD);
+          const bv = fH * fA * fD;
+          
+          if(bv > minBV || topList.length < 200){
+            let lo=0, hi=topList.length;
+            while(lo < hi){ 
+              const m = (lo + hi) >> 1; 
+              if(topList[m].bv >= bv) lo = m + 1; 
+              else hi = m; 
+            }
+            topList.splice(lo, 0, {
+              bv, dt, accN:acc.n, enc, pend, buf, 
+              alloc:alloc.map((k,i)=>({k, g:pool[i]})).filter(x=>x.k>0), 
+              fH, fA, fD
+            });
+            if(topList.length > 200) topList.pop(); // 200등까지만 유지
+            minBV = topList.length === 200 ? topList[199].bv : -Infinity;
+          }
+        }
+      }
+    }
   }
-  return parts.length?parts.join(''):'<span style="color:var(--dimmer)">없음</span>';
+  return topList;
 }
 
-function fmtPendMob(pend){
-  if(!pend)return'<span style="color:var(--dimmer);font-size:11px">없음</span>';
-  const mo=pend.type==='태양'?3:2;
-  const opts=pend.options.slice(0,mo).filter(o=>o&&o.stat).map(o=>{
-    const col=o.stat==='hp'?'#fbbf24':o.stat==='atk'?'#f87171':'#60a5fa';
-    return`<span style="color:${col}">${SK[o.stat]}</span><span>${o.val||0}%</span>`;
-  }).join('<span style="color:var(--dim)">/</span>');
-  const shortType=pend.type==='태양'?'태양펜':'달펜';
-  const pimg=IMG_PEND[pend.type]?`<img src="${IMG_PEND[pend.type]}" style="width:26px;height:26px;object-fit:contain;border-radius:3px">`:'';
-  return`<div style="display:flex;align-items:center;gap:6px;flex:1;min-width:0">${pimg}<span style="font-size:11px;color:var(--dim)">${shortType} <small>(${opts})</small></span></div>`;
-}
-
-function fmtPend(p){
-  if(!p)return'<span style="color:var(--dimmer)">없음</span>';
-  const mo=p.type==='태양'?3:2;
-  const opts=p.options.slice(0,mo).filter(o=>o&&o.stat).map(o=>{
-    const col=o.stat==='hp'?'#fbbf24':o.stat==='atk'?'#f87171':'#60a5fa';
-    return`<span style="color:${col}">${SK[o.stat]}</span><span style="color:var(--text)">${o.val||0}%</span>`;
-  }).join('<span style="color:var(--dim)">/</span>');
-  const img=IMG_PEND[p.type]?`<img src="${IMG_PEND[p.type]}" style="width:36px;height:36px;object-fit:contain;border-radius:4px">`:'';
-  const shortType=p.type==='태양'?'태양펜':'달펜';
-  return`<div style="display:flex;align-items:center;gap:8px">${img}<div style="color:var(--text)"><span class="pend-name-full">${p.type}의 펜던트</span><span class="pend-name-short">${shortType}</span><br><small>(${opts})</small></div></div>`;
-}
-
-function mkMobCard(rank,dc,dt,accImg,accName,enc,gems,pendMob,buf,fH,fA,fD,bv){
-  const dtBadge=dt?`<span class="dtype-b" style="color:${dc};border-color:${dc};font-size:11px">${dt}</span>`:'';
-  const bufBadge=buf?`<div style="font-size:11px;color:var(--dim);margin-bottom:2px">${buf}</div>`:'';
-  return`<div style="padding:13px 14px;border-bottom:1px solid var(--bd);box-sizing:border-box;width:100%;overflow:hidden">
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:9px;min-width:0">
-      <span style="font-size:20px;width:26px;text-align:center;flex-shrink:0">${rank}</span>
-      <div style="flex-shrink:0">${accImg}</div>
-      <div style="flex:1;min-width:0;overflow:hidden">
-        <div style="font-weight:800;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${accName}</div>
-        <div style="display:flex;align-items:center;gap:5px;margin-top:2px;flex-wrap:wrap">${enc}${dtBadge}</div>
-      </div>
-      <span style="font-family:'Courier New',monospace;font-size:17px;font-weight:800;color:var(--gold);flex-shrink:0">${bv}</span>
-    </div>
-    <div style="border-top:1px solid var(--bd);padding-top:7px;margin-bottom:7px">
-      <div class="gem-tags" style="flex-wrap:wrap">${gems}</div>
-    </div>
-    <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-      <div style="flex:1;min-width:0">${pendMob}</div>
-      <div style="text-align:right;flex-shrink:0">
-        ${bufBadge}
-        <div style="font-family:'Courier New',monospace;font-size:11px;white-space:nowrap">
-          <span style="color:var(--hpc)">${fH}</span>/<span style="color:var(--atc)">${fA}</span>/<span style="color:var(--dfc)">${fD}</span>
-        </div>
-      </div>
-    </div>
-  </div>`;
-}
-
-// 렌더링 - 고점(TOP)
-function renderResTop(top10){
-  const el=document.getElementById('res-body-top');
-  if(!top10.length){el.innerHTML='<div style="padding:30px;text-align:center;color:var(--dim)">결과 없음</div>';return;}
-  const medals=['🥇','🥈','🥉'];
-  let mobHtml='<div class="mob-only">';
-  let pcHtml=`<table class="rtbl pc-only"><thead><tr>
+function renderResTop(topList){
+  const el = document.getElementById('res-body-top');
+  if(!topList.length){
+    el.innerHTML='<div style="padding:30px;text-align:center;color:var(--dim)">결과 없음</div>';
+    return;
+  }
+  const medals = ['🥇','🥈','🥉'];
+  let mobHtml = '<div class="mob-only">';
+  let pcHtml = `<table class="rtbl pc-only"><thead><tr>
     <th>순위</th><th>타입</th><th>장신구 / 인챈트</th>
     <th>젬 배분</th><th>펜던트</th><th>버프</th><th>체 / 공 / 방</th><th>비밸</th>
   </tr></thead><tbody>`;
-  top10.forEach((r,i)=>{
-    const rank=i<3?medals[i]:`<span class="rank-n">${i+1}</span>`;
-    const dc=DCOLORS[r.dt];
-    const a=ACC_DB.find(x=>x.n===r.accN);
-    const aImg=a&&a.img?`<img src="${a.img}" style="width:38px;height:38px;object-fit:contain;border-radius:5px">`:'';
-    mobHtml+=mkMobCard(rank,dc,r.dt,aImg,fmtAccName(r.accN),fmtAccEnc(r.enc),
-      fmtGem(r.alloc),fmtPendMob(r.pend),fmtBufLabel(r.buf.label),
-      r.fH.toLocaleString('ko-KR'),r.fA.toLocaleString('ko-KR'),r.fD.toLocaleString('ko-KR'),
-      (r.bv/1e6).toFixed(1));
-    pcHtml+=`<tr>
+  
+  topList.forEach((r, i) => {
+    const rank = i < 3 ? medals[i] : `<span class="rank-n">${i+1}</span>`;
+    const dc = DCOLORS[r.dt];
+    const a = ACC_DB.find(x => x.n === r.accN);
+    const aImg = a && a.img ? `<img src="${a.img}" style="width:38px;height:38px;object-fit:contain;border-radius:5px">` : '';
+    
+    // 앞서 분석표에서 수정한 소수점 3자리 + '억' 포맷을 시뮬레이터 결과에도 동일 적용
+    const formattedBv = (r.bv / 1e8).toFixed(3) + '억';
+
+    mobHtml += mkMobCard(rank, dc, r.dt, aImg, fmtAccName(r.accN), fmtAccEnc(r.enc),
+      fmtGem(r.alloc), fmtPendMob(r.pend), fmtBufLabel(r.buf.label),
+      r.fH.toLocaleString('ko-KR'), r.fA.toLocaleString('ko-KR'), r.fD.toLocaleString('ko-KR'),
+      formattedBv);
+      
+    pcHtml += `<tr>
       <td>${rank}</td>
       <td><span class="dtype-b" style="color:${dc};border-color:${dc}">${r.dt}</span></td>
       <td>
@@ -1082,108 +1129,10 @@ function renderResTop(top10){
         <span style="color:var(--atc)">${r.fA.toLocaleString('ko-KR')}</span> /
         <span style="color:var(--dfc)">${r.fD.toLocaleString('ko-KR')}</span>
       </td>
-      <td class="bv-cell">${(r.bv/1e6).toFixed(1)}</td>
+      <td class="bv-cell">${formattedBv}</td>
     </tr>`;
   });
-  el.innerHTML=mobHtml+'</div>'+pcHtml+'</tbody></table>';
-}
-
-// 렌더링 - 평균
-function renderResAvg(results){
-  const el=document.getElementById('res-body-avg');
-  if(!results.length){el.innerHTML='<div style="padding:30px;text-align:center;color:var(--dim)">결과 없음</div>';return;}
-  let html=`<table class="rtbl"><thead><tr>
-    <th class="pc-only">타입</th><th class="pc-only">고점</th><th class="pc-only">저점</th><th class="pc-only">평균 비밸</th>
-    <th class="pc-only" style="color:var(--text)">최종 점수
-      <span style="display:inline-block;width:16px;height:16px;background:#fff;color:#000;border-radius:50%;font-size:11px;font-weight:800;text-align:center;line-height:16px;cursor:help;margin-left:4px;position:relative"
-        onmouseenter="document.getElementById('score-tip').style.display='block'"
-        onmouseleave="document.getElementById('score-tip').style.display='none'">?</span>
-      <div id="score-tip" style="display:none;position:absolute;background:var(--sf2);color:var(--text);font-size:12px;font-weight:400;padding:7px 11px;border-radius:6px;border:1px solid var(--bd);white-space:nowrap;z-index:999;margin-top:4px">
-        가중평균, 고점, 저점을 모두 고려한 종합 수치입니다.<br><br>계산식: 가중평균비밸×0.5 + 저점×0.3 + 고점×0.2
-      </div>
-    </th>
-  </tr></thead><tbody>`;
-  results.forEach((r,i)=>{
-    const dc=DCOLORS[r.dt];
-    const peak=r.bufResults[0];
-    const bottom=r.bufResults[r.bufResults.length-1];
-    html+=`<tr style="cursor:pointer" onclick="toggleAvgDetail(${i})">
-      <td class="pc-only">
-        <span class="dtype-b" style="color:${dc};border-color:${dc}">${r.dt}</span>
-        <span class="avg-arrow" id="avg-arrow-${i}" style="color:var(--text);font-size:10px;margin-left:6px">▼</span>
-      </td>
-      <td class="pc-only"><span class="bv-cell">${(peak.bestBV/1e6).toFixed(1)}</span> (${fmtBufLabel(peak.label)})</td>
-      <td class="pc-only"><span class="bv-cell">${(bottom.bestBV/1e6).toFixed(1)}</span> (${fmtBufLabel(bottom.label)})</td>
-      <td class="pc-only bv-cell">${(r.avgBV/1e6).toFixed(1)}</td>
-      <td class="pc-only bv-cell" style="color:var(--gold)">${(r.score/1e6).toFixed(1)}</td>
-      <td class="mob-only" style="padding:10px 14px">
-        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px">
-          <div>
-            <span class="dtype-b" style="color:${dc};border-color:${dc}">${r.dt}</span>
-            <span class="avg-arrow" id="avg-arrow-${i}" style="color:var(--text);font-size:10px;margin-left:6px">▼</span>
-          </div>
-          <div style="display:flex;gap:12px;flex-wrap:wrap;font-size:12px">
-            <span><span style="color:var(--dim);font-size:10px">고점 </span><span class="bv-cell">${(peak.bestBV/1e6).toFixed(1)}</span></span>
-            <span><span style="color:var(--dim);font-size:10px">저점 </span><span class="bv-cell">${(bottom.bestBV/1e6).toFixed(1)}</span></span>
-            <span><span style="color:var(--dim);font-size:10px">평균 </span><span class="bv-cell">${(r.avgBV/1e6).toFixed(1)}</span></span>
-            <span><span style="color:var(--dim);font-size:10px">점수 </span><span class="bv-cell" style="color:var(--gold)">${(r.score/1e6).toFixed(1)}</span></span>
-          </div>
-        </div>
-      </td>
-    </tr>
-    <tr id="avg-detail-${i}" style="display:none">
-      <td colspan="6" style="padding:0">${renderAvgDetail(r)}</td>
-    </tr>`;
-  });
-  el.innerHTML=html+'</tbody></table>';
-}
-
-function toggleAvgDetail(i){
-  const el=document.getElementById(`avg-detail-${i}`);
-  const arrow=document.getElementById('avg-arrow-'+i);
-  if(!el)return;
-  const open=el.style.display==='none';
-  el.style.display=open?'':'none';
-  if(arrow)arrow.textContent=open?'▲':'▼';
-}
-
-function renderAvgDetail(r){
-  const medals=['🥇','🥈','🥉'];
-  let mobHtml='<div class="mob-only" style="padding:10px 0;background:var(--sf2)">';
-  let pcHtml='<div class="pc-only" style="padding:10px 16px;background:var(--sf2)">';
-  r.bufResults.forEach(buf=>{
-    const label=`<span class="bv-cell">${(buf.bestBV/1e6).toFixed(1)}</span> (${fmtBufLabel(buf.label)})`;
-    mobHtml+=`<div style="margin-bottom:10px"><div style="font-size:12px;font-weight:800;margin:0 14px 6px">${label}</div>`;
-    pcHtml+=`<div style="margin-bottom:14px"><div style="font-size:12px;font-weight:800;margin-bottom:6px">${label}</div>
-      <table class="rtbl" style="min-width:0"><thead><tr>
-        <th>순위</th><th>장신구 / 인챈트</th><th>젬 배분</th><th>펜던트</th><th>체 / 공 / 방</th><th>비밸</th>
-      </tr></thead><tbody>`;
-    buf.top5.forEach((item,j)=>{
-      const rank=j<3?medals[j]:`<span class="rank-n">${j+1}</span>`;
-      const a=ACC_DB.find(x=>x.n===item.accN);
-      const aImg=a&&a.img?`<img src="${a.img}" style="width:36px;height:36px;object-fit:contain;border-radius:4px">`:'';
-      mobHtml+=mkMobCard(rank,'#aaa','',aImg,fmtAccName(item.accN),fmtAccEnc(item.enc),
-        fmtGem(item.alloc),fmtPendMob(item.pend),'',
-        item.fH.toLocaleString('ko-KR'),item.fA.toLocaleString('ko-KR'),item.fD.toLocaleString('ko-KR'),
-        (item.bv/1e6).toFixed(1));
-      const pcImg=a&&a.img?`<img src="${a.img}" style="width:28px;height:28px;object-fit:contain;border-radius:3px">`:'';
-      pcHtml+=`<tr>
-        <td>${rank}</td>
-        <td><div style="display:flex;align-items:center;gap:6px">${pcImg}<div><div style="font-weight:800;font-size:12px">${fmtAccName(item.accN)}</div>${fmtAccEnc(item.enc)}</div></div></td>
-        <td><div class="gem-tags">${fmtGem(item.alloc)}</div></td>
-        <td style="font-size:12px">${fmtPend(item.pend)}</td>
-        <td class="st-cell">
-          <span style="color:var(--hpc)">${item.fH.toLocaleString('ko-KR')}</span> /
-          <span style="color:var(--atc)">${item.fA.toLocaleString('ko-KR')}</span> /
-          <span style="color:var(--dfc)">${item.fD.toLocaleString('ko-KR')}</span>
-        </td>
-        <td class="bv-cell">${(item.bv/1e6).toFixed(1)}</td>
-      </tr>`;
-    });
-    mobHtml+='</div>';
-    pcHtml+='</tbody></table></div>';
-  });
-  return mobHtml+'</div>'+pcHtml+'</div>';
+  el.innerHTML = mobHtml + '</div>' + pcHtml + '</tbody></table>';
 }
 
 document.addEventListener('DOMContentLoaded', doLoad);
