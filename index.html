@@ -1324,13 +1324,13 @@ function renderSimSpiritDisplay() {
      if(!o || !o.stat || !o.type) return '<span style="color:var(--dimmer);">-</span>';
      const st = o.stat==='hp'?'체':o.stat==='atk'?'공':'방';
      const col = o.stat==='hp'?'#fbbf24':o.stat==='atk'?'#f87171':'#60a5fa';
-     return `<span style="color:${col}; font-weight:800; font-size:13px;">${st}${o.type}</span>`;
+     return `<span style="color:${col}; font-weight:800; font-size:var(--sfont);">${st}${o.type}</span>`;
   };
 
   const makeOptCell = (idx, o) => {
     return `
-      <div style="background: var(--sf2); border: 1px solid var(--bd); border-radius: 6px; padding: 10px; display: flex; flex-direction: column; gap: 8px;">
-        <div style="text-align: center; font-size: 11px; font-weight: 800; color: var(--dim);">${idx+1}옵션</div>
+      <div style="background: var(--sf2); border: 1px solid var(--bd); border-radius: 6px; padding: clamp(6px, 1.5vw, 10px); display: flex; flex-direction: column; gap: clamp(4px, 1vw, 8px);">
+        <div style="text-align: center; font-size: var(--ssfont); font-weight: 800; color: var(--dim); white-space:nowrap;">${idx+1}옵션</div>
         <div style="text-align: center;">${getOptText(o)}</div>
       </div>
     `;
@@ -1341,26 +1341,26 @@ function renderSimSpiritDisplay() {
      const st = sp.bonus==='hp'?'체':sp.bonus==='atk'?'공':'방';
      const v = sp.bonus==='hp'?'+40':'+10';
      const col = sp.bonus==='hp'?'#fbbf24':sp.bonus==='atk'?'#f87171':'#60a5fa';
-     bHtml = `<span style="color:${col}; font-weight:800; font-size:13px;">${st} (${v})</span>`;
+     bHtml = `<span style="color:${col}; font-weight:800; font-size:var(--sfont); white-space:nowrap;">${st} (${v})</span>`;
   }
 
   let spiritHtml = `
-    <div class="sec-hd" style="border-radius: 8px 8px 0 0; margin-bottom: 0;">🔮 적용된 정령 정보 (수정 불가)</div>
-    <div class="sec-bd" style="background: var(--sf); border: 1px solid var(--bd); border-top: none; border-radius: 0 0 8px 8px; height: calc(100% - 32px); display:flex; flex-direction:column; justify-content:center;">
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
+    <div class="sec-hd" style="border-radius: 8px 8px 0 0; margin-bottom: 0; font-size: var(--sfont); white-space: nowrap;">🔮 적용된 정령 정보 (수정 불가)</div>
+    <div class="sec-bd" style="background: var(--sf); border: 1px solid var(--bd); border-top: none; border-radius: 0 0 8px 8px; height: calc(100% - clamp(24px, 6vw, 32px)); display:flex; flex-direction:column; justify-content:center; padding: clamp(8px, 2vw, 14px);">
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: clamp(4px, 1vw, 8px); margin-bottom: clamp(4px, 1vw, 8px);">
         ${makeOptCell(0, sp.opts[0])}
         ${makeOptCell(1, sp.opts[1])}
         ${makeOptCell(2, sp.opts[2])}
         ${makeOptCell(3, sp.opts[3])}
       </div>
-      <div style="background: var(--sf2); border: 1px solid var(--bd); border-radius: 6px; padding: 10px; display: flex; align-items: center; justify-content: center; gap: 14px;">
-        <div style="font-size: 11px; font-weight: 800; color: var(--dim);">부가옵션</div>
+      <div style="background: var(--sf2); border: 1px solid var(--bd); border-radius: 6px; padding: clamp(6px, 1.5vw, 10px); display: flex; align-items: center; justify-content: center; gap: clamp(8px, 2vw, 14px);">
+        <div style="font-size: var(--ssfont); font-weight: 800; color: var(--dim); white-space:nowrap;">부가옵션</div>
         <div>${bHtml}</div>
       </div>
     </div>
   `;
 
-  // 장신구 하이라이트 드롭다운 동적 생성 (현재 선택된 17, 18, 19, 20등급 풀에 맞춤)
+  // 장신구 하이라이트 드롭다운 동적 생성
   const ownedAcc = ACC_DB.filter(a => getAccNum(a.n) === S.accLevel);
   let accOpts = '<option value="">-- 하이라이트 해제 --</option>';
   ownedAcc.forEach(a => {
@@ -1368,25 +1368,25 @@ function renderSimSpiritDisplay() {
   });
 
   let hlHtml = `
-    <div style="display:flex; flex-direction:column; min-width: 140px;">
-      <div class="sec-hd" style="border-radius: 8px 8px 0 0; margin-bottom: 0; justify-content: center; letter-spacing: 0;">🔍 지정 장신구 선택</div>
-      <div class="sec-bd" style="background: var(--sf); border: 1px solid var(--bd); border-top: none; border-radius: 0 0 8px 8px; flex: 1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap: 10px;">
+    <div style="display:flex; flex-direction:column; min-width: 0; flex: 0.6;">
+      <div class="sec-hd" style="border-radius: 8px 8px 0 0; margin-bottom: 0; justify-content: center; letter-spacing: 0; font-size: var(--sfont); white-space: nowrap;">🔍 지정 장신구 선택</div>
+      <div class="sec-bd" style="background: var(--sf); border: 1px solid var(--bd); border-top: none; border-radius: 0 0 8px 8px; flex: 1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap: clamp(6px, 1.5vw, 10px); padding: clamp(8px, 2vw, 14px);">
          
-         <div style="position: relative; width: 68px; height: 68px; border: 2px dashed var(--gold); border-radius: 8px; overflow: hidden; cursor: pointer; background: var(--bg); display:flex; align-items:center; justify-content:center; transition: all 0.2s;" onmouseover="this.style.backgroundColor='rgba(232,184,75,0.1)'" onmouseout="this.style.backgroundColor='var(--bg)'">
+         <div style="position: relative; width: clamp(44px, 10vw, 68px); height: clamp(44px, 10vw, 68px); border: 2px dashed var(--gold); border-radius: 8px; overflow: hidden; cursor: pointer; background: var(--bg); display:flex; align-items:center; justify-content:center; transition: all 0.2s;" onmouseover="this.style.backgroundColor='rgba(232,184,75,0.1)'" onmouseout="this.style.backgroundColor='var(--bg)'">
            <img id="hl-acc-img" src="" style="width: 100%; height: 100%; object-fit: contain; display: none; z-index: 1;">
-           <div id="hl-acc-placeholder" style="position: absolute; width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:var(--gold); font-size:28px; font-weight:800; line-height:1; z-index: 0;">+</div>
-           <!-- 투명한 select 태그가 십자 상자를 완전히 덮고 있어서 클릭 시 드롭다운이 열립니다 -->
+           <div id="hl-acc-placeholder" style="position: absolute; width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:var(--gold); font-size:clamp(18px, 4vw, 28px); font-weight:800; line-height:1; z-index: 0;">+</div>
            <select id="hl-acc-sel" onchange="applyAccHighlight(this.value)" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; z-index: 2;">
               ${accOpts}
            </select>
          </div>
-         <div style="font-size:11px; color:var(--dim); text-align:center; word-break:keep-all;">클릭하여 선택<br>(목록 하이라이트)</div>
+         <div id="hl-acc-text" style="font-size:var(--ssfont); color:var(--dim); text-align:center; word-break:keep-all;">클릭하여 선택<br>(목록 하이라이트)</div>
       </div>
     </div>
   `;
 
-  el.innerHTML = `<div style="display: flex; gap: 14px; flex-wrap: wrap;">
-     <div style="flex: 1; min-width: 250px; display:flex; flex-direction:column;">${spiritHtml}</div>
+  // --sfont와 --ssfont 변수를 통해 컨테이너 내부의 글자 크기를 화면 너비에 맞춰 자동 조율합니다.
+  el.innerHTML = `<div style="--sfont: clamp(11px, 2.6vw, 14px); --ssfont: clamp(9px, 2.2vw, 12px); display: flex; gap: clamp(8px, 2vw, 14px); flex-wrap: nowrap;">
+     <div style="flex: 1.4; min-width: 0; display:flex; flex-direction:column;">${spiritHtml}</div>
      ${hlHtml}
   </div>`;
   el.style.display = 'block';
@@ -1395,16 +1395,19 @@ function renderSimSpiritDisplay() {
 function applyAccHighlight(accName) {
    const imgEl = document.getElementById('hl-acc-img');
    const phEl = document.getElementById('hl-acc-placeholder');
+   const textEl = document.getElementById('hl-acc-text'); // 안내 텍스트 요소 가져오기
    
    if(!accName) {
       imgEl.style.display = 'none';
       phEl.style.display = 'flex';
+      if(textEl) textEl.innerHTML = '클릭하여 선택<br>(목록 하이라이트)'; // 선택 해제 시 기본 문구 복구
    } else {
       const acc = ACC_DB.find(x => x.n === accName);
       if(acc && acc.img) {
          imgEl.src = acc.img;
          imgEl.style.display = 'block';
          phEl.style.display = 'none';
+         if(textEl) textEl.innerHTML = `<span style="color:var(--text); font-weight:800;">${accName}</span>`; // 선택한 장신구 이름으로 교체
       }
    }
 
