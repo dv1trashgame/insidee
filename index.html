@@ -933,11 +933,11 @@ function fmtBufNerfLabel(bLabel, nLabel){
   }
 
   if(nLabel && nLabel !== '노너프') {
-    const nHtml = `<div style="color:var(--red); font-weight:800; font-size:11px; margin-top:3px; display:inline-block; padding: 2px 6px; background: rgba(248,113,113,0.15); border-radius: 4px; border: 1px solid rgba(248,113,113,0.3);">▼ ${nLabel}</div>`;
+    const nHtml = `<div style="color:var(--red); font-weight:800; font-size:11px; margin-top:4px; display:inline-block; padding: 2px 6px; background: rgba(248,113,113,0.15); border-radius: 4px; border: 1px solid rgba(248,113,113,0.3);">▼ ${nLabel}</div>`;
     if (bLabel === '노버프') {
-       return nHtml; // 버프가 없으면 너프 뱃지만 출력
+       return nHtml;
     } else {
-       return bHtml + '<br>' + nHtml; // 버프 밑에 너프 뱃지 출력
+       return bHtml + '<br>' + nHtml;
     }
   }
   return bHtml;
@@ -951,25 +951,25 @@ function fmtAccName(name){
 }
 
 function fmtAccEnc(enc){
-  if(enc==='none')return'<span class="enc-b enc-none">없음</span>';
+  if(enc==='none')return'<span class="enc-b enc-none" style="padding:2px 8px; border-radius:4px;">없음</span>';
   const col=enc==='hp'?'#fbbf24':enc==='atk'?'#f87171':'#60a5fa';
   const lbl=enc==='hp'?'체':enc==='atk'?'공':'방';
-  return`<span class="enc-b" style="border-color:${col};color:${col}">${lbl} +21%</span>`;
+  return`<span class="enc-b" style="border-color:${col};color:${col};padding:2px 8px;border-radius:4px;">${lbl} +21%</span>`;
 }
 
+// 젬 표시를 0 / 4 / 1 (체/공/방) 형식으로 심플하게 변경
 function fmtGem(alloc){
-  if(!alloc||!alloc.length)return'<span style="color:var(--dimmer)">없음</span>';
-  const bySt={hp:[],atk:[],def:[]};
-  alloc.forEach(({k,g})=>{for(let i=0;i<k;i++)bySt[g.s].push(g.lv);});
-  const cols={hp:'var(--hpc)',atk:'var(--atc)',def:'var(--dfc)'};
-  const parts=[];
-  for(const s of SKEYS){
-    const lvs=bySt[s].sort((a,b)=>b-a);
-    if(lvs.length)parts.push(`<span class="gem-tag" style="color:${cols[s]}">${SK[s]}${lvs.length}(${lvs[0]})</span>`);
-  }
-  return parts.length?parts.join(''):'<span style="color:var(--dimmer)">없음</span>';
+  if(!alloc||!alloc.length) return `<span style="color:var(--hpc)">0</span> <span style="color:var(--dim)">/</span> <span style="color:var(--atc)">0</span> <span style="color:var(--dim)">/</span> <span style="color:var(--dfc)">0</span>`;
+  let h=0, a=0, d=0;
+  alloc.forEach(({k,g})=>{
+    if(g.s==='hp') h+=k;
+    else if(g.s==='atk') a+=k;
+    else if(g.s==='def') d+=k;
+  });
+  return `<span style="color:var(--hpc)">${h}</span> <span style="color:var(--dim)">/</span> <span style="color:var(--atc)">${a}</span> <span style="color:var(--dim)">/</span> <span style="color:var(--dfc)">${d}</span>`;
 }
 
+// 펜던트 표시를 상단에 이름+아이콘, 하단에 스탯으로 배치
 function fmtPendMob(pend){
   if(!pend)return'<span style="color:var(--dimmer);font-size:11px">없음</span>';
   const mo=pend.type==='태양'?3:2;
@@ -978,47 +978,69 @@ function fmtPendMob(pend){
     return`<span style="color:${col}">${SK[o.stat]}</span><span>${o.val||0}%</span>`;
   }).join('<span style="color:var(--dim)">/</span>');
   const shortType=pend.type==='태양'?'태양펜':'달펜';
-  const pimg=IMG_PEND[pend.type]?`<img src="${IMG_PEND[pend.type]}" style="width:26px;height:26px;object-fit:contain;border-radius:3px">`:'';
-  return`<div style="display:flex;align-items:center;gap:6px;flex:1;min-width:0">${pimg}<span style="font-size:11px;color:var(--dim)">${shortType} <small>(${opts})</small></span></div>`;
-}
-
-function fmtPend(p){
-  if(!p)return'<span style="color:var(--dimmer)">없음</span>';
-  const mo=p.type==='태양'?3:2;
-  const opts=p.options.slice(0,mo).filter(o=>o&&o.stat).map(o=>{
-    const col=o.stat==='hp'?'#fbbf24':o.stat==='atk'?'#f87171':'#60a5fa';
-    return`<span style="color:${col}">${SK[o.stat]}</span><span style="color:var(--text)">${o.val||0}%</span>`;
-  }).join('<span style="color:var(--dim)">/</span>');
-  const img=IMG_PEND[p.type]?`<img src="${IMG_PEND[p.type]}" style="width:36px;height:36px;object-fit:contain;border-radius:4px">`:'';
-  const shortType=p.type==='태양'?'태양펜':'달펜';
-  return`<div style="display:flex;align-items:center;gap:8px">${img}<div style="color:var(--text)"><span class="pend-name-full">${p.type}의 펜던트</span><span class="pend-name-short">${shortType}</span><br><small>(${opts})</small></div></div>`;
-}
-
-function mkMobCard(rank,dc,dt,accImg,accName,enc,gems,pendMob,bufHtml,fH,fA,fD,bv, rawAccName){
-  const dtBadge=dt?`<span class="dtype-b" style="color:${dc};border-color:${dc};font-size:11px">${dt}</span>`:'';
-  // 하이라이트 제어를 위해 class="res-item"과 data-acc 속성 추가
-  return`<div class="res-item" data-acc="${rawAccName}" style="padding:13px 14px;border-bottom:1px solid var(--bd);box-sizing:border-box;width:100%;overflow:hidden; transition: background-color 0.2s;">
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:9px;min-width:0">
-      <span style="font-size:20px;width:26px;text-align:center;flex-shrink:0">${rank}</span>
-      <div style="flex-shrink:0">${accImg}</div>
-      <div style="flex:1;min-width:0;overflow:hidden">
-        <div style="font-weight:800;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${accName}</div>
-        <div style="display:flex;align-items:center;gap:5px;margin-top:2px;flex-wrap:wrap">${enc}${dtBadge}</div>
+  const pimg=IMG_PEND[pend.type]?`<img src="${IMG_PEND[pend.type]}" style="width:22px;height:22px;object-fit:contain;border-radius:3px">`:'';
+  
+  return `
+    <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px;">
+      <div style="display:flex; align-items:center; gap:6px;">
+        ${pimg}
+        <span style="font-size:13px; color:var(--text); font-weight:700;">${shortType}</span>
       </div>
-      <span style="font-family:'Courier New',monospace;font-size:17px;font-weight:800;color:var(--gold);flex-shrink:0">${bv}</span>
+      <div style="font-size:12px; color:var(--dim);">(${opts})</div>
     </div>
-    <div style="border-top:1px solid var(--bd);padding-top:7px;margin-bottom:7px">
-      <div class="gem-tags" style="flex-wrap:wrap">${gems}</div>
-    </div>
-    <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-      <div style="flex:1;min-width:0">${pendMob}</div>
-      <div style="text-align:right;flex-shrink:0">
-        <div style="font-size:11px;color:var(--dim);margin-bottom:4px">${bufHtml}</div>
-        <div style="font-family:'Courier New',monospace;font-size:11px;white-space:nowrap">
-          <span style="color:var(--hpc)">${fH}</span>/<span style="color:var(--atc)">${fA}</span>/<span style="color:var(--dfc)">${fD}</span>
+  `;
+}
+
+// 전체 레이아웃을 이미지에 맞게 재배치 (상단/하단 분리, 플렉스박스 최적화)
+function mkMobCard(rank,dc,dt,accImg,accName,enc,gems,pendMob,bufHtml,fH,fA,fD,bv, rawAccName){
+  const dtBadge=dt?`<span class="dtype-b" style="color:${dc};border-color:${dc};font-size:12px;padding:3px 8px;">${dt}</span>`:'';
+  
+  return `<div class="res-item" data-acc="${rawAccName}" style="padding:16px 20px; border-bottom:1px solid var(--border2); box-sizing:border-box; width:100%; transition: background-color 0.2s;">
+    
+    <!-- 상단: 랭크, 타입/버프, 최종 스탯, 비밸 -->
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+      <div style="display:flex; align-items:center; gap:14px;">
+        <div style="font-size:26px; width:30px; text-align:center; flex-shrink:0;">${rank}</div>
+        <div style="display:flex; flex-direction:column; gap:6px; align-items:flex-start;">
+          ${dtBadge}
+          <div style="font-size:12px; color:var(--dim); line-height:1.3;">${bufHtml}</div>
+        </div>
+      </div>
+      <div style="display:flex; align-items:center; gap:16px;">
+        <div style="font-family:'Courier New',monospace; font-size:16px; font-weight:800; letter-spacing:-0.5px;">
+          <span style="color:var(--hpc)">${fH}</span><span style="color:var(--dim); margin:0 4px;">/</span><span style="color:var(--atc)">${fA}</span><span style="color:var(--dim); margin:0 4px;">/</span><span style="color:var(--dfc)">${fD}</span>
+        </div>
+        <div style="font-family:'Nanum Gothic',sans-serif; font-size:20px; font-weight:900; color:var(--accent);">
+          ${bv}
         </div>
       </div>
     </div>
+
+    <!-- 가로선(구분선) -->
+    <div style="border-top:1px solid var(--border3); margin-bottom:14px;"></div>
+
+    <!-- 하단: 젬 수치, 장신구, 펜던트 -->
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <!-- 좌측: 젬 수치 -->
+      <div style="font-family:'Courier New',monospace; font-size:17px; font-weight:800; white-space:nowrap; flex-shrink:0;">
+        ${gems}
+      </div>
+      
+      <!-- 중앙: 장신구 정보 -->
+      <div style="display:flex; align-items:center; gap:12px; flex:1; justify-content:center;">
+        <div style="flex-shrink:0;">${accImg}</div>
+        <div style="display:flex; flex-direction:column; align-items:flex-start; gap:5px;">
+          <div style="font-weight:800; font-size:14px; white-space:nowrap;">${accName}</div>
+          <div>${enc}</div>
+        </div>
+      </div>
+
+      <!-- 우측: 펜던트 정보 -->
+      <div style="flex-shrink:0;">
+        ${pendMob}
+      </div>
+    </div>
+
   </div>`;
 }
 
@@ -1225,19 +1247,18 @@ function renderResTop(topList){
   }
   const medals = ['🥇','🥈','🥉'];
   
-  // 모바일/PC 구분을 완전히 없애고 기본 카드 컨테이너만 엽니다.
   let html = '<div>'; 
   
   topList.forEach((r, i) => {
     const rank = i < 3 ? medals[i] : `<span class="rank-n">${i+1}</span>`;
     const dc = DCOLORS[r.dt];
     const a = ACC_DB.find(x => x.n === r.accN);
-    const aImg = a && a.img ? `<img src="${a.img}" style="width:38px;height:38px;object-fit:contain;border-radius:5px">` : '';
+    // 장신구 이미지를 원본 사진처럼 조금 더 크게 설정
+    const aImg = a && a.img ? `<img src="${a.img}" style="width:48px;height:48px;object-fit:contain;border-radius:5px">` : '';
     
     const formattedBv = (r.bv / 1e8).toFixed(3) + '억';
     const combinedBufHtml = fmtBufNerfLabel(r.bufLabel, r.nerfLabel);
 
-    // 카드 형태의 UI만 무조건 추가되도록 변경
     html += mkMobCard(rank, dc, r.dt, aImg, fmtAccName(r.accN), fmtAccEnc(r.enc),
       fmtGem(r.alloc), fmtPendMob(r.pend), combinedBufHtml,
       r.fH.toLocaleString('ko-KR'), r.fA.toLocaleString('ko-KR'), r.fD.toLocaleString('ko-KR'),
