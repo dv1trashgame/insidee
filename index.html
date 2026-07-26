@@ -1,0 +1,1424 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>드래곤빌리지1 비밸 시뮬레이터</title>
+<link href="https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800&display=swap" rel="stylesheet">
+<link id="theme-css" rel="stylesheet" href="./theme-dark.css">
+<script src="./theme.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Nanum Gothic',-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px}
+.hd{display:flex;align-items:center;gap:14px;padding:12px 20px;background:var(--sf);border-bottom:2px solid var(--gold);position:sticky;top:0;z-index:100}
+.hd-icon{font-size:26px}.hd-t{font-size:15px;font-weight:800;color:var(--gold)}.hd-s{font-size:11px;color:var(--dim);margin-top:2px}
+.tabs{display:flex;background:var(--sf);border-bottom:1px solid var(--bd);position:sticky;top:50px;z-index:99}
+.tab-btn{flex:1;padding:12px 20px;background:none;border:none;border-bottom:3px solid transparent;color:var(--dim);font-family:'Nanum Gothic',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all .15s}
+.tab-btn.active{color:var(--gold);border-bottom-color:var(--gold)}
+.tc{display:none}.tc.active{display:block}
+.ti{max-width:100%;padding:14px 24px}.ti-sim{max-width:1200px;margin:0 auto;padding:14px 24px}
+.sec{background:var(--sf);border:1px solid var(--bd);border-radius:8px;margin-bottom:14px;overflow:hidden}
+.sec-hd{display:flex;align-items:center;justify-content:space-between;padding:9px 16px;background:var(--sf2);border-bottom:1px solid var(--bd);font-size:11px;font-weight:800;color:var(--gold);text-transform:uppercase;letter-spacing:.5px}
+.sec-bd{padding:14px 16px}
+select,input[type=number],input[type=text]{background:var(--sf2);border:1px solid var(--bd);color:var(--text);padding:5px 9px;border-radius:5px;font-family:'Nanum Gothic',sans-serif;font-size:13px}
+select:focus,input:focus{outline:none;border-color:var(--gold)}
+
+/* 라디오 버튼 UI 커스텀 */
+.radio-opts{display:grid;grid-template-columns:repeat(2, 1fr);gap:10px;}
+@media(max-width:600px){ .radio-opts{grid-template-columns:1fr;} }
+.radio-opts label{display:flex;align-items:center;gap:10px;cursor:pointer;font-size:14px;padding:10px 14px;background:var(--sf2);border:1px solid var(--bd);border-radius:6px;transition:all .15s;font-weight:700}
+.radio-opts label:hover{background:rgba(232,184,75,.08);border-color:var(--gold)}
+.radio-opts input[type=radio]{accent-color:var(--gold);width:16px;height:16px}
+
+.sp-opts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.sp-ocard{display:flex;align-items:center;gap:7px;padding:8px 10px;background:var(--sf);border:1px solid var(--bd);border-radius:5px}
+.sp-onum{color:var(--gold);font-size:11px;font-weight:800;min-width:18px}
+.sp-ocard select{flex:1;font-size:12px}
+.sp-oval{color:var(--green);font-size:11px;min-width:46px;text-align:right}
+.sp-preset-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;margin-bottom:10px}
+.sp-preset-btn{background:var(--sf2);border:1px solid var(--bd);border-radius:5px;padding:6px 8px;color:var(--text);cursor:pointer;font-family:'Nanum Gothic',sans-serif;text-align:center;transition:all .15s;min-height:34px;white-space:nowrap}
+.sp-preset-btn:hover{border-color:var(--gold);background:rgba(232,184,75,.08)}
+.sp-preset-btn.active{border-color:var(--gold);background:rgba(232,184,75,.14)}
+.sp-preset-name{display:inline;font-size:12px;font-weight:800;color:var(--gold)}
+.sp-preset-desc{display:inline;font-size:11px;color:var(--text);margin-left:5px}
+.fg label{display:block;font-size:11px;color:var(--dim);margin-bottom:4px;text-transform:uppercase;letter-spacing:.3px}
+.fg select{width:100%}
+
+.btn-reset{background:none;border:1px solid var(--red);color:var(--red);padding:6px 13px;border-radius:5px;cursor:pointer;font-family:'Nanum Gothic',sans-serif;font-size:13px;font-weight:700}
+.btn-reset:hover{background:rgba(248,113,113,.1)}
+.btn-sim{width:100%;padding:14px;background:linear-gradient(135deg,var(--gold2),var(--gold));border:none;border-radius:8px;color:#0a0c18;font-family:'Nanum Gothic',sans-serif;font-size:16px;font-weight:800;cursor:pointer;margin:12px 0;letter-spacing:-.5px;transition:opacity .15s,transform .1s}
+.btn-sim:hover{opacity:.92}.btn-sim:active{transform:scale(.99)}.btn-sim:disabled{opacity:.5;cursor:not-allowed}
+
+.sim-cfg{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-bottom:10px}
+.cfg-lbl{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.5px;font-weight:700;margin-bottom:7px}
+.btn-grp{display:flex;gap:4px}
+.btn-grp button{flex:1;padding:8px 4px;background:var(--sf2);border:1px solid var(--bd);border-radius:4px;color:var(--dim);cursor:pointer;font-family:'Nanum Gothic',sans-serif;font-size:13px;font-weight:700;transition:all .15s}
+.btn-grp button.active{background:rgba(232,184,75,.12);border-color:var(--gold);color:var(--gold)}
+
+.res-wrap{overflow-x:hidden}
+.medal{font-size:20px}.rank-n{font-weight:800;color:var(--dim)}
+.dtype-b{display:inline-block;padding:2px 8px;border-radius:4px;font-size:12px;font-weight:800;border:1px solid}
+.bv-cell{font-family:'Courier New',monospace;font-size:14px;font-weight:800;color:var(--gold);white-space:nowrap}
+.st-cell{font-family:'Courier New',monospace;font-size:12px;white-space:nowrap}
+.gem-tags{display:flex;flex-wrap:wrap;gap:3px}
+.gem-tag{padding:2px 6px;border-radius:3px;font-size:11px;font-weight:700;background:rgba(255,255,255,.07)}
+.enc-b{display:inline-block;padding:1px 7px;border-radius:3px;font-size:11px;font-weight:700;border:1px solid var(--green);color:var(--green);background:rgba(74,222,128,.1)}
+.enc-none{border-color:var(--dimmer);color:var(--dimmer);background:none}
+
+.res-tab-btn{padding:9px 18px;background:none;border:none;border-bottom:3px solid transparent;color:var(--dim);font-family:'Nanum Gothic',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .15s}
+.res-tab-btn.active{color:var(--gold);border-bottom-color:var(--gold)}
+
+[data-theme="dark"]{
+  --bg:#0e1116;--bg2:#161a22;--bg3:#1c212c;
+  --border:#23293a;--border2:#1b1f2a;--border3:#2d3447;
+  --text:#eaecf2;--text2:#b3b9c7;--text3:#7d8597;--text4:#565d6e;
+  --accent:#7aa2f7;--accent-bg:rgba(122,162,247,0.12);--accent-border:rgba(122,162,247,0.30);
+}
+:root{
+  --sf:var(--bg2);--sf2:var(--bg3);--bd:var(--border);
+  --gold:var(--accent);--gold2:var(--accent);
+  --dim:var(--text3);--dimmer:var(--text4);
+  --red:#f87171;--green:#4ade80;--blue:#60a5fa;
+  --hpc:#fbbf24;--atc:#f87171;--dfc:#60a5fa;
+}
+</style>
+</head>
+<body>
+
+<div class="hd">
+  <div class="hd-icon">🐉</div>
+  <div><div class="hd-t">비밸 시뮬레이터 (간편 입력)</div><div class="hd-s">선택한 수치의 모든 조합을 자동 계산합니다</div></div>
+</div>
+
+<div class="tabs">
+  <button class="tab-btn active" id="tab-btn-spec" onclick="switchTab('spec')">스펙 간편 설정</button>
+  <button class="tab-btn" id="tab-btn-sim" onclick="switchTab('sim')">시뮬레이터 (결과)</button>
+</div>
+
+<!-- ■ 내 스펙 간편 설정 탭 -->
+<div id="tab-spec" class="tc active"><div class="ti">
+  <!-- CSS 변수(--ufont)를 선언하여 탭 내부의 모든 폰트 크기를 화면 비율에 맞춰 100% 동일하게 일치시킵니다 -->
+  <div style="max-width: 820px; margin: 0 auto; background: #111; padding: 14px; border-radius: 8px; border: 1px solid #333; --ufont: clamp(11px, 2.6vw, 14px);">
+    
+    <!-- 상단 1: 타입 / 버프 / 너프 -->
+    <table style="width: 100%; border-collapse: collapse; text-align: center; margin-bottom: 10px; font-family: 'Malgun Gothic', sans-serif; table-layout: fixed;">
+      <thead>
+        <tr>
+          <th style="background: #ccc; color: black; border: 2px solid white; padding: 6px; font-size: var(--ufont); white-space: nowrap;">드래곤 타입</th>
+          <th style="background: #ccc; color: black; border: 2px solid white; padding: 6px; font-size: var(--ufont); white-space: nowrap;">적용 버프</th>
+          <th style="background: #ccc; color: black; border: 2px solid white; padding: 6px; font-size: var(--ufont); white-space: nowrap;">적용 너프</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="background: black; border: 2px solid white; padding: 4px;">
+            <select onchange="setType(this.value)" id="sel-type" style="width:100%; background:black; color:white; border:none; text-align:center; font-size: var(--ufont); font-weight:bold; cursor:pointer;">
+              <option value="체력형" selected>체력형</option>
+              <option value="공격형">공격형</option>
+              <option value="방어형">방어형</option>
+              <option value="체공형">체공형</option>
+              <option value="체방형">체방형</option>
+              <option value="공방형">공방형</option>
+            </select>
+          </td>
+          <td style="background: black; border: 2px solid white; padding: 4px;">
+            <select onchange="setExactBuf(this.value)" id="sel-buf" style="width:100%; background:black; color:white; border:none; text-align:center; font-size: var(--ufont); cursor:pointer;">
+              <option value="노버프" selected>노버프</option>
+              <option value="체">체 1벞</option>
+              <option value="공">공 1벞</option>
+              <option value="방">방 1벞</option>
+              <option value="체+체">체+체</option>
+              <option value="공+공">공+공</option>
+              <option value="방+방">방+방</option>
+              <option value="체+공">체+공</option>
+              <option value="체+방">체+방</option>
+              <option value="공+방">공+방</option>
+            </select>
+          </td>
+          <td style="background: black; border: 2px solid white; padding: 4px;">
+            <select onchange="setExactNerf(this.value)" id="sel-nerf" style="width:100%; background:black; color:white; border:none; text-align:center; font-size: var(--ufont); cursor:pointer;">
+              <option value="노너프" selected>노너프</option>
+              <option value="체">체 1넢</option>
+              <option value="공">공 1넢</option>
+              <option value="방">방 1넢</option>
+            </select>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- 상단 2: 등급 / 젬 / 장신구 / 펜던트 -->
+    <table style="width: 100%; border-collapse: collapse; text-align: center; margin-bottom: 20px; font-family: 'Malgun Gothic', sans-serif;">
+      <thead>
+        <tr>
+          <!-- width: 1% 를 적용하여 헤더 글자(내용물) 크기에 맞춰 칸 넓이가 최소한으로 자동 축소됩니다 -->
+          <th style="background: #ccc; color: black; border: 2px solid white; padding: 6px; font-size: var(--ufont); white-space: nowrap; width: 1%;">드래곤 등급</th>
+          <th style="background: #ccc; color: black; border: 2px solid white; padding: 6px; font-size: var(--ufont); white-space: nowrap; width: 1%;">젬 수치</th>
+          <th style="background: #ccc; color: black; border: 2px solid white; padding: 6px; font-size: var(--ufont); white-space: nowrap;">장신구 수치</th>
+          <th style="background: #ccc; color: black; border: 2px solid white; padding: 6px; font-size: var(--ufont); white-space: nowrap;">펜던트</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <!-- 선택박스 역시 width: auto 를 통해 내용물(7.0 등)에 맞춰 폭이 딱 맞게 줄어듭니다 -->
+          <td style="background: black; border: 2px solid white; padding: 4px;">
+            <select onchange="setGrade(this.value)" id="sel-grade" style="width:auto; background:black; color:white; border:none; text-align:center; font-size: var(--ufont); font-weight:bold; cursor:pointer;">
+              <option value="7.0">7.0</option>
+              <option value="8.0">8.0</option>
+              <option value="9.0" selected>9.0</option>
+            </select>
+          </td>
+          <td style="background: black; border: 2px solid white; padding: 4px;">
+            <select onchange="onGemLvl(parseInt(this.value))" id="sel-gem-lv" style="width:auto; background:black; color:white; border:none; text-align:center; font-size: var(--ufont); font-weight:bold; cursor:pointer;">
+              <option value="38">38</option>
+              <option value="40">40</option>
+              <option value="42">42</option>
+              <option value="44">44</option>
+            </select>
+          </td>
+          <td style="background: black; border: 2px solid white; padding: 4px;">
+            <select onchange="onAccLvl(parseInt(this.value))" id="sel-acc-lv" style="width:100%; background:black; color:white; border:none; text-align:center; text-align-last:center; font-size: var(--ufont); cursor:pointer;">
+              <option value="17">17장</option>
+              <option value="18">18장</option>
+              <option value="19">19장</option>
+              <option value="20">20장</option>
+            </select>
+          </td>
+          <td style="background: black; border: 2px solid white; padding: 4px;">
+            <select onchange="onPendType(this.value)" id="sel-pend-type" style="width:100%; background:black; color:white; border:none; text-align:center; text-align-last:center; font-size: var(--ufont); cursor:pointer;">
+              <option value="달">달펜(2옵)</option>
+              <option value="태양">태펜(3옵)</option>
+            </select>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- 정령 옵션 테이블이 렌더링될 영역 -->
+    <div id="sp-bd"></div>
+
+    <!-- 안내 문구 -->
+    <div style="font-size: var(--ufont); color:var(--dim); text-align:center; margin-bottom: 20px; margin-top: 14px; white-space: nowrap;">
+      * 컬렉션은 <strong>체력 240, 공격 60, 방어 60</strong>으로 자동 적용됩니다.
+    </div>
+
+  <!-- 일괄 실행 버튼 -->
+    <button class="btn-sim" id="btn-run-all" onclick="runAllSims()" style="margin-top:0; font-size: var(--ufont); padding: 12px; white-space: nowrap;">📊 일괄 시뮬레이션 연산 (분석표 + TOP 200)</button>
+    
+    <!-- 분석표 출력 영역 (복구됨!) -->
+    <div id="table-res-wrap" style="margin-top: 14px; overflow-x: auto; display: none;"></div>
+    
+  </div>
+</div></div>
+
+<!-- ■ 시뮬레이터 탭 -->
+<div id="tab-sim" class="tc"><div class="ti">
+  <!-- 스펙 간편 설정 탭과 동일한 외곽선 박스 적용 -->
+  <div style="max-width: 820px; margin: 0 auto; background: #111; padding: 14px; border-radius: 8px; border: 1px solid #333;">
+    
+    <!-- 🐉 적용된 정령 정보 표시 영역 (읽기 전용) -->
+    <div id="sim-spirit-display" style="margin-bottom: 14px; display: none;"></div>
+
+    <div class="sec" id="res-sec" style="display:none; margin-bottom: 0;">
+      <div class="sec-hd">🏆 지정 조건 시뮬레이션 결과 — TOP 200</div>
+      <div id="res-top"><div class="res-wrap"><div id="res-body-top"></div></div></div>
+    </div>
+
+  </div>
+</div></div>
+
+<script>
+// ================================================================
+// 게임 및 스펙 데이터 DB
+// ================================================================
+const TEM_BASE='https://raw.githubusercontent.com/yejoo0519/dogam/refs/heads/main/tem';
+const ACC_IMG_MAP={
+  '20':{'바뿔':13,'악보':20,'황보':21,'여보':22,'대뿔':1433,'물뿔':1435,'불뿔':1437},
+  '19':{'악보':1273,'황보':1274,'여보':1275,'바뿔':1276,'대뿔':1306,'물뿔':1308,'불뿔':1310},
+  '18':{'악보':1205,'황보':1206,'여보':1207,'바뿔':1202,'대뿔':1247,'물뿔':1249,'불뿔':1251},
+  '17':{'악보':1102,'황보':1103,'여보':1104,'바뿔':1105,'대뿔':1130,'물뿔':1132,'불뿔':1134},
+};
+const accImg=(lv,name)=>{const n=ACC_IMG_MAP[String(lv)]?.[name];return n?`${TEM_BASE}/${n}.png`:'';}
+const IMG_PEND={태양:`${TEM_BASE}/1337.png`,달:`${TEM_BASE}/1336.png`};
+
+// 모든 장신구 데이터 (17~20단계)
+const ACC_DB=[
+ 
+  {n:'악보주 (체) 17',hp:0.17, atk:0, def:0, img:accImg(17,'악보')},{n:'황보주 (공) 17',hp:0, atk:0.17, def:0, img:accImg(17,'황보')},{n:'여보주 (방) 17',hp:0, atk:0, def:0.17, img:accImg(17,'여보')},
+  {n:'물뿔 (체/공) 17',hp:0.11, atk:0.06, def:0, img:accImg(17,'물뿔')},{n:'물뿔 (체/방) 17',hp:0.11, atk:0, def:0.06, img:accImg(17,'물뿔')},{n:'불뿔 (공/체) 17',hp:0.06, atk:0.11, def:0, img:accImg(17,'불뿔')},
+  {n:'불뿔 (공/방) 17',hp:0, atk:0.11, def:0.06, img:accImg(17,'불뿔')},{n:'대뿔 (방/체) 17',hp:0.06, atk:0, def:0.11, img:accImg(17,'대뿔')},{n:'대뿔 (방/공) 17',hp:0, atk:0.06, def:0.11, img:accImg(17,'대뿔')},
+  {n:'바뿔 (체/방) 17',hp:0.09, atk:0, def:0.08, img:accImg(17,'바뿔')},{n:'바뿔 (공/체) 17',hp:0.08, atk:0.09, def:0, img:accImg(17,'바뿔')},{n:'바뿔 (공/방) 17',hp:0, atk:0.09, def:0.08, img:accImg(17,'바뿔')},
+
+  {n:'악보주 (체) 18',hp:0.18, atk:0, def:0, img:accImg(18,'악보')},{n:'황보주 (공) 18',hp:0, atk:0.18, def:0, img:accImg(18,'황보')},{n:'여보주 (방) 18',hp:0, atk:0, def:0.18, img:accImg(18,'여보')},
+  {n:'물뿔 (체/공) 18',hp:0.12, atk:0.06, def:0, img:accImg(18,'물뿔')},{n:'물뿔 (체/방) 18',hp:0.12, atk:0, def:0.06, img:accImg(18,'물뿔')},{n:'불뿔 (공/체) 18',hp:0.06, atk:0.12, def:0, img:accImg(18,'불뿔')},
+  {n:'불뿔 (공/방) 18',hp:0, atk:0.12, def:0.06, img:accImg(18,'불뿔')},{n:'대뿔 (방/체) 18',hp:0.06, atk:0, def:0.12, img:accImg(18,'대뿔')},{n:'대뿔 (방/공) 18',hp:0, atk:0.06, def:0.12, img:accImg(18,'대뿔')},
+  {n:'바뿔 (체/방) 18',hp:0.09, atk:0, def:0.09, img:accImg(18,'바뿔')},{n:'바뿔 (공/체) 18',hp:0.09, atk:0.09, def:0, img:accImg(18,'바뿔')},{n:'바뿔 (공/방) 18',hp:0, atk:0.09, def:0.09, img:accImg(18,'바뿔')},
+
+  {n:'악보주 (체) 19',hp:0.19, atk:0, def:0, img:accImg(19,'악보')},{n:'황보주 (공) 19',hp:0, atk:0.19, def:0, img:accImg(19,'황보')},{n:'여보주 (방) 19',hp:0, atk:0, def:0.19, img:accImg(19,'여보')},
+  {n:'물뿔 (체/공) 19',hp:0.13, atk:0.06, def:0, img:accImg(19,'물뿔')},{n:'물뿔 (체/방) 19',hp:0.13, atk:0, def:0.06, img:accImg(19,'물뿔')},{n:'불뿔 (공/체) 19',hp:0.06, atk:0.13, def:0, img:accImg(19,'불뿔')},
+  {n:'불뿔 (공/방) 19',hp:0, atk:0.13, def:0.06, img:accImg(19,'불뿔')},{n:'대뿔 (방/체) 19',hp:0.06, atk:0, def:0.13, img:accImg(19,'대뿔')},{n:'대뿔 (방/공) 19',hp:0, atk:0.06, def:0.13, img:accImg(19,'대뿔')},
+  {n:'바뿔 (체/방) 19',hp:0.1, atk:0, def:0.09, img:accImg(19,'바뿔')},{n:'바뿔 (공/체) 19',hp:0.09, atk:0.1, def:0, img:accImg(19,'바뿔')},{n:'바뿔 (공/방) 19',hp:0, atk:0.1, def:0.09, img:accImg(19,'바뿔')},
+
+  {n:'악보주 (체) 20',hp:0.2, atk:0, def:0, img:accImg(20,'악보')},{n:'황보주 (공) 20',hp:0, atk:0.2, def:0, img:accImg(20,'황보')},{n:'여보주 (방) 20',hp:0, atk:0, def:0.2, img:accImg(20,'여보')},
+  {n:'물뿔 (체/공) 20',hp:0.14, atk:0.06, def:0, img:accImg(20,'물뿔')},{n:'물뿔 (체/방) 20',hp:0.14, atk:0, def:0.06, img:accImg(20,'물뿔')},{n:'불뿔 (공/체) 20',hp:0.06, atk:0.14, def:0, img:accImg(20,'불뿔')},
+  {n:'불뿔 (공/방) 20',hp:0, atk:0.14, def:0.06, img:accImg(20,'불뿔')},{n:'대뿔 (방/체) 20',hp:0.06, atk:0, def:0.14, img:accImg(20,'대뿔')},{n:'대뿔 (방/공) 20',hp:0, atk:0.06, def:0.14, img:accImg(20,'대뿔')},
+  {n:'바뿔 (체/방) 20',hp:0.1, atk:0, def:0.1, img:accImg(20,'바뿔')},{n:'바뿔 (공/체) 20',hp:0.1, atk:0.1, def:0, img:accImg(20,'바뿔')},{n:'바뿔 (공/방) 20',hp:0, atk:0.1, def:0.1, img:accImg(20,'바뿔')}
+];
+
+function getAccNum(name){ const m=name.match(/(\d+)\s*$/); return m?parseInt(m[1]):0; }
+
+// 기본스탯 DB
+const BASE={
+  '7.0':{체력형:{hp:1252,atk:176,def:176},공격형:{hp:876,atk:285,def:161},방어형:{hp:788,atk:185,def:283},공방형:{hp:720,atk:242,def:243},체공형:{hp:1080,atk:262,def:133},체방형:{hp:1080,atk:133,def:262}},
+  '8.0':{체력형:{hp:1332,atk:176,def:176},공격형:{hp:876,atk:305,def:161},방어형:{hp:788,atk:185,def:303},공방형:{hp:720,atk:252,def:253},체공형:{hp:1120,atk:272,def:133},체방형:{hp:1120,atk:133,def:272}},
+  '9.0':{체력형:{hp:1412,atk:176,def:176},공격형:{hp:876,atk:325,def:161},방어형:{hp:788,atk:185,def:323},공방형:{hp:720,atk:262,def:263},체공형:{hp:1160,atk:282,def:133},체방형:{hp:1160,atk:133,def:282}},
+};
+
+const SP_PLUS={hp:{1:216,2:240,3:264,4:480},atk:{1:54,2:60,3:66,4:120},def:{1:54,2:60,3:66,4:120}};
+const SP_PCT={1:0.24,2:0.28,3:0.32,4:0.40};
+const SP_BONUS={hp:40,atk:10,def:10};
+const SP_PRESETS=[
+  {id:'custom',name:'직접입력',types:['','','','']},
+  {id:'last_plus',name:'막플',types:['%','%','%','+']},
+  {id:'all_pct',name:'올퍼',types:['%','%','%','%']},
+  {id:'one_four_plus',name:'14플',types:['+','%','%','+']},
+  {id:'first_plus',name:'24플',types:['%','+','%','+']}
+];
+
+const DTYPES=['체력형','공격형','방어형','체공형','체방형','공방형'];
+const DCOLORS={체력형:'#fbbf24',공격형:'#f87171',방어형:'#60a5fa',체공형:'#f59e4a',체방형:'#90d97f',공방형:'#c084fc'};
+const SK={hp:'체',atk:'공',def:'방'};
+const SKEYS=['hp','atk','def'];
+const COLL = {hp: 240, atk: 60, def: 60}; // 컬렉션 고정 적용값
+
+// ================================================================
+// 상태 관리 및 저장 (로컬 전용)
+// ================================================================
+const mkState=()=>({
+  gemLevel: 44, // 38, 40, 42, 44
+  accLevel: 20, // 17, 18, 19, 20
+  pendType: '달', // '달', '태양'
+  spirit:{level:1, maxLvl:false, opts:[{stat:'',type:''},{stat:'',type:''},{stat:'',type:''},{stat:'',type:''}], bonus:''}
+});
+
+let S = mkState();
+let simGrade = '9.0', simType = '체력형', simExactBuf = '노버프', simExactNerf = '노너프';
+const SAVE_KEY = 'dv1sim_calc_v4';
+
+function doLoad() {
+  try {
+    const r = localStorage.getItem(SAVE_KEY);
+    if(r) S = {...mkState(), ...JSON.parse(r)};
+  } catch(e) {}
+  updateUIs();
+}
+
+function qSave() {
+  localStorage.setItem(SAVE_KEY, JSON.stringify(S));
+}
+
+function updateUIs() {
+  const gemSel = document.getElementById('sel-gem-lv');
+  if(gemSel) gemSel.value = S.gemLevel;
+  
+  const accSel = document.getElementById('sel-acc-lv');
+  if(accSel) accSel.value = S.accLevel;
+  
+  const pendSel = document.getElementById('sel-pend-type');
+  if(pendSel) pendSel.value = S.pendType;
+
+  renderSpirit();
+}
+function onGemLvl(lv) { S.gemLevel = lv; qSave(); }
+function onAccLvl(lv) { S.accLevel = lv; qSave(); }
+function onPendType(t) { S.pendType = t; qSave(); }
+
+/* ... (이하 renderSpirit 등의 코드는 그대로 유지) ... */
+/* ==================== (여기서부터 아래를 통째로 복사해서 덮어쓰기!) ==================== */
+
+// ================================================================
+// 정령 UI 및 로직 통합본
+// ================================================================
+function spPresetLabel(type) { return type==='%'?'%':type==='+'?'+':'-'; }
+function isSpiritPresetActive(preset) {
+  return preset.types.every((type,i)=>{ const cur=S.spirit.opts[i]||{}; return cur.type===type; });
+}
+function applySpiritPreset(id) {
+  const preset=SP_PRESETS.find(p=>p.id===id);
+  if(!preset)return;
+  S.spirit.opts=preset.types.map((type,i)=>({ stat:S.spirit.opts[i]?.stat||'', type }));
+  renderSpirit(); qSave();
+}
+
+// 스탯에 따른 세련된 스타일을 반환하는 헬퍼 함수
+function getStatStyle(stat) {
+  if(stat === 'hp') return 'background: rgba(251, 191, 36, 0.15); border: 1px solid #fbbf24; color: #fbbf24;';
+  if(stat === 'atk') return 'background: rgba(248, 113, 113, 0.15); border: 1px solid #f87171; color: #f87171;';
+  if(stat === 'def') return 'background: rgba(96, 165, 250, 0.15); border: 1px solid #60a5fa; color: #60a5fa;';
+  return 'background: var(--sf); border: 1px solid var(--bd); color: var(--text);';
+}
+
+function renderSpirit() {
+  const el = document.getElementById('sp-bd');
+  if(!el) return;
+  const sp = S.spirit;
+
+  const presets = SP_PRESETS.map(p => {
+    // 초록색 글자(desc)를 완전히 지우고, 남은 텍스트 영역을 중앙 정렬합니다.
+    return `<button class="sp-preset-btn ${isSpiritPresetActive(p) ? 'active' : ''}" onclick="applySpiritPreset('${p.id}')" style="padding: 8px 2px; display:flex; justify-content:center; align-items:center;">
+      <span class="sp-preset-name" style="font-size: var(--ufont); color: var(--gold); white-space: nowrap;">${p.name}</span>
+    </button>`;
+  }).join('');
+
+  const makeOptCell = (idx, o) => {
+    // 우측 빈 공간(v값 표시부)을 삭제하고 min-width: 0 속성으로 박스가 화면을 비집고 나가지 않게 조절합니다.
+    return `
+      <div style="background: var(--sf2); border: 1px solid var(--bd); border-radius: 6px; padding: 8px 4px; display: flex; flex-direction: column; gap: 6px; justify-content: center;">
+        <div style="text-align: center; font-weight: 800; color: var(--dim); font-size: var(--ufont); white-space: nowrap;">${idx+1}옵션</div>
+        <div style="display: flex; gap: 4px; align-items: center; justify-content: space-between;">
+          <select onchange="onSpOpt(${idx},'stat',this.value)" style="flex: 1; min-width: 0; ${getStatStyle(o.stat)} padding: 4px 2px; border-radius: 4px; font-weight: 800; outline: none; cursor: pointer; font-size: var(--ufont); text-align: center; text-align-last: center;">
+            <option value="" style="background: var(--sf); color: var(--text);">-</option>
+            <option value="hp" style="background: var(--sf); color: #fbbf24;" ${o.stat==='hp'?'selected':''}>체력</option>
+            <option value="atk" style="background: var(--sf); color: #f87171;" ${o.stat==='atk'?'selected':''}>공격</option>
+            <option value="def" style="background: var(--sf); color: #60a5fa;" ${o.stat==='def'?'selected':''}>방어</option>
+          </select>
+          <select onchange="onSpOpt(${idx},'type',this.value)" style="flex: 1; min-width: 0; background: var(--sf); border: 1px solid var(--bd); color: var(--text); padding: 4px 2px; border-radius: 4px; outline: none; cursor: pointer; font-size: var(--ufont); text-align: center; text-align-last: center;">
+            <option value="" ${!o.type?'selected':''}>(-)</option>
+            <option value="+" ${o.type==='+'?'selected':''}>+</option>
+            <option value="%" ${o.type==='%'?'selected':''}>%</option>
+          </select>
+        </div>
+      </div>
+    `;
+  };
+
+  let html = `
+    <div class="sp-preset-grid" style="margin-bottom: 12px; gap: 4px;">${presets}</div>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 8px;">
+      ${makeOptCell(0, sp.opts[0] || {stat:'', type:''})}
+      ${makeOptCell(1, sp.opts[1] || {stat:'', type:''})}
+      ${makeOptCell(2, sp.opts[2] || {stat:'', type:''})}
+      ${makeOptCell(3, sp.opts[3] || {stat:'', type:''})}
+    </div>
+  `;
+
+  const bStat = sp.bonus;
+  html += `
+    <div style="background: var(--sf2); border: 1px solid var(--bd); border-radius: 6px; padding: 8px 10px; display: flex; align-items: center; justify-content: space-between; gap: 6px;">
+      <div style="font-weight: 800; color: var(--dim); text-align: center; flex-shrink: 0; font-size: var(--ufont); white-space: nowrap;">부가옵션</div>
+      <select onchange="onSpBonus(this.value)" style="flex: 1; min-width: 0; ${getStatStyle(bStat)} padding: 4px; border-radius: 4px; font-weight: 800; outline: none; cursor: pointer; font-size: var(--ufont); text-align: center; text-align-last: center;">
+        <option value="" style="background: var(--sf); color: var(--text);">-</option>
+        <option value="hp" style="background: var(--sf); color: #fbbf24;" ${bStat==='hp'?'selected':''}>체력 (+40)</option>
+        <option value="atk" style="background: var(--sf); color: #f87171;" ${bStat==='atk'?'selected':''}>공격 (+10)</option>
+        <option value="def" style="background: var(--sf); color: #60a5fa;" ${bStat==='def'?'selected':''}>방어 (+10)</option>
+      </select>
+    </div>
+  `;
+
+  el.innerHTML = html;
+}
+
+function resetSpirit() {
+  if(!confirm('정령 옵션을 초기화하시겠습니까?'))return;
+  S.spirit={level:1,maxLvl:false,opts:[{stat:'',type:''},{stat:'',type:''},{stat:'',type:''},{stat:'',type:''}],bonus:''};
+  renderSpirit(); qSave();
+}
+
+function fmtSpVal(n,stat,type){
+  if(!stat||!type)return'';
+  return type==='+'?`<b>+${SP_PLUS[stat][n]}</b>`:`<b>+${(SP_PCT[n]*100).toFixed(0)}%</b>`;
+}
+function onSpOpt(idx,field,val){ S.spirit.opts[idx][field]=val; renderSpirit(); qSave(); }
+function onSpBonus(val){ S.spirit.bonus=val; renderSpirit(); qSave(); }
+
+/* ==================== (여기까지 복사해서 덮어쓰기 완료!) ==================== */
+
+// 탭 컨트롤
+function switchTab(t){
+  ['spec','sim'].forEach(x=>{
+    document.getElementById(`tab-${x}`).classList.toggle('active',x===t);
+    document.getElementById(`tab-btn-${x}`).classList.toggle('active',x===t);
+  });
+}
+function setGrade(g){
+  simGrade = g;
+  const el = document.getElementById('sel-grade');
+  if(el) el.value = g;
+}
+
+function setType(t){
+  simType = t;
+  const el = document.getElementById('sel-type');
+  if(el) el.value = t;
+}
+
+function setExactBuf(val){
+  simExactBuf = val;
+  const el = document.getElementById('sel-buf');
+  if(el) el.value = val;
+}
+
+function setExactNerf(val){
+  simExactNerf = val;
+  const el = document.getElementById('sel-nerf');
+  if(el) el.value = val;
+}
+
+function parseExactNerf(nStr){
+  if(nStr === '노너프') return {h:0, a:0, d:0, label:'노너프'};
+  let h=0, a=0, d=0;
+  if(nStr === '체') h = 1;
+  if(nStr === '공') a = 1;
+  if(nStr === '방') d = 1;
+  return {h, a, d, label: nStr};
+}
+
+function parseExactBuf(bStr){
+  if(bStr === '노버프') return {h:0, a:0, d:0, label:'노버프'};
+  let h=0, a=0, d=0;
+  bStr.split('+').forEach(s => {
+    if(s==='체') h++;
+    if(s==='공') a++;
+    if(s==='방') d++;
+  });
+  return {h, a, d, label: bStr};
+}
+// 시뮬레이션 데이터 준비 (Pool, Pendants, Allocations)
+// ================================================================
+
+// 선택된 젬 수치를 기반으로 풀(pool) 구성 (무한 사용)
+function buildPool() {
+  const v = S.gemLevel; // 38, 40, 42, 44
+  return [
+    {s:'hp', lv:v, h:v*4, a:0, d:0},
+    {s:'atk', lv:v, h:0, a:v, d:0},
+    {s:'def', lv:v, h:0, a:0, d:v}
+  ];
+}
+
+// 5슬롯 젬 배분 경우의 수 (중복조합) -> 21가지 고정
+function genAllocs() {
+  const res = [];
+  for(let h=0; h<=5; h++) {
+    for(let a=0; a<=5-h; a++) {
+      let d = 5 - h - a;
+      res.push([h, a, d]); // [hp개수, atk개수, def개수]
+    }
+  }
+  return res;
+}
+
+// 펜던트 6% 극옵 모든 조합 자동 생성
+function getPends() {
+   const pends = [];
+   const opts = ['hp', 'atk', 'def'];
+   if(S.pendType === '달') {
+      for(let i=0; i<3; i++) {
+         for(let j=i; j<3; j++) {
+            pends.push({type:'달', options:[{stat:opts[i], val:6}, {stat:opts[j], val:6}]});
+         }
+      }
+   } else { // 태양
+      for(let i=0; i<3; i++) {
+         for(let j=i; j<3; j++) {
+            for(let k=j; k<3; k++) {
+               pends.push({type:'태양', options:[{stat:opts[i], val:6}, {stat:opts[j], val:6}, {stat:opts[k], val:6}]});
+            }
+         }
+      }
+   }
+   return pends;
+}
+
+/* 스탯 산출 공식 (엑셀 원본 완벽 동기화) */
+function calcStat(B, G, P, AP, SP, PP, SL, SB, C, BU) {
+  // 1. INT((기본스탯+젬+물약)*(1+장신구+인첸트))
+  const step1 = Math.floor((B + G + P) * (1 + AP));
+  
+  // 2. INT( step1*(1+정령퍼옵) + 정령플옵*(1+정령퍼옵) ) + 정령부가옵
+  // 엑셀과 동일하게 두 값을 먼저 더한 후 Math.floor(INT) 처리
+  const step2 = Math.floor(step1 * (1 + SP) + SL * (1 + SP)) + SB;
+  
+  // 3. INT( step2 * (1+펜던트) )
+  const step3 = Math.floor(step2 * (1 + PP));
+  
+  // 4. 최종 합산: + INT(용스탯*버프) + 컬렉션
+  return step3 + BU + C;
+}
+
+function procSpirit(){
+  const sp=S.spirit;
+  const plus={hp:0,atk:0,def:0},pct={hp:0,atk:0,def:0},bonus={hp:0,atk:0,def:0};
+  for(let i=0;i<4;i++){
+    const o=sp.opts[i];
+    if(!o||!o.stat||!o.type)continue;
+    if(o.type==='+')plus[o.stat]+=SP_PLUS[o.stat][i+1];
+    else if(o.type==='%')pct[o.stat]+=SP_PCT[i+1];
+  }
+  if(sp.bonus&&SP_BONUS[sp.bonus])bonus[sp.bonus]=SP_BONUS[sp.bonus];
+  return{plus,pct,bonus};
+}
+
+function getBufCombos(bufLv){
+  if(bufLv===0)return[{h:0,a:0,d:0,w:1,label:'버프 없음'}];
+  if(bufLv===1)return[
+    {h:1,a:0,d:0,w:1/3,label:'체'},{h:0,a:1,d:0,w:1/3,label:'공'},{h:0,a:0,d:1,w:1/3,label:'방'}
+  ];
+  return[
+    {h:2,a:0,d:0,w:1/9,label:'체+체'},{h:1,a:1,d:0,w:2/9,label:'체+공'},{h:1,a:0,d:1,w:2/9,label:'체+방'},
+    {h:0,a:2,d:0,w:1/9,label:'공+공'},{h:0,a:1,d:1,w:2/9,label:'공+방'},{h:0,a:0,d:2,w:1/9,label:'방+방'}
+  ];
+}
+
+function calcPendPct(pend){
+  let pH=0,pA=0,pD=0;
+  if(pend){
+    const mo=pend.type==='태양'?3:2;
+    pend.options.slice(0,mo).forEach(o=>{
+      const v=(o.val||0)/100;
+      if(o.stat==='hp')pH+=v;else if(o.stat==='atk')pA+=v;else pD+=v;
+    });
+  }
+  return{pH,pA,pD};
+}
+// ================================================================
+// 분석표 생성 (3888개 전체 정령 연산 및 등수 기능 포함)
+// ================================================================
+
+window.tableSimData = null; // 모드 전환을 위한 전역 변수
+
+// ================================================================
+// 시뮬레이션 일괄 실행 (분석표 + TOP 200 동시 연산)
+// ================================================================
+
+function runAllSims() {
+  const btn = document.getElementById('btn-run-all');
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = '⏳ 분석표 및 TOP 200 일괄 연산 중...';
+  }
+
+  // 시뮬레이터 탭에 정령 정보(읽기 전용) 렌더링
+  renderSimSpiritDisplay();
+
+  setTimeout(() => {
+    try {
+      // 1. 공통 환경 변수 가져오기
+      S.gemLevel = parseInt(document.getElementById('sel-gem-lv').value);
+      S.accLevel = parseInt(document.getElementById('sel-acc-lv').value);
+      S.pendType = document.getElementById('sel-pend-type').value;
+
+      const ownedAcc = ACC_DB.filter(a => getAccNum(a.n) === S.accLevel);
+      const pends = getPends();
+      const pool = buildPool();
+      const allocs = genAllocs();
+      const userSp = procSpirit();
+
+      // ==========================================================
+      // 2. 정령 버프효율 분석표 생성 로직
+      // ==========================================================
+      const buffsArr = [
+        {h:0, a:0, d:0}, {h:1, a:0, d:0}, {h:0, a:1, d:0}, {h:0, a:0, d:1},
+        {h:2, a:0, d:0}, {h:0, a:2, d:0}, {h:0, a:0, d:2},
+        {h:1, a:1, d:0}, {h:1, a:0, d:1}, {h:0, a:1, d:1}
+      ];
+
+      const allSpirits = generateAllSpirits();
+      const allRowBVs = [];
+      const userRowBVs = [];
+
+      DTYPES.forEach((dt) => {
+        const bs = BASE[simGrade][dt];
+        const bh = bs.hp, ba = bs.atk, bd = bs.def;
+
+        const envs = [];
+        ownedAcc.forEach(acc => {
+          ['hp','atk','def'].forEach(enc => {
+            const aH = acc.hp + (enc==='hp'?0.21:0);
+            const aA = acc.atk + (enc==='atk'?0.21:0);
+            const aD = acc.def + (enc==='def'?0.21:0);
+            pends.forEach(pend => {
+              const {pH, pA, pD} = calcPendPct(pend);
+              allocs.forEach(alloc => {
+                let gH=0, gA=0, gD=0;
+                for(let i=0; i<alloc.length; i++){
+                  gH += alloc[i]*pool[i].h; gA += alloc[i]*pool[i].a; gD += alloc[i]*pool[i].d;
+                }
+                envs.push({
+                   baseH: Math.floor((bh + gH + 24)*(1 + aH)),
+                   baseA: Math.floor((ba + gA +  6)*(1 + aA)),
+                   baseD: Math.floor((bd + gD +  6)*(1 + aD)),
+                   pH, pA, pD
+                });
+              });
+            });
+          });
+        });
+
+        const BU_H = buffsArr.map(b => Math.floor(bh * 0.2) * b.h + COLL.hp);
+        const BU_A = buffsArr.map(b => Math.floor(ba * 0.2) * b.a + COLL.atk);
+        const BU_D = buffsArr.map(b => Math.floor(bd * 0.2) * b.d + COLL.def);
+
+        const evalSpirit = (sp) => {
+           const sp_pH = 1 + sp.pct.hp, sp_pA = 1 + sp.pct.atk, sp_pD = 1 + sp.pct.def;
+           const sp_plusH = sp.plus.hp * sp_pH, sp_plusA = sp.plus.atk * sp_pA, sp_plusD = sp.plus.def * sp_pD;
+           const sp_bH = sp.bonus.hp, sp_bA = sp.bonus.atk, sp_bD = sp.bonus.def;
+
+           const maxBVs = new Float64Array(10);
+           for(let j=0; j<envs.length; j++) {
+               const env = envs[j];
+               const s3H = Math.floor( (Math.floor(env.baseH * sp_pH + sp_plusH) + sp_bH) * (1 + env.pH) );
+               const s3A = Math.floor( (Math.floor(env.baseA * sp_pA + sp_plusA) + sp_bA) * (1 + env.pA) );
+               const s3D = Math.floor( (Math.floor(env.baseD * sp_pD + sp_plusD) + sp_bD) * (1 + env.pD) );
+
+               for(let k=0; k<10; k++) {
+                   const bv = (s3H + BU_H[k]) * (s3A + BU_A[k]) * (s3D + BU_D[k]);
+                   if(bv > maxBVs[k]) maxBVs[k] = bv;
+               }
+           }
+
+           const rows = new Float64Array(14);
+           rows[0] = maxBVs[0];
+           rows[1] = maxBVs[1]; rows[2] = maxBVs[2]; rows[3] = maxBVs[3];
+           rows[4] = (maxBVs[1] + maxBVs[2] + maxBVs[3]) / 3;
+           rows[5] = maxBVs[4]; rows[6] = maxBVs[5]; rows[7] = maxBVs[6];
+           rows[8] = maxBVs[7]; rows[9] = maxBVs[8]; rows[10] = maxBVs[9];
+
+           const b2Arr = [maxBVs[4], maxBVs[5], maxBVs[6], maxBVs[7], maxBVs[8], maxBVs[9]];
+           b2Arr.sort((a, b) => b - a);
+
+           rows[11] = (b2Arr[0] + b2Arr[1] + b2Arr[2] + b2Arr[3] + b2Arr[4] + b2Arr[5]) / 6;
+           rows[12] = (b2Arr[0] + b2Arr[1] + b2Arr[2]) / 3;
+           rows[13] = (b2Arr[3] + b2Arr[4] + b2Arr[5]) / 3;
+
+           return rows;
+        };
+
+        userRowBVs.push(evalSpirit(userSp));
+        const dtAllRows = new Float64Array(3888 * 14);
+        for(let i=0; i<3888; i++) {
+           const rows = evalSpirit(allSpirits[i]);
+           for(let r=0; r<14; r++) { dtAllRows[i*14 + r] = rows[r]; }
+        }
+        allRowBVs.push(dtAllRows);
+      });
+
+      window.tableSimData = { userRowBVs, allRowBVs, mode: window.tableSimData ? window.tableSimData.mode : 'bv' };
+      renderAnalysisTable();
+
+      // ==========================================================
+      // 3. 단일 조건 TOP 200 계산 로직
+      // ==========================================================
+      const exactBufObj = parseExactBuf(simExactBuf);
+      const exactNerfObj = parseExactNerf(simExactNerf);
+      const top200 = doSimExact(ownedAcc, exactBufObj, exactNerfObj, pends, pool, allocs);
+      renderResTop(top200);
+
+      const rs = document.getElementById('res-sec');
+      rs.style.display = '';
+
+    } catch(e) {
+      console.error(e);
+      alert('오류: ' + e.message);
+    }
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = '📊 일괄 시뮬레이션 연산 (분석표 + TOP 200)';
+    }
+  }, 30);
+}
+
+// ================================================================
+// 정령 정보 읽기 전용 렌더링 함수 (시뮬레이터 탭용)
+// ================================================================
+
+function renderSimSpiritDisplay() {
+  const el = document.getElementById('sim-spirit-display');
+  if(!el) return;
+  const sp = S.spirit;
+
+  const getOptText = (o) => {
+     if(!o || !o.stat || !o.type) return '<span style="color:var(--dimmer);">-</span>';
+     const st = o.stat==='hp'?'체':o.stat==='atk'?'공':'방';
+     const col = o.stat==='hp'?'#fbbf24':o.stat==='atk'?'#f87171':'#60a5fa';
+     return `<span style="color:${col}; font-weight:800; font-size:13px;">${st}${o.type}</span>`;
+  };
+
+  const makeOptCell = (idx, o) => {
+    return `
+      <div style="background: var(--sf2); border: 1px solid var(--bd); border-radius: 6px; padding: 10px; display: flex; flex-direction: column; gap: 8px;">
+        <div style="text-align: center; font-size: 11px; font-weight: 800; color: var(--dim);">${idx+1}옵션</div>
+        <div style="text-align: center;">${getOptText(o)}</div>
+      </div>
+    `;
+  };
+
+  let bHtml = '<span style="color:var(--dimmer);">-</span>';
+  if(sp.bonus) {
+     const st = sp.bonus==='hp'?'체':sp.bonus==='atk'?'공':'방';
+     const v = sp.bonus==='hp'?'+40':'+10';
+     const col = sp.bonus==='hp'?'#fbbf24':sp.bonus==='atk'?'#f87171':'#60a5fa';
+     bHtml = `<span style="color:${col}; font-weight:800; font-size:13px;">${st} (${v})</span>`;
+  }
+
+  let html = `
+    <div class="sec-hd" style="border-radius: 8px 8px 0 0; margin-bottom: 0;">🔮 적용된 정령 정보 (수정 불가)</div>
+    <div class="sec-bd" style="background: var(--sf); border: 1px solid var(--bd); border-top: none; border-radius: 0 0 8px 8px;">
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
+        ${makeOptCell(0, sp.opts[0])}
+        ${makeOptCell(1, sp.opts[1])}
+        ${makeOptCell(2, sp.opts[2])}
+        ${makeOptCell(3, sp.opts[3])}
+      </div>
+      <div style="background: var(--sf2); border: 1px solid var(--bd); border-radius: 6px; padding: 10px; display: flex; align-items: center; justify-content: center; gap: 14px;">
+        <div style="font-size: 11px; font-weight: 800; color: var(--dim);">부가옵션</div>
+        <div>${bHtml}</div>
+      </div>
+    </div>
+  `;
+  el.innerHTML = html;
+  el.style.display = 'block';
+}
+
+// 3888가지 정령을 모두 생성하는 헬퍼 함수
+function generateAllSpirits() {
+  const res = [];
+  const opts = [
+    {s:'hp', t:'+'}, {s:'hp', t:'%'}, {s:'atk', t:'+'}, 
+    {s:'atk', t:'%'}, {s:'def', t:'+'}, {s:'def', t:'%'}
+  ];
+  const bonuses = ['hp', 'atk', 'def'];
+  
+  for(let b of bonuses) {
+    for(let o1 of opts) {
+      for(let o2 of opts) {
+        for(let o3 of opts) {
+          for(let o4 of opts) {
+             const plus = {hp:0, atk:0, def:0}, pct = {hp:0, atk:0, def:0}, bonus = {hp:0, atk:0, def:0};
+             if(b === 'hp') bonus.hp = 40; if(b === 'atk') bonus.atk = 10; if(b === 'def') bonus.def = 10;
+
+             const applyOpt = (o, level) => { if(o.t === '+') plus[o.s] += SP_PLUS[o.s][level]; else pct[o.s] += SP_PCT[level]; };
+             applyOpt(o1, 1); applyOpt(o2, 2); applyOpt(o3, 3); applyOpt(o4, 4);
+             res.push({plus, pct, bonus});
+          }
+        }
+      }
+    }
+  }
+  return res;
+}
+
+// 토글 버튼 (모드 전환) 
+/* ==================== (여기서부터 아래를 덮어쓰기!) ==================== */
+
+// 토글 버튼 대신 3가지 모드를 지원하는 셀렉트 변경 함수로 교체
+function changeTableMode(modeVal) {
+  if(!window.tableSimData) return;
+  window.tableSimData.mode = modeVal;
+  renderAnalysisTable();
+}
+
+function renderAnalysisTable() {
+  const wrap = document.getElementById('table-res-wrap');
+  if(!window.tableSimData) return;
+  const { userRowBVs, allRowBVs, mode } = window.tableSimData;
+
+  // 무조건 소수점 2자리로 고정 (이전 요청 반영)
+  const fBV = v => (v / 1e8).toFixed(2) + '억';
+
+  // (신규 추가) 정수 부분만 1.5px 더 크게 만드는 포맷팅 함수
+  const fBigInt = str => {
+    const parts = str.split('.');
+    if(parts.length === 2) {
+      return `<span style="font-size: calc(100% + 1px);">${parts[0]}</span>.${parts[1]}`;
+    }
+    return str;
+  };
+
+  const rowsData = [
+    { id: '노버프', rIdx: 0, bottomBorder: '2px solid white' },
+    { id: '체', rIdx: 1, bottomBorder: '1px solid #555' },
+    { id: '공', rIdx: 2, bottomBorder: '1px solid #555' },
+    { id: '방', rIdx: 3, bottomBorder: '1px solid #555' },
+    { id: '1벞', rIdx: 4, bottomBorder: '2px solid white' },
+    { id: '체_체', rIdx: 5, bottomBorder: '1px solid #555' },
+    { id: '공_공', rIdx: 6, bottomBorder: '1px solid #555' },
+    { id: '방_방', rIdx: 7, bottomBorder: '1px solid #555' },
+    { id: '체_공', rIdx: 8, bottomBorder: '1px solid #555' },
+    { id: '체_방', rIdx: 9, bottomBorder: '1px solid #555' },
+    { id: '공_방', rIdx: 10, bottomBorder: '1px solid #555' },
+    { id: '2벞', rIdx: 11, bottomBorder: '2px solid white' },
+    { id: '고점', rIdx: 12, bottomBorder: '1px solid #555' },
+    { id: '저점', rIdx: 13, bottomBorder: '2px solid white' }
+  ];
+
+  let html = `
+  <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom: 8px;">
+     <span style="font-size: clamp(10px, 2.5vw, 12px); color:var(--dim); line-height: 1.3; white-space:nowrap;">
+        3888개의 정령 조합과 비교합니다.
+     </span>
+     <select onchange="changeTableMode(this.value)" style="background:var(--sf2); padding:4px 8px; border-radius:6px; border:1px solid var(--gold); color:var(--text); font-size: clamp(11px, 2.5vw, 12px); font-weight:800; cursor:pointer; outline:none; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
+       <option value="bv" ${mode === 'bv' ? 'selected' : ''}>최대 비밸 수치 보기</option>
+       <option value="rank" ${mode === 'rank' ? 'selected' : ''}>전체 정령 중 내 등수 보기</option>
+       <option value="gap" ${mode === 'gap' ? 'selected' : ''}>1위와의 비밸 격차 보기</option>
+     </select>
+  </div>
+  <!-- 가로 스크롤을 유발하던 min-width를 삭제하고 너비를 100%로 꽉 맞춥니다 -->
+  <div style="width: 100%;">
+    <table style="width:100%; table-layout: fixed; border-collapse: collapse; border: 2px solid white; color: white; background: #111; font-family: 'Courier New', 'Malgun Gothic', sans-serif; text-align: center; font-size: clamp(9px, 2.4vw, 12px); white-space: nowrap; letter-spacing: -0.5px;">
+      <thead>
+        <tr>
+           <th colspan="7" style="background: white; color: black; padding: 4px; font-size: clamp(11px, 3vw, 13px); font-weight: 800; border: 2px solid white; letter-spacing: 0;">&lt;_정령 버프효율 분석표_&gt;</th>
+        </tr>
+        <tr>
+           <!-- 화면이 줄어들면 패딩(좌우 여백)도 최소화되어 공간을 절약합니다 -->
+           <th style="width: 10%; border: 1px solid #777; padding: 4px 1px; background: #222; border-bottom: 2px solid white;">/</th>
+           <th style="width: 15%; border: 1px solid #777; padding: 4px 1px; background: #222; border-bottom: 2px solid white;">체력</th>
+           <th style="width: 15%; border: 1px solid #777; padding: 4px 1px; background: #222; border-bottom: 2px solid white;">공격</th>
+           <th style="width: 15%; border: 1px solid #777; padding: 4px 1px; background: #222; border-bottom: 2px solid white;">방어</th>
+           <th style="width: 15%; border: 1px solid #777; padding: 4px 1px; background: #222; border-bottom: 2px solid white;">체공</th>
+           <th style="width: 15%; border: 1px solid #777; padding: 4px 1px; background: #222; border-bottom: 2px solid white;">체방</th>
+           <th style="width: 15%; border: 1px solid #777; padding: 4px 1px; background: #222; border-bottom: 2px solid white;">공방</th>
+        </tr>
+      </thead>
+      <tbody>
+  `;
+
+  rowsData.forEach(row => {
+    html += `<tr><th style="border: 1px solid #555; border-bottom: ${row.bottomBorder}; padding: 4px 1px; background: #222; font-size: clamp(9px, 2.4vw, 12px);">${row.id}</th>`;
+    
+    DTYPES.forEach((dt, dtIdx) => {
+      const userVal = userRowBVs[dtIdx][row.rIdx];
+      const allVals = allRowBVs[dtIdx];
+      let displayStr = '';
+      
+      if(mode === 'bv') {
+         // 모드 1: 최대 비밸 (색상 하얀색 변경 및 정수 확대 적용)
+         displayStr = `<span style="color:white; font-weight:800;">${fBigInt(fBV(userVal))}</span>`;
+      } else if (mode === 'rank') {
+         // 모드 2: 내 등수
+         let rank = 1;
+         for(let i=0; i<3888; i++) {
+            if(allVals[i*14 + row.rIdx] > userVal) rank++;
+         }
+         if(rank === 1) displayStr = `<span style="color:var(--gold); font-weight:800;">1등</span>`;
+         else displayStr = `<span style="color:var(--text); font-weight:800;">${rank}등</span>`;
+     } else if (mode === 'gap') {
+         // 모드 3: 1위와의 격차 (정수 확대 적용)
+         let maxVal = -Infinity;
+         for(let i=0; i<3888; i++) {
+            if(allVals[i*14 + row.rIdx] > maxVal) maxVal = allVals[i*14 + row.rIdx];
+         }
+         const gap = maxVal - userVal;
+         
+         if(gap <= 0.0001) {
+            displayStr = `<span style="color:var(--gold); font-weight:800;">${fBigInt('0.00억')}</span>`;
+         } else {
+            displayStr = `<span style="color:var(--red); font-weight:800;">-${fBigInt(fBV(gap))}</span>`;
+         }
+      }
+      
+      html += `<td style="border: 1px solid #555; border-bottom: ${row.bottomBorder}; padding: 4px 1px;">${displayStr}</td>`;
+    });
+    html += `</tr>`;
+  });
+
+  html += `</tbody></table></div>`;
+  wrap.innerHTML = html;
+  wrap.style.display = 'block';
+}
+
+// ================================================================
+// 출력 포매팅 헬퍼
+// ================================================================
+
+const STAT_COL={체:'#fbbf24',공:'#f87171',방:'#60a5fa'};
+
+// 버프와 너프를 똑같은 박스(배지) 형태로 예쁘게 렌더링하는 통합 라벨 함수
+function fmtBufNerfLabel(bLabel, nLabel){
+  let bHtml = '';
+  if(bLabel === '노버프'){
+    bHtml = `<span style="color:var(--dim); font-size:inherit;">버프 없음</span>`;
+  } else {
+    // 버프도 너프와 완전히 동일한 박스 형태(초록색)로 통일
+    bHtml = `<div style="color:var(--green); font-weight:800; font-size:inherit; margin-top:2px; display:inline-block; padding: 2px 6px; background: rgba(74,222,128,0.15); border-radius: 4px; border: 1px solid rgba(74,222,128,0.3); white-space:nowrap;">▲ ${bLabel}</div>`;
+  }
+
+  if(nLabel && nLabel !== '노너프') {
+    const nHtml = `<div style="color:var(--red); font-weight:800; font-size:inherit; margin-top:2px; display:inline-block; padding: 2px 6px; background: rgba(248,113,113,0.15); border-radius: 4px; border: 1px solid rgba(248,113,113,0.3); white-space:nowrap;">▼ ${nLabel}</div>`;
+    if (bLabel === '노버프') {
+       return nHtml;
+    } else {
+       return bHtml + '<br>' + nHtml;
+    }
+  }
+  return bHtml;
+}
+
+function fmtAccName(name){
+  return name.replace(/[체공방]/g,s=>{
+    const col=s==='체'?'#fbbf24':s==='공'?'#f87171':'#60a5fa';
+    return`<span style="color:${col}; font-size:inherit;">${s}</span>`;
+  });
+}
+
+function fmtAccEnc(enc){
+  if(enc==='none')return'<span class="enc-b enc-none" style="padding:2px 6px; border-radius:4px; font-size:inherit; white-space:nowrap;">없음</span>';
+  const col=enc==='hp'?'#fbbf24':enc==='atk'?'#f87171':'#60a5fa';
+  const lbl=enc==='hp'?'체':enc==='atk'?'공':'방';
+  return`<span class="enc-b" style="border-color:${col};color:${col};padding:2px 6px;border-radius:4px; font-size:inherit; white-space:nowrap;">${lbl} +21%</span>`;
+}
+
+// 젬 표시를 0 / 4 / 1 (체/공/방) 형식으로 심플하게 유지하고, 폰트를 3px 더 크게 설정
+function fmtGem(alloc){
+  if(!alloc||!alloc.length) return `<span style="color:var(--hpc); font-size:calc(100% + 3px);">0</span> <span style="color:var(--dim); font-size:calc(100% + 3px);">/</span> <span style="color:var(--atc); font-size:calc(100% + 3px);">0</span> <span style="color:var(--dim); font-size:calc(100% + 3px);">/</span> <span style="color:var(--dfc); font-size:calc(100% + 3px);">0</span>`;
+  let h=0, a=0, d=0;
+  alloc.forEach(({k,g})=>{
+    if(g.s==='hp') h+=k;
+    else if(g.s==='atk') a+=k;
+    else if(g.s==='def') d+=k;
+  });
+  return `<span style="color:var(--hpc); font-size:calc(100% + 3px);">${h}</span> <span style="color:var(--dim); font-size:calc(100% + 3px);">/</span> <span style="color:var(--atc); font-size:calc(100% + 3px);">${a}</span> <span style="color:var(--dim); font-size:calc(100% + 3px);">/</span> <span style="color:var(--dfc); font-size:calc(100% + 3px);">${d}</span>`;
+}
+
+// 펜던트 표시를 상단에 이름+아이콘, 하단에 스탯으로 배치
+function fmtPendMob(pend){
+  if(!pend)return'<span style="color:var(--dimmer);font-size:inherit;">없음</span>';
+  const mo=pend.type==='태양'?3:2;
+  const opts=pend.options.slice(0,mo).filter(o=>o&&o.stat).map(o=>{
+    const col=o.stat==='hp'?'#fbbf24':o.stat==='atk'?'#f87171':'#60a5fa';
+    return`<span style="color:${col}; font-size:inherit;">${SK[o.stat]}</span><span style="font-size:inherit;">${o.val||0}%</span>`;
+  }).join('<span style="color:var(--dim); font-size:inherit;">/</span>');
+  const shortType=pend.type==='태양'?'태양펜':'달펜';
+  const pimg=IMG_PEND[pend.type]?`<img src="${IMG_PEND[pend.type]}" style="width:clamp(16px, 4vw, 24px);height:clamp(16px, 4vw, 24px);object-fit:contain;border-radius:3px">`:'';
+  
+  return `
+    <div style="display:flex; flex-direction:column; align-items:center; gap:4px;">
+      <div style="display:flex; align-items:center; gap:4px;">
+        ${pimg}
+        <span style="color:var(--text); font-weight:700; font-size:inherit;">${shortType}</span>
+      </div>
+      <div style="color:var(--dim); font-size:inherit; white-space:nowrap;">(${opts})</div>
+    </div>
+  `;
+}
+
+// 전체 레이아웃을 중앙 정렬, 지정된 요소 폰트 +3px, 반응형으로 재배치
+function mkMobCard(rank,dc,dt,accImg,accName,enc,gems,pendMob,bufHtml,fH,fA,fD,bv, rawAccName){
+  const dtBadge=dt?`<span class="dtype-b" style="color:${dc};border-color:${dc};padding:2px 6px; font-size:inherit;">${dt}</span>`:'';
+  
+  // 장신구 이미지 반응형 크기 조절
+  let sizedAccImg = '';
+  if(accImg) {
+     sizedAccImg = accImg.replace(/width:[^;]+;height:[^;]+;/, 'width:clamp(20px, 5vw, 36px);height:clamp(20px, 5vw, 36px);');
+  }
+  
+  // 모든 폰트를 동일하게 자동 조절
+  return `<div class="res-item" data-acc="${rawAccName}" style="padding:14px 10px; border-bottom:1px solid var(--border2); box-sizing:border-box; width:100%; transition: background-color 0.2s; font-size: clamp(10px, 2.5vw, 13px);">
+    
+    <!-- 상단: 랭크/타입(좌), 스탯(중앙), 비밸(우) -->
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; width:100%;">
+      
+      <!-- 좌측: 랭크 및 타입/버프 -->
+      <div style="display:flex; align-items:center; gap:8px; flex:1; min-width:0;">
+        <div style="text-align:center; font-weight:800; font-size:inherit;">${rank}</div>
+        <div style="display:flex; flex-direction:column; gap:4px; align-items:flex-start; min-width:0;">
+          ${dtBadge}
+          <div style="color:var(--dim); line-height:1.2; white-space:nowrap; font-size:inherit;">${bufHtml}</div>
+        </div>
+      </div>
+
+      <!-- 중앙: 스탯 (정가운데, 폰트 3px 크게) -->
+      <div style="display:flex; justify-content:center; align-items:center; flex:1; font-family:'Courier New',monospace; font-weight:800; white-space:nowrap; letter-spacing:-0.5px; font-size:calc(100% + 3px);">
+        <span style="color:var(--hpc); font-size:inherit;">${fH}</span><span style="color:var(--dim); margin:0 3px; font-size:inherit;">/</span><span style="color:var(--atc); font-size:inherit;">${fA}</span><span style="color:var(--dim); margin:0 3px; font-size:inherit;">/</span><span style="color:var(--dfc); font-size:inherit;">${fD}</span>
+      </div>
+
+      <!-- 우측: 비밸 (폰트 3px 크게) -->
+      <div style="display:flex; justify-content:flex-end; align-items:center; flex:1; font-family:'Nanum Gothic',sans-serif; font-weight:900; color:var(--accent); white-space:nowrap; font-size:calc(100% + 3px);">
+        ${bv}
+      </div>
+    </div>
+
+    <!-- 가로선(구분선) -->
+    <div style="border-top:1px solid var(--border3); margin-bottom:12px;"></div>
+
+    <!-- 하단: 젬 배치, 장신구, 펜던트 -->
+    <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+      
+      <!-- 좌측: 젬 배치 -->
+      <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; flex:1; min-width:0;">
+        <div style="font-weight:800; font-family:'Nanum Gothic',sans-serif; white-space:nowrap; font-size:inherit;">젬 배치</div>
+        <div style="font-family:'Courier New',monospace; font-weight:800; white-space:nowrap; font-size:inherit;">
+          ${gems}
+        </div>
+      </div>
+      
+      <!-- 중앙: 장신구 정보 -->
+      <div style="display:flex; align-items:center; justify-content:center; gap:6px; flex:1; min-width:0;">
+        <div style="flex-shrink:0; display:flex; align-items:center;">
+           ${sizedAccImg}
+        </div>
+        <div style="display:flex; flex-direction:column; align-items:center; gap:4px; min-width:0;">
+          <div style="font-weight:800; white-space:nowrap; font-size:inherit;">${accName}</div>
+          <div style="font-size:inherit;">${enc}</div>
+        </div>
+      </div>
+
+      <!-- 우측: 펜던트 정보 -->
+      <div style="display:flex; justify-content:center; flex:1; min-width:0; font-size:inherit;">
+        ${pendMob}
+      </div>
+      
+    </div>
+
+  </div>`;
+}
+// ================================================================
+// 시뮬레이션 일괄 실행 (분석표 + TOP 200 동시 연산)
+// ================================================================
+
+function runAllSims() {
+  const btn = document.getElementById('btn-run-all');
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = '⏳ 분석표 및 TOP 200 일괄 연산 중...';
+  }
+
+  // 시뮬레이터 탭에 정령 정보 및 하이라이트 UI 렌더링
+  renderSimSpiritDisplay();
+
+  setTimeout(() => {
+    try {
+      S.gemLevel = parseInt(document.getElementById('sel-gem-lv').value);
+      S.accLevel = parseInt(document.getElementById('sel-acc-lv').value);
+      S.pendType = document.getElementById('sel-pend-type').value;
+
+      const ownedAcc = ACC_DB.filter(a => getAccNum(a.n) === S.accLevel);
+      const pends = getPends();
+      const pool = buildPool();
+      const allocs = genAllocs();
+      const userSp = procSpirit();
+
+      // ==========================================================
+      // 1. 정령 버프효율 분석표 생성 로직
+      // ==========================================================
+      const buffsArr = [
+        {h:0, a:0, d:0}, {h:1, a:0, d:0}, {h:0, a:1, d:0}, {h:0, a:0, d:1},
+        {h:2, a:0, d:0}, {h:0, a:2, d:0}, {h:0, a:0, d:2},
+        {h:1, a:1, d:0}, {h:1, a:0, d:1}, {h:0, a:1, d:1}
+      ];
+
+      const allSpirits = generateAllSpirits();
+      const allRowBVs = [];
+      const userRowBVs = [];
+
+      DTYPES.forEach((dt) => {
+        const bs = BASE[simGrade][dt];
+        const bh = bs.hp, ba = bs.atk, bd = bs.def;
+
+        const envs = [];
+        ownedAcc.forEach(acc => {
+          ['hp','atk','def'].forEach(enc => {
+            const aH = acc.hp + (enc==='hp'?0.21:0);
+            const aA = acc.atk + (enc==='atk'?0.21:0);
+            const aD = acc.def + (enc==='def'?0.21:0);
+            pends.forEach(pend => {
+              const {pH, pA, pD} = calcPendPct(pend);
+              allocs.forEach(alloc => {
+                let gH=0, gA=0, gD=0;
+                for(let i=0; i<alloc.length; i++){
+                  gH += alloc[i]*pool[i].h; gA += alloc[i]*pool[i].a; gD += alloc[i]*pool[i].d;
+                }
+                envs.push({
+                   baseH: Math.floor((bh + gH + 24)*(1 + aH)),
+                   baseA: Math.floor((ba + gA +  6)*(1 + aA)),
+                   baseD: Math.floor((bd + gD +  6)*(1 + aD)),
+                   pH, pA, pD
+                });
+              });
+            });
+          });
+        });
+
+        const BU_H = buffsArr.map(b => Math.floor(bh * 0.2) * b.h + COLL.hp);
+        const BU_A = buffsArr.map(b => Math.floor(ba * 0.2) * b.a + COLL.atk);
+        const BU_D = buffsArr.map(b => Math.floor(bd * 0.2) * b.d + COLL.def);
+
+        const evalSpirit = (sp) => {
+           const sp_pH = 1 + sp.pct.hp, sp_pA = 1 + sp.pct.atk, sp_pD = 1 + sp.pct.def;
+           const sp_plusH = sp.plus.hp * sp_pH, sp_plusA = sp.plus.atk * sp_pA, sp_plusD = sp.plus.def * sp_pD;
+           const sp_bH = sp.bonus.hp, sp_bA = sp.bonus.atk, sp_bD = sp.bonus.def;
+
+           const maxBVs = new Float64Array(10);
+           for(let j=0; j<envs.length; j++) {
+               const env = envs[j];
+               const s3H = Math.floor( (Math.floor(env.baseH * sp_pH + sp_plusH) + sp_bH) * (1 + env.pH) );
+               const s3A = Math.floor( (Math.floor(env.baseA * sp_pA + sp_plusA) + sp_bA) * (1 + env.pA) );
+               const s3D = Math.floor( (Math.floor(env.baseD * sp_pD + sp_plusD) + sp_bD) * (1 + env.pD) );
+
+               for(let k=0; k<10; k++) {
+                   const bv = (s3H + BU_H[k]) * (s3A + BU_A[k]) * (s3D + BU_D[k]);
+                   if(bv > maxBVs[k]) maxBVs[k] = bv;
+               }
+           }
+
+           const rows = new Float64Array(14);
+           rows[0] = maxBVs[0];
+           rows[1] = maxBVs[1]; rows[2] = maxBVs[2]; rows[3] = maxBVs[3];
+           rows[4] = (maxBVs[1] + maxBVs[2] + maxBVs[3]) / 3;
+           rows[5] = maxBVs[4]; rows[6] = maxBVs[5]; rows[7] = maxBVs[6];
+           rows[8] = maxBVs[7]; rows[9] = maxBVs[8]; rows[10] = maxBVs[9];
+
+           const b2Arr = [maxBVs[4], maxBVs[5], maxBVs[6], maxBVs[7], maxBVs[8], maxBVs[9]];
+           b2Arr.sort((a, b) => b - a);
+
+           rows[11] = (b2Arr[0] + b2Arr[1] + b2Arr[2] + b2Arr[3] + b2Arr[4] + b2Arr[5]) / 6;
+           rows[12] = (b2Arr[0] + b2Arr[1] + b2Arr[2]) / 3;
+           rows[13] = (b2Arr[3] + b2Arr[4] + b2Arr[5]) / 3;
+
+           return rows;
+        };
+
+        userRowBVs.push(evalSpirit(userSp));
+        const dtAllRows = new Float64Array(3888 * 14);
+        for(let i=0; i<3888; i++) {
+           const rows = evalSpirit(allSpirits[i]);
+           for(let r=0; r<14; r++) { dtAllRows[i*14 + r] = rows[r]; }
+        }
+        allRowBVs.push(dtAllRows);
+      });
+
+      window.tableSimData = { userRowBVs, allRowBVs, mode: window.tableSimData ? window.tableSimData.mode : 'bv' };
+      renderAnalysisTable();
+
+      // ==========================================================
+      // 2. 단일 조건 TOP 200 계산 로직
+      // ==========================================================
+      const exactBufObj = parseExactBuf(simExactBuf);
+      const exactNerfObj = parseExactNerf(simExactNerf);
+      const top200 = doSimExact(ownedAcc, exactBufObj, exactNerfObj, pends, pool, allocs);
+      renderResTop(top200);
+
+      const rs = document.getElementById('res-sec');
+      rs.style.display = '';
+
+    } catch(e) {
+      console.error(e);
+      alert('오류: ' + e.message);
+    }
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = '📊 일괄 시뮬레이션 연산 (분석표 + TOP 200)';
+    }
+  }, 30);
+}
+
+function doSimExact(ownedAcc, buf, nerf, pends, pool, allocs){
+  const {plus:sP, pct:sPct, bonus:sB} = procSpirit();
+  const topList = [];
+  let minBV = -Infinity;
+
+  const dt = simType; 
+  const bs = BASE[simGrade][dt];
+  const bh = bs.hp, ba = bs.atk, bd = bs.def;
+  
+  const finalH = Math.floor(bh * 0.2) * buf.h - Math.floor(bh * 0.2) * nerf.h;
+  const finalA = Math.floor(ba * 0.2) * buf.a - Math.floor(ba * 0.2) * nerf.a;
+  const finalD = Math.floor(bd * 0.2) * buf.d - Math.floor(bd * 0.2) * nerf.d;
+
+  for(const acc of ownedAcc){
+    for(const enc of ['hp','atk','def']){
+      const aH = acc.hp + (enc==='hp'?0.21:0);
+      const aA = acc.atk + (enc==='atk'?0.21:0);
+      const aD = acc.def + (enc==='def'?0.21:0);
+      
+      for(const pend of pends){
+        const {pH, pA, pD} = calcPendPct(pend);
+        for(const alloc of allocs){
+          let gH=0, gA=0, gD=0;
+          for(let i=0; i<alloc.length; i++){
+            gH += alloc[i]*pool[i].h; gA += alloc[i]*pool[i].a; gD += alloc[i]*pool[i].d;
+          }
+          
+          const fH = calcStat(bh, gH, 24, aH, sPct.hp, pH, sP.hp, sB.hp, COLL.hp, finalH);
+          const fA = calcStat(ba, gA, 6, aA, sPct.atk, pA, sP.atk, sB.atk, COLL.atk, finalA);
+          const fD = calcStat(bd, gD, 6, aD, sPct.def, pD, sP.def, sB.def, COLL.def, finalD);
+          const bv = fH * fA * fD;
+          
+          if(bv > minBV || topList.length < 200){
+            let lo=0, hi=topList.length;
+            while(lo < hi){ 
+              const m = (lo + hi) >> 1; 
+              if(topList[m].bv >= bv) lo = m + 1; 
+              else hi = m; 
+            }
+            topList.splice(lo, 0, {
+              bv, dt, accN:acc.n, enc, pend, 
+              bufLabel: buf.label, nerfLabel: nerf.label,
+              alloc:alloc.map((k,i)=>({k, g:pool[i]})).filter(x=>x.k>0), 
+              fH, fA, fD
+            });
+            if(topList.length > 200) topList.pop(); 
+            minBV = topList.length === 200 ? topList[199].bv : -Infinity;
+          }
+        }
+      }
+    }
+  }
+  return topList;
+}
+
+function renderResTop(topList){
+  const el = document.getElementById('res-body-top');
+  if(!topList.length){
+    el.innerHTML='<div style="padding:30px;text-align:center;color:var(--dim)">결과 없음</div>';
+    return;
+  }
+  const medals = ['🥇','🥈','🥉'];
+  
+  let html = '<div>'; 
+  
+  topList.forEach((r, i) => {
+    const rank = i < 3 ? medals[i] : `<span class="rank-n">${i+1}</span>`;
+    const dc = DCOLORS[r.dt];
+    const a = ACC_DB.find(x => x.n === r.accN);
+    // 장신구 이미지를 원본 사진처럼 조금 더 크게 설정
+    const aImg = a && a.img ? `<img src="${a.img}" style="width:48px;height:48px;object-fit:contain;border-radius:5px">` : '';
+    
+    const formattedBv = (r.bv / 1e8).toFixed(3) + '억';
+    const combinedBufHtml = fmtBufNerfLabel(r.bufLabel, r.nerfLabel);
+
+    html += mkMobCard(rank, dc, r.dt, aImg, fmtAccName(r.accN), fmtAccEnc(r.enc),
+      fmtGem(r.alloc), fmtPendMob(r.pend), combinedBufHtml,
+      r.fH.toLocaleString('ko-KR'), r.fA.toLocaleString('ko-KR'), r.fD.toLocaleString('ko-KR'),
+      formattedBv, r.accN);
+  });
+  
+  html += '</div>';
+  el.innerHTML = html;
+
+  // 테이블이 새로 그려졌으므로, 현재 드롭다운에 선택된 장신구가 있다면 다시 하이라이트 적용
+  const selAcc = document.getElementById('hl-acc-sel');
+  if(selAcc && selAcc.value) {
+    applyAccHighlight(selAcc.value);
+  }
+}
+
+// ================================================================
+// 정령 정보 읽기 전용 및 장신구 하이라이트 렌더링 함수
+// ================================================================
+
+function renderSimSpiritDisplay() {
+  const el = document.getElementById('sim-spirit-display');
+  if(!el) return;
+  const sp = S.spirit;
+
+  const getOptText = (o) => {
+     if(!o || !o.stat || !o.type) return '<span style="color:var(--dimmer);">-</span>';
+     const st = o.stat==='hp'?'체':o.stat==='atk'?'공':'방';
+     const col = o.stat==='hp'?'#fbbf24':o.stat==='atk'?'#f87171':'#60a5fa';
+     return `<span style="color:${col}; font-weight:800; font-size:var(--sfont);">${st}${o.type}</span>`;
+  };
+
+  const makeOptCell = (idx, o) => {
+    return `
+      <div style="background: var(--sf2); border: 1px solid var(--bd); border-radius: 6px; padding: clamp(6px, 1.5vw, 10px); display: flex; flex-direction: column; gap: clamp(4px, 1vw, 8px);">
+        <div style="text-align: center; font-size: var(--ssfont); font-weight: 800; color: var(--dim); white-space:nowrap;">${idx+1}옵션</div>
+        <div style="text-align: center;">${getOptText(o)}</div>
+      </div>
+    `;
+  };
+
+  let bHtml = '<span style="color:var(--dimmer);">-</span>';
+  if(sp.bonus) {
+     const st = sp.bonus==='hp'?'체':sp.bonus==='atk'?'공':'방';
+     const v = sp.bonus==='hp'?'+40':'+10';
+     const col = sp.bonus==='hp'?'#fbbf24':sp.bonus==='atk'?'#f87171':'#60a5fa';
+     bHtml = `<span style="color:${col}; font-weight:800; font-size:var(--sfont); white-space:nowrap;">${st} (${v})</span>`;
+  }
+
+  let spiritHtml = `
+    <div class="sec-hd" style="border-radius: 8px 8px 0 0; margin-bottom: 0; font-size: var(--sfont); white-space: nowrap;">🔮 적용된 정령 정보 (수정 불가)</div>
+    <div class="sec-bd" style="background: var(--sf); border: 1px solid var(--bd); border-top: none; border-radius: 0 0 8px 8px; height: calc(100% - clamp(24px, 6vw, 32px)); display:flex; flex-direction:column; justify-content:center; padding: clamp(8px, 2vw, 14px);">
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: clamp(4px, 1vw, 8px); margin-bottom: clamp(4px, 1vw, 8px);">
+        ${makeOptCell(0, sp.opts[0])}
+        ${makeOptCell(1, sp.opts[1])}
+        ${makeOptCell(2, sp.opts[2])}
+        ${makeOptCell(3, sp.opts[3])}
+      </div>
+      <div style="background: var(--sf2); border: 1px solid var(--bd); border-radius: 6px; padding: clamp(6px, 1.5vw, 10px); display: flex; align-items: center; justify-content: center; gap: clamp(8px, 2vw, 14px);">
+        <div style="font-size: var(--ssfont); font-weight: 800; color: var(--dim); white-space:nowrap;">부가옵션</div>
+        <div>${bHtml}</div>
+      </div>
+    </div>
+  `;
+
+  // 장신구 하이라이트 드롭다운 동적 생성
+  const ownedAcc = ACC_DB.filter(a => getAccNum(a.n) === S.accLevel);
+  let accOpts = '<option value="">-- 하이라이트 해제 --</option>';
+  ownedAcc.forEach(a => {
+     accOpts += `<option value="${a.n}">${a.n}</option>`;
+  });
+
+  let hlHtml = `
+    <div style="display:flex; flex-direction:column; min-width: 0; flex: 0.6;">
+      <div class="sec-hd" style="border-radius: 8px 8px 0 0; margin-bottom: 0; justify-content: center; letter-spacing: 0; font-size: var(--sfont); white-space: nowrap;">🔍 지정 장신구 선택</div>
+      <div class="sec-bd" style="background: var(--sf); border: 1px solid var(--bd); border-top: none; border-radius: 0 0 8px 8px; flex: 1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap: clamp(6px, 1.5vw, 10px); padding: clamp(8px, 2vw, 14px);">
+         
+         <div style="position: relative; width: clamp(44px, 10vw, 68px); height: clamp(44px, 10vw, 68px); border: 2px dashed var(--gold); border-radius: 8px; overflow: hidden; cursor: pointer; background: var(--bg); display:flex; align-items:center; justify-content:center; transition: all 0.2s;" onmouseover="this.style.backgroundColor='rgba(232,184,75,0.1)'" onmouseout="this.style.backgroundColor='var(--bg)'">
+           <img id="hl-acc-img" src="" style="width: 100%; height: 100%; object-fit: contain; display: none; z-index: 1;">
+           <div id="hl-acc-placeholder" style="position: absolute; width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:var(--gold); font-size:clamp(18px, 4vw, 28px); font-weight:800; line-height:1; z-index: 0;">+</div>
+           <select id="hl-acc-sel" onchange="applyAccHighlight(this.value)" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; z-index: 2;">
+              ${accOpts}
+           </select>
+         </div>
+         <div id="hl-acc-text" style="font-size:var(--ssfont); color:var(--dim); text-align:center; word-break:keep-all;">클릭하여 선택<br>(목록 하이라이트)</div>
+      </div>
+    </div>
+  `;
+
+  // --sfont와 --ssfont 변수를 통해 컨테이너 내부의 글자 크기를 화면 너비에 맞춰 자동 조율합니다.
+  el.innerHTML = `<div style="--sfont: clamp(11px, 2.6vw, 14px); --ssfont: clamp(9px, 2.2vw, 12px); display: flex; gap: clamp(8px, 2vw, 14px); flex-wrap: nowrap;">
+     <div style="flex: 1.4; min-width: 0; display:flex; flex-direction:column;">${spiritHtml}</div>
+     ${hlHtml}
+  </div>`;
+  el.style.display = 'block';
+}
+
+function applyAccHighlight(accName) {
+   const imgEl = document.getElementById('hl-acc-img');
+   const phEl = document.getElementById('hl-acc-placeholder');
+   const textEl = document.getElementById('hl-acc-text'); // 안내 텍스트 요소 가져오기
+   
+   if(!accName) {
+      imgEl.style.display = 'none';
+      phEl.style.display = 'flex';
+      if(textEl) textEl.innerHTML = '클릭하여 선택<br>(목록 하이라이트)'; // 선택 해제 시 기본 문구 복구
+   } else {
+      const acc = ACC_DB.find(x => x.n === accName);
+      if(acc && acc.img) {
+         imgEl.src = acc.img;
+         imgEl.style.display = 'block';
+         phEl.style.display = 'none';
+         if(textEl) textEl.innerHTML = `<span style="color:var(--text); font-weight:800;">${accName}</span>`; // 선택한 장신구 이름으로 교체
+      }
+   }
+
+   // 200위 결과 리스트에서 장신구 이름이 일치하는 행을 찾아 황금색으로 하이라이팅
+   const items = document.querySelectorAll('.res-item');
+   items.forEach(el => {
+      if(accName && el.getAttribute('data-acc') === accName) {
+         // 모바일 기기에서도 완벽하게 보이도록 투명도를 높이고 안쪽 황금색 테두리 추가
+         el.style.backgroundColor = 'rgba(232, 184, 75, 0.25)'; 
+         el.style.boxShadow = 'inset 0 0 0 2px rgba(232, 184, 75, 0.8)';
+      } else {
+         // 선택 해제 시 원래 상태로 복구
+         el.style.backgroundColor = ''; 
+         el.style.boxShadow = '';
+      }
+   });
+}
+document.addEventListener('DOMContentLoaded', doLoad);
+</script>
+</body>
+</html>
