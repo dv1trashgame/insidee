@@ -69,17 +69,27 @@ select:focus,input:focus{outline:none;border-color:var(--gold)}
 .res-tab-btn.active{color:var(--gold);border-bottom-color:var(--gold)}
 
 [data-theme="dark"]{
-  --bg:#0e1116;--bg2:#161a22;--bg3:#1c212c;
-  --border:#23293a;--border2:#1b1f2a;--border3:#2d3447;
-  --text:#eaecf2;--text2:#b3b9c7;--text3:#7d8597;--text4:#565d6e;
-  --accent:#7aa2f7;--accent-bg:rgba(122,162,247,0.12);--accent-border:rgba(122,162,247,0.30);
+  --bg:#f0f2f5; /* 엑셀 느낌의 옅은 회색 배경 */
+  --bg2:#ffffff; /* 흰색 패널 */
+  --bg3:#f8f9fa; /* 아주 옅은 회색 */
+  --border:#cccccc; /* 밝은 테두리 */
+  --border2:#dddddd;
+  --border3:#eeeeee;
+  --text:#000000; /* 기본 글자색 검정 */
+  --text2:#333333;
+  --text3:#555555;
+  --text4:#888888;
+  --accent:#000000; /* 강조색 검정 */
+  --accent-bg:rgba(0,0,0,0.05);
+  --accent-border:rgba(0,0,0,0.20);
 }
 :root{
   --sf:var(--bg2);--sf2:var(--bg3);--bd:var(--border);
-  --gold:var(--accent);--gold2:var(--accent);
+  --gold:#000000; /* 황금색 글씨들을 깔끔한 검은색으로 통일 */
+  --gold2:#333333;
   --dim:var(--text3);--dimmer:var(--text4);
-  --red:#f87171;--green:#4ade80;--blue:#60a5fa;
-  --hpc:#fbbf24;--atc:#f87171;--dfc:#60a5fa;
+  --red:#e53e3e;--green:#38a169;--blue:#3182ce;
+  --hpc:#b46504;--atc:#c00000;--dfc:#2b579a; /* 흰 배경에 맞춘 진한 스탯 색상 */
 }
 </style>
 </head>
