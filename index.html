@@ -470,7 +470,7 @@ function parseExactNerf(nStr){
   if(nStr === '체') h = 1;
   if(nStr === '공') a = 1;
   if(nStr === '방') d = 1;
-  return {h, a, d, label: nStr + ' 너프'};
+  return {h, a, d, label: nStr + ' 넢'};
 }
 
 function parseExactBuf(bStr){
@@ -481,7 +481,7 @@ function parseExactBuf(bStr){
     if(s==='공') a++;
     if(s==='방') d++;
   });
-  return {h, a, d, label: bStr};
+  return {h, a, d, label: bStr + ' 벞'};
 }
 // 시뮬레이션 데이터 준비 (Pool, Pendants, Allocations)
 // ================================================================
