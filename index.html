@@ -717,7 +717,7 @@ function renderAnalysisTable() {
   if(!window.tableSimData) return;
   const { userRowBVs, allRowBVs, mode } = window.tableSimData;
 
-  const fBV = v => Number((v/1e6).toFixed(1));
+  const fBV = v => (v / 1e8).toFixed(3) + '억';
 
   const rowsData = [
     { id: '노버프', rIdx: 0, bottomBorder: '2px solid white' },
@@ -747,19 +747,19 @@ function renderAnalysisTable() {
        <option value="gap" ${mode === 'gap' ? 'selected' : ''}>1위와의 비밸 격차 보기</option>
      </select>
   </div>
-  <table style="width:100%; border-collapse: collapse; border: 2px solid white; color: white; background: #111; font-family: 'Malgun Gothic', sans-serif; text-align: center; font-size: 14px;">
+ <table style="width:100%; table-layout: fixed; border-collapse: collapse; border: 2px solid white; color: white; background: #111; font-family: 'Malgun Gothic', sans-serif; text-align: center; font-size: 14px;">
     <thead>
       <tr>
          <th colspan="7" style="background: white; color: black; padding: 8px; font-size: 16px; font-weight: 800; border: 2px solid white;">&lt;_정령 버프효율 분석표_&gt;</th>
       </tr>
       <tr>
-         <th style="border: 1px solid #777; padding: 8px; background: #222; border-bottom: 2px solid white;">/</th>
-         <th style="border: 1px solid #777; padding: 8px; background: #222; border-bottom: 2px solid white;">체력</th>
-         <th style="border: 1px solid #777; padding: 8px; background: #222; border-bottom: 2px solid white;">공격</th>
-         <th style="border: 1px solid #777; padding: 8px; background: #222; border-bottom: 2px solid white;">방어</th>
-         <th style="border: 1px solid #777; padding: 8px; background: #222; border-bottom: 2px solid white;">체공</th>
-         <th style="border: 1px solid #777; padding: 8px; background: #222; border-bottom: 2px solid white;">체방</th>
-         <th style="border: 1px solid #777; padding: 8px; background: #222; border-bottom: 2px solid white;">공방</th>
+         <th style="width: 10%; border: 1px solid #777; padding: 8px; background: #222; border-bottom: 2px solid white; word-break: keep-all;">/</th>
+         <th style="width: 15%; border: 1px solid #777; padding: 8px; background: #222; border-bottom: 2px solid white;">체력</th>
+         <th style="width: 15%; border: 1px solid #777; padding: 8px; background: #222; border-bottom: 2px solid white;">공격</th>
+         <th style="width: 15%; border: 1px solid #777; padding: 8px; background: #222; border-bottom: 2px solid white;">방어</th>
+         <th style="width: 15%; border: 1px solid #777; padding: 8px; background: #222; border-bottom: 2px solid white;">체공</th>
+         <th style="width: 15%; border: 1px solid #777; padding: 8px; background: #222; border-bottom: 2px solid white;">체방</th>
+         <th style="width: 15%; border: 1px solid #777; padding: 8px; background: #222; border-bottom: 2px solid white;">공방</th>
       </tr>
     </thead>
     <tbody>
