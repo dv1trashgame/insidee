@@ -55,30 +55,7 @@ select:focus,input:focus{outline:none;border-color:var(--gold)}
 .btn-grp button{flex:1;padding:8px 4px;background:var(--sf2);border:1px solid var(--bd);border-radius:4px;color:var(--dim);cursor:pointer;font-family:'Nanum Gothic',sans-serif;font-size:13px;font-weight:700;transition:all .15s}
 .btn-grp button.active{background:rgba(232,184,75,.12);border-color:var(--gold);color:var(--gold)}
 
-.res-wrap{overflow-x:auto}
-table.rtbl{width:100%;border-collapse:collapse;min-width:640px}
-.rtbl th{background:var(--sf2);padding:9px 11px;text-align:left;font-size:11px;color:var(--dim);border-bottom:1px solid var(--bd);white-space:nowrap}
-.rtbl td{padding:10px 11px;border-bottom:1px solid var(--bd);font-size:13px;vertical-align:middle}
-.rtbl tr:last-child td{border-bottom:none}
-.rtbl tbody tr:hover td{background:rgba(255,255,255,.015)}
-.td-pc{display:table-cell}.td-mob{display:none}
-.mob-only{display:none}
-.acc-name-short{display:none}.pend-name-short{display:none}
-
-@media(max-width:600px){
-  .res-wrap{overflow-x:hidden}
-  table.rtbl{display:block;width:100%!important;min-width:0!important;box-sizing:border-box}
-  .rtbl thead{display:none}
-  .rtbl tbody{display:block;width:100%}
-  .rtbl tbody tr{display:block;width:100%;border-bottom:1px solid var(--bd);padding:0;box-sizing:border-box}
-  .rtbl tbody td{display:block;width:100%;box-sizing:border-box}
-  .td-pc{display:none!important}
-  .td-mob{display:block!important;padding:0;width:100%!important;box-sizing:border-box}
-  .acc-name-full{display:none}.acc-name-short{display:inline}
-  .pend-name-full{display:none}.pend-name-short{display:inline}
-  .mob-only{display:block!important}
-  .pc-only{display:none!important}
-}
+.res-wrap{overflow-x:hidden}
 .medal{font-size:20px}.rank-n{font-weight:800;color:var(--dim)}
 .dtype-b{display:inline-block;padding:2px 8px;border-radius:4px;font-size:12px;font-weight:800;border:1px solid}
 .bv-cell{font-family:'Courier New',monospace;font-size:14px;font-weight:800;color:var(--gold);white-space:nowrap}
@@ -1247,11 +1224,9 @@ function renderResTop(topList){
     return;
   }
   const medals = ['🥇','🥈','🥉'];
-  let mobHtml = '<div class="mob-only">';
-  let pcHtml = `<table class="rtbl pc-only"><thead><tr>
-    <th>순위</th><th>타입</th><th>장신구 / 인챈트</th>
-    <th>젬 배분</th><th>펜던트</th><th>버프 및 너프</th><th>체 / 공 / 방</th><th>비밸</th>
-  </tr></thead><tbody>`;
+  
+  // 모바일/PC 구분을 완전히 없애고 기본 카드 컨테이너만 엽니다.
+  let html = '<div>'; 
   
   topList.forEach((r, i) => {
     const rank = i < 3 ? medals[i] : `<span class="rank-n">${i+1}</span>`;
@@ -1262,32 +1237,15 @@ function renderResTop(topList){
     const formattedBv = (r.bv / 1e8).toFixed(3) + '억';
     const combinedBufHtml = fmtBufNerfLabel(r.bufLabel, r.nerfLabel);
 
-    mobHtml += mkMobCard(rank, dc, r.dt, aImg, fmtAccName(r.accN), fmtAccEnc(r.enc),
+    // 카드 형태의 UI만 무조건 추가되도록 변경
+    html += mkMobCard(rank, dc, r.dt, aImg, fmtAccName(r.accN), fmtAccEnc(r.enc),
       fmtGem(r.alloc), fmtPendMob(r.pend), combinedBufHtml,
       r.fH.toLocaleString('ko-KR'), r.fA.toLocaleString('ko-KR'), r.fD.toLocaleString('ko-KR'),
-      formattedBv, r.accN); // r.accN을 하이라이팅을 위한 raw data로 전달
-      
-    pcHtml += `<tr class="res-item" data-acc="${r.accN}" style="transition: background-color 0.2s;">
-      <td>${rank}</td>
-      <td><span class="dtype-b" style="color:${dc};border-color:${dc}">${r.dt}</span></td>
-      <td>
-        <div style="display:flex;align-items:center;gap:8px">
-          ${a&&a.img?`<img src="${a.img}" style="width:36px;height:36px;object-fit:contain;border-radius:4px">`:''}
-          <div><div style="font-weight:800;margin-bottom:3px">${fmtAccName(r.accN)}</div>${fmtAccEnc(r.enc)}</div>
-        </div>
-      </td>
-      <td><div class="gem-tags">${fmtGem(r.alloc)}</div></td>
-      <td style="font-size:12px;color:var(--dim)">${fmtPend(r.pend)}</td>
-      <td style="font-size:12px">${combinedBufHtml}</td>
-      <td class="st-cell">
-        <span style="color:var(--hpc)">${r.fH.toLocaleString('ko-KR')}</span> /
-        <span style="color:var(--atc)">${r.fA.toLocaleString('ko-KR')}</span> /
-        <span style="color:var(--dfc)">${r.fD.toLocaleString('ko-KR')}</span>
-      </td>
-      <td class="bv-cell">${formattedBv}</td>
-    </tr>`;
+      formattedBv, r.accN);
   });
-  el.innerHTML = mobHtml + '</div>' + pcHtml + '</tbody></table>';
+  
+  html += '</div>';
+  el.innerHTML = html;
 
   // 테이블이 새로 그려졌으므로, 현재 드롭다운에 선택된 장신구가 있다면 다시 하이라이트 적용
   const selAcc = document.getElementById('hl-acc-sel');
