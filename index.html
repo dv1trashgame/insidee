@@ -826,7 +826,8 @@ function renderAnalysisTable() {
   if(!window.tableSimData) return;
   const { userRowBVs, allRowBVs, mode } = window.tableSimData;
 
-  const fBV = v => (v / 1e8).toFixed(3) + '억';
+  // 무조건 소수점 3자리로 고정하는 포맷 함수
+  const fBV = v => (v / 1e8).toFixed(2) + '억';
 
   const rowsData = [
     { id: '노버프', rIdx: 0, bottomBorder: '2px solid white' },
@@ -847,35 +848,37 @@ function renderAnalysisTable() {
 
   let html = `
   <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom: 8px;">
-     <span style="font-size:12px; color:var(--dim); line-height: 1.3;">
-        3888개의 모든 정령 조합과 비교합니다.<br>우측 메뉴에서 보기 모드를 변경해보세요!
+     <span style="font-size:12px; color:var(--dim); line-height: 1.3; white-space:nowrap;">
+        3888개의 정령 조합과 비교합니다.
      </span>
-     <select onchange="changeTableMode(this.value)" style="background:var(--sf2); padding:8px 14px; border-radius:6px; border:1px solid var(--gold); color:var(--text); font-size:13px; font-weight:800; cursor:pointer; outline:none; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
+     <select onchange="changeTableMode(this.value)" style="background:var(--sf2); padding:6px 10px; border-radius:6px; border:1px solid var(--gold); color:var(--text); font-size:12px; font-weight:800; cursor:pointer; outline:none; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
        <option value="bv" ${mode === 'bv' ? 'selected' : ''}>최대 비밸 수치 보기</option>
        <option value="rank" ${mode === 'rank' ? 'selected' : ''}>전체 정령 중 내 등수 보기</option>
        <option value="gap" ${mode === 'gap' ? 'selected' : ''}>1위와의 비밸 격차 보기</option>
      </select>
   </div>
- <table style="width:100%; table-layout: fixed; border-collapse: collapse; border: 2px solid white; color: white; background: #111; font-family: 'Malgun Gothic', sans-serif; text-align: center; font-size: 14px;">
-    <thead>
-      <tr>
-         <th colspan="7" style="background: white; color: black; padding: 8px; font-size: 16px; font-weight: 800; border: 2px solid white;">&lt;_정령 버프효율 분석표_&gt;</th>
-      </tr>
-      <tr>
-         <th style="width: 10%; border: 1px solid #777; padding: 8px; background: #222; border-bottom: 2px solid white; word-break: keep-all;">/</th>
-         <th style="width: 15%; border: 1px solid #777; padding: 8px; background: #222; border-bottom: 2px solid white;">체력</th>
-         <th style="width: 15%; border: 1px solid #777; padding: 8px; background: #222; border-bottom: 2px solid white;">공격</th>
-         <th style="width: 15%; border: 1px solid #777; padding: 8px; background: #222; border-bottom: 2px solid white;">방어</th>
-         <th style="width: 15%; border: 1px solid #777; padding: 8px; background: #222; border-bottom: 2px solid white;">체공</th>
-         <th style="width: 15%; border: 1px solid #777; padding: 8px; background: #222; border-bottom: 2px solid white;">체방</th>
-         <th style="width: 15%; border: 1px solid #777; padding: 8px; background: #222; border-bottom: 2px solid white;">공방</th>
-      </tr>
-    </thead>
-    <tbody>
+  <!-- 글자가 깨지지 않도록 최소 너비를 주고, 넘치면 표 내부만 스크롤되도록 설정 -->
+  <div style="width: 100%; overflow-x: auto;">
+    <table style="width:100%; min-width: 520px; table-layout: fixed; border-collapse: collapse; border: 2px solid white; color: white; background: #111; font-family: 'Courier New', 'Malgun Gothic', sans-serif; text-align: center; font-size: 12px; white-space: nowrap; letter-spacing: -0.5px;">
+      <thead>
+        <tr>
+           <th colspan="7" style="background: white; color: black; padding: 6px; font-size: 13px; font-weight: 800; border: 2px solid white; letter-spacing: 0;">&lt;_정령 버프효율 분석표_&gt;</th>
+        </tr>
+        <tr>
+           <th style="width: 10%; border: 1px solid #777; padding: 6px; background: #222; border-bottom: 2px solid white;">/</th>
+           <th style="width: 15%; border: 1px solid #777; padding: 6px; background: #222; border-bottom: 2px solid white;">체력</th>
+           <th style="width: 15%; border: 1px solid #777; padding: 6px; background: #222; border-bottom: 2px solid white;">공격</th>
+           <th style="width: 15%; border: 1px solid #777; padding: 6px; background: #222; border-bottom: 2px solid white;">방어</th>
+           <th style="width: 15%; border: 1px solid #777; padding: 6px; background: #222; border-bottom: 2px solid white;">체공</th>
+           <th style="width: 15%; border: 1px solid #777; padding: 6px; background: #222; border-bottom: 2px solid white;">체방</th>
+           <th style="width: 15%; border: 1px solid #777; padding: 6px; background: #222; border-bottom: 2px solid white;">공방</th>
+        </tr>
+      </thead>
+      <tbody>
   `;
 
   rowsData.forEach(row => {
-    html += `<tr><th style="border: 1px solid #555; border-bottom: ${row.bottomBorder}; padding: 8px; background: #222;">${row.id}</th>`;
+    html += `<tr><th style="border: 1px solid #555; border-bottom: ${row.bottomBorder}; padding: 6px; background: #222; font-size: 12px;">${row.id}</th>`;
     
     DTYPES.forEach((dt, dtIdx) => {
       const userVal = userRowBVs[dtIdx][row.rIdx];
@@ -883,39 +886,37 @@ function renderAnalysisTable() {
       let displayStr = '';
       
       if(mode === 'bv') {
-         // 모드 1: 기존 최대 비밸 보기
-         displayStr = fBV(userVal);
+         // 모드 1: 최대 비밸 (12px 통일)
+         displayStr = `<span style="color:var(--gold); font-weight:800;">${fBV(userVal)}</span>`;
       } else if (mode === 'rank') {
-         // 모드 2: 내 등수 보기
+         // 모드 2: 내 등수 (12px 통일)
          let rank = 1;
          for(let i=0; i<3888; i++) {
             if(allVals[i*14 + row.rIdx] > userVal) rank++;
          }
-         
-         if(rank === 1) displayStr = `<span style="color:var(--gold); font-weight:800; font-size:15px;">1</span><span style="font-size:11px; color:#ddd;">등</span>`;
-         else displayStr = `<span style="color:var(--text); font-weight:800;">${rank}</span><span style="font-size:11px; color:#aaa;">등</span>`;
+         if(rank === 1) displayStr = `<span style="color:var(--gold); font-weight:800;">1등</span>`;
+         else displayStr = `<span style="color:var(--text); font-weight:800;">${rank}등</span>`;
       } else if (mode === 'gap') {
-         // 모드 3: 1위와의 격차 보기
+         // 모드 3: 1위와의 격차 (무조건 소수점 3자리, 12px 통일)
          let maxVal = -Infinity;
          for(let i=0; i<3888; i++) {
             if(allVals[i*14 + row.rIdx] > maxVal) maxVal = allVals[i*14 + row.rIdx];
          }
          const gap = maxVal - userVal;
          
-         // 부동소수점 오차 방지를 위해 0.0001 이하는 격차 없음(1위)으로 간주
          if(gap <= 0.0001) {
-            displayStr = `<span style="color:var(--gold); font-weight:800; font-size:12px;">격차 없음</span>`;
+            displayStr = `<span style="color:var(--gold); font-weight:800;">0.00억</span>`;
          } else {
             displayStr = `<span style="color:var(--red); font-weight:800;">-${fBV(gap)}</span>`;
          }
       }
       
-      html += `<td style="border: 1px solid #555; border-bottom: ${row.bottomBorder}; padding: 8px;">${displayStr}</td>`;
+      html += `<td style="border: 1px solid #555; border-bottom: ${row.bottomBorder}; padding: 6px;">${displayStr}</td>`;
     });
     html += `</tr>`;
   });
 
-  html += `</tbody></table>`;
+  html += `</tbody></table></div>`;
   wrap.innerHTML = html;
   wrap.style.display = 'block';
 }
