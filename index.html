@@ -934,17 +934,14 @@ function renderAnalysisTable() {
 
 const STAT_COL={체:'#fbbf24',공:'#f87171',방:'#60a5fa'};
 
-// 버프와 너프를 함께 예쁘게 렌더링하는 통합 라벨 함수
+// 버프와 너프를 똑같은 박스(배지) 형태로 예쁘게 렌더링하는 통합 라벨 함수
 function fmtBufNerfLabel(bLabel, nLabel){
   let bHtml = '';
   if(bLabel === '노버프'){
     bHtml = `<span style="color:var(--dim); font-size:inherit;">버프 없음</span>`;
   } else {
-    bHtml = bLabel.split('+').map((s,i)=>{
-      const trimmed=s.trim();
-      const col=STAT_COL[trimmed]||'#fff';
-      return(i>0?`<span style="color:var(--text); font-size:inherit;">+</span>`:'')+`<span style="color:${col};font-weight:700; font-size:inherit;">${trimmed}</span>`;
-    }).join('');
+    // 버프도 너프와 완전히 동일한 박스 형태(초록색)로 통일
+    bHtml = `<div style="color:var(--green); font-weight:800; font-size:inherit; margin-top:2px; display:inline-block; padding: 2px 6px; background: rgba(74,222,128,0.15); border-radius: 4px; border: 1px solid rgba(74,222,128,0.3); white-space:nowrap;">▲ ${bLabel}</div>`;
   }
 
   if(nLabel && nLabel !== '노너프') {
@@ -972,16 +969,16 @@ function fmtAccEnc(enc){
   return`<span class="enc-b" style="border-color:${col};color:${col};padding:2px 6px;border-radius:4px; font-size:inherit; white-space:nowrap;">${lbl} +21%</span>`;
 }
 
-// 젬 표시를 0 / 4 / 1 (체/공/방) 형식으로 심플하게 변경 및 폰트 통일
+// 젬 표시를 0 / 4 / 1 (체/공/방) 형식으로 심플하게 유지하고, 폰트를 3px 더 크게 설정
 function fmtGem(alloc){
-  if(!alloc||!alloc.length) return `<span style="color:var(--hpc); font-size:inherit;">0</span> <span style="color:var(--dim); font-size:inherit;">/</span> <span style="color:var(--atc); font-size:inherit;">0</span> <span style="color:var(--dim); font-size:inherit;">/</span> <span style="color:var(--dfc); font-size:inherit;">0</span>`;
+  if(!alloc||!alloc.length) return `<span style="color:var(--hpc); font-size:calc(100% + 3px);">0</span> <span style="color:var(--dim); font-size:calc(100% + 3px);">/</span> <span style="color:var(--atc); font-size:calc(100% + 3px);">0</span> <span style="color:var(--dim); font-size:calc(100% + 3px);">/</span> <span style="color:var(--dfc); font-size:calc(100% + 3px);">0</span>`;
   let h=0, a=0, d=0;
   alloc.forEach(({k,g})=>{
     if(g.s==='hp') h+=k;
     else if(g.s==='atk') a+=k;
     else if(g.s==='def') d+=k;
   });
-  return `<span style="color:var(--hpc); font-size:inherit;">${h}</span> <span style="color:var(--dim); font-size:inherit;">/</span> <span style="color:var(--atc); font-size:inherit;">${a}</span> <span style="color:var(--dim); font-size:inherit;">/</span> <span style="color:var(--dfc); font-size:inherit;">${d}</span>`;
+  return `<span style="color:var(--hpc); font-size:calc(100% + 3px);">${h}</span> <span style="color:var(--dim); font-size:calc(100% + 3px);">/</span> <span style="color:var(--atc); font-size:calc(100% + 3px);">${a}</span> <span style="color:var(--dim); font-size:calc(100% + 3px);">/</span> <span style="color:var(--dfc); font-size:calc(100% + 3px);">${d}</span>`;
 }
 
 // 펜던트 표시를 상단에 이름+아이콘, 하단에 스탯으로 배치
@@ -1006,7 +1003,7 @@ function fmtPendMob(pend){
   `;
 }
 
-// 전체 레이아웃을 중앙 정렬, 폰트 크기 일치, 반응형으로 재배치
+// 전체 레이아웃을 중앙 정렬, 지정된 요소 폰트 +3px, 반응형으로 재배치
 function mkMobCard(rank,dc,dt,accImg,accName,enc,gems,pendMob,bufHtml,fH,fA,fD,bv, rawAccName){
   const dtBadge=dt?`<span class="dtype-b" style="color:${dc};border-color:${dc};padding:2px 6px; font-size:inherit;">${dt}</span>`:'';
   
@@ -1031,13 +1028,13 @@ function mkMobCard(rank,dc,dt,accImg,accName,enc,gems,pendMob,bufHtml,fH,fA,fD,b
         </div>
       </div>
 
-      <!-- 중앙: 스탯 (정가운데) -->
-      <div style="display:flex; justify-content:center; align-items:center; flex:1; font-family:'Courier New',monospace; font-weight:800; white-space:nowrap; letter-spacing:-0.5px; font-size:inherit;">
+      <!-- 중앙: 스탯 (정가운데, 폰트 3px 크게) -->
+      <div style="display:flex; justify-content:center; align-items:center; flex:1; font-family:'Courier New',monospace; font-weight:800; white-space:nowrap; letter-spacing:-0.5px; font-size:calc(100% + 3px);">
         <span style="color:var(--hpc); font-size:inherit;">${fH}</span><span style="color:var(--dim); margin:0 3px; font-size:inherit;">/</span><span style="color:var(--atc); font-size:inherit;">${fA}</span><span style="color:var(--dim); margin:0 3px; font-size:inherit;">/</span><span style="color:var(--dfc); font-size:inherit;">${fD}</span>
       </div>
 
-      <!-- 우측: 비밸 -->
-      <div style="display:flex; justify-content:flex-end; align-items:center; flex:1; font-family:'Nanum Gothic',sans-serif; font-weight:900; color:var(--accent); white-space:nowrap; font-size:inherit;">
+      <!-- 우측: 비밸 (폰트 3px 크게) -->
+      <div style="display:flex; justify-content:flex-end; align-items:center; flex:1; font-family:'Nanum Gothic',sans-serif; font-weight:900; color:var(--accent); white-space:nowrap; font-size:calc(100% + 3px);">
         ${bv}
       </div>
     </div>
@@ -1076,7 +1073,6 @@ function mkMobCard(rank,dc,dt,accImg,accName,enc,gems,pendMob,bufHtml,fH,fA,fD,b
 
   </div>`;
 }
-
 // ================================================================
 // 시뮬레이션 일괄 실행 (분석표 + TOP 200 동시 연산)
 // ================================================================
