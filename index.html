@@ -107,22 +107,22 @@ select:focus,input:focus{outline:none;border-color:var(--gold)}
 
 <!-- ■ 내 스펙 간편 설정 탭 -->
 <div id="tab-spec" class="tc active"><div class="ti">
-  <!-- CSS 변수(--ufont)를 선언하여 탭 내부의 모든 폰트 크기를 화면 비율에 맞춰 100% 동일하게 일치시킵니다 -->
-  <div style="max-width: 820px; margin: 0 auto; background: #111; padding: 14px; border-radius: 8px; border: 1px solid #333; --ufont: clamp(11px, 2.6vw, 14px);">
+  <!-- 배경을 투명하게 하고 외곽선을 지워 엑셀 시트 위에 표가 떠있는 느낌 적용 -->
+  <div style="max-width: 820px; margin: 0 auto; background: transparent; padding: 14px; border-radius: 8px; border: none; --ufont: clamp(11px, 2.6vw, 14px);">
     
     <!-- 상단 1: 타입 / 버프 / 너프 -->
     <table style="width: 100%; border-collapse: collapse; text-align: center; margin-bottom: 10px; font-family: 'Malgun Gothic', sans-serif; table-layout: fixed;">
       <thead>
         <tr>
-          <th style="background: #ccc; color: black; border: 2px solid white; padding: 6px; font-size: var(--ufont); white-space: nowrap;">드래곤 타입</th>
-          <th style="background: #ccc; color: black; border: 2px solid white; padding: 6px; font-size: var(--ufont); white-space: nowrap;">적용 버프</th>
-          <th style="background: #ccc; color: black; border: 2px solid white; padding: 6px; font-size: var(--ufont); white-space: nowrap;">적용 너프</th>
+          <th style="background: black; color: white; border: 1px solid #ccc; padding: 6px; font-size: var(--ufont); white-space: nowrap;">드래곤 타입</th>
+          <th style="background: black; color: white; border: 1px solid #ccc; padding: 6px; font-size: var(--ufont); white-space: nowrap;">적용 버프</th>
+          <th style="background: black; color: white; border: 1px solid #ccc; padding: 6px; font-size: var(--ufont); white-space: nowrap;">적용 너프</th>
         </tr>
       </thead>
       <tbody>
         <tr>
-          <td style="background: black; border: 2px solid white; padding: 4px;">
-            <select onchange="setType(this.value)" id="sel-type" style="width:100%; background:black; color:white; border:none; text-align:center; font-size: var(--ufont); font-weight:bold; cursor:pointer;">
+          <td style="background: white; border: 1px solid #ccc; padding: 4px;">
+            <select onchange="setType(this.value)" id="sel-type" style="width:100%; background:white; color:black; border:none; text-align:center; font-size: var(--ufont); font-weight:bold; cursor:pointer;">
               <option value="체력형" selected>체력형</option>
               <option value="공격형">공격형</option>
               <option value="방어형">방어형</option>
@@ -131,8 +131,8 @@ select:focus,input:focus{outline:none;border-color:var(--gold)}
               <option value="공방형">공방형</option>
             </select>
           </td>
-          <td style="background: black; border: 2px solid white; padding: 4px;">
-            <select onchange="setExactBuf(this.value)" id="sel-buf" style="width:100%; background:black; color:white; border:none; text-align:center; font-size: var(--ufont); cursor:pointer;">
+          <td style="background: white; border: 1px solid #ccc; padding: 4px;">
+            <select onchange="setExactBuf(this.value)" id="sel-buf" style="width:100%; background:white; color:black; border:none; text-align:center; font-size: var(--ufont); cursor:pointer;">
               <option value="노버프" selected>노버프</option>
               <option value="체">체 1벞</option>
               <option value="공">공 1벞</option>
@@ -145,8 +145,8 @@ select:focus,input:focus{outline:none;border-color:var(--gold)}
               <option value="공+방">공+방</option>
             </select>
           </td>
-          <td style="background: black; border: 2px solid white; padding: 4px;">
-            <select onchange="setExactNerf(this.value)" id="sel-nerf" style="width:100%; background:black; color:white; border:none; text-align:center; font-size: var(--ufont); cursor:pointer;">
+          <td style="background: white; border: 1px solid #ccc; padding: 4px;">
+            <select onchange="setExactNerf(this.value)" id="sel-nerf" style="width:100%; background:white; color:black; border:none; text-align:center; font-size: var(--ufont); cursor:pointer;">
               <option value="노너프" selected>노너프</option>
               <option value="체">체 1넢</option>
               <option value="공">공 1넢</option>
@@ -161,41 +161,39 @@ select:focus,input:focus{outline:none;border-color:var(--gold)}
     <table style="width: 100%; border-collapse: collapse; text-align: center; margin-bottom: 20px; font-family: 'Malgun Gothic', sans-serif;">
       <thead>
         <tr>
-          <!-- width: 1% 를 적용하여 헤더 글자(내용물) 크기에 맞춰 칸 넓이가 최소한으로 자동 축소됩니다 -->
-          <th style="background: #ccc; color: black; border: 2px solid white; padding: 6px; font-size: var(--ufont); white-space: nowrap; width: 1%;">드래곤 등급</th>
-          <th style="background: #ccc; color: black; border: 2px solid white; padding: 6px; font-size: var(--ufont); white-space: nowrap; width: 1%;">젬 수치</th>
-          <th style="background: #ccc; color: black; border: 2px solid white; padding: 6px; font-size: var(--ufont); white-space: nowrap;">장신구 수치</th>
-          <th style="background: #ccc; color: black; border: 2px solid white; padding: 6px; font-size: var(--ufont); white-space: nowrap;">펜던트</th>
+          <th style="background: black; color: white; border: 1px solid #ccc; padding: 6px; font-size: var(--ufont); white-space: nowrap; width: 1%;">드래곤 등급</th>
+          <th style="background: black; color: white; border: 1px solid #ccc; padding: 6px; font-size: var(--ufont); white-space: nowrap; width: 1%;">젬 수치</th>
+          <th style="background: black; color: white; border: 1px solid #ccc; padding: 6px; font-size: var(--ufont); white-space: nowrap;">장신구 수치</th>
+          <th style="background: black; color: white; border: 1px solid #ccc; padding: 6px; font-size: var(--ufont); white-space: nowrap;">펜던트</th>
         </tr>
       </thead>
       <tbody>
         <tr>
-          <!-- 선택박스 역시 width: auto 를 통해 내용물(7.0 등)에 맞춰 폭이 딱 맞게 줄어듭니다 -->
-          <td style="background: black; border: 2px solid white; padding: 4px;">
-            <select onchange="setGrade(this.value)" id="sel-grade" style="width:auto; background:black; color:white; border:none; text-align:center; font-size: var(--ufont); font-weight:bold; cursor:pointer;">
+          <td style="background: white; border: 1px solid #ccc; padding: 4px;">
+            <select onchange="setGrade(this.value)" id="sel-grade" style="width:auto; background:white; color:black; border:none; text-align:center; font-size: var(--ufont); font-weight:bold; cursor:pointer;">
               <option value="7.0">7.0</option>
               <option value="8.0">8.0</option>
               <option value="9.0" selected>9.0</option>
             </select>
           </td>
-          <td style="background: black; border: 2px solid white; padding: 4px;">
-            <select onchange="onGemLvl(parseInt(this.value))" id="sel-gem-lv" style="width:auto; background:black; color:white; border:none; text-align:center; font-size: var(--ufont); font-weight:bold; cursor:pointer;">
+          <td style="background: white; border: 1px solid #ccc; padding: 4px;">
+            <select onchange="onGemLvl(parseInt(this.value))" id="sel-gem-lv" style="width:auto; background:white; color:black; border:none; text-align:center; font-size: var(--ufont); font-weight:bold; cursor:pointer;">
               <option value="38">38</option>
               <option value="40">40</option>
               <option value="42">42</option>
               <option value="44">44</option>
             </select>
           </td>
-          <td style="background: black; border: 2px solid white; padding: 4px;">
-            <select onchange="onAccLvl(parseInt(this.value))" id="sel-acc-lv" style="width:100%; background:black; color:white; border:none; text-align:center; text-align-last:center; font-size: var(--ufont); cursor:pointer;">
+          <td style="background: white; border: 1px solid #ccc; padding: 4px;">
+            <select onchange="onAccLvl(parseInt(this.value))" id="sel-acc-lv" style="width:100%; background:white; color:black; border:none; text-align:center; text-align-last:center; font-size: var(--ufont); cursor:pointer;">
               <option value="17">17장</option>
               <option value="18">18장</option>
               <option value="19">19장</option>
               <option value="20">20장</option>
             </select>
           </td>
-          <td style="background: black; border: 2px solid white; padding: 4px;">
-            <select onchange="onPendType(this.value)" id="sel-pend-type" style="width:100%; background:black; color:white; border:none; text-align:center; text-align-last:center; font-size: var(--ufont); cursor:pointer;">
+          <td style="background: white; border: 1px solid #ccc; padding: 4px;">
+            <select onchange="onPendType(this.value)" id="sel-pend-type" style="width:100%; background:white; color:black; border:none; text-align:center; text-align-last:center; font-size: var(--ufont); cursor:pointer;">
               <option value="달">달펜(2옵)</option>
               <option value="태양">태펜(3옵)</option>
             </select>
