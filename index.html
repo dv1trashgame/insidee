@@ -829,6 +829,15 @@ function renderAnalysisTable() {
   // 무조건 소수점 2자리로 고정 (이전 요청 반영)
   const fBV = v => (v / 1e8).toFixed(2) + '억';
 
+  // (신규 추가) 정수 부분만 1.5px 더 크게 만드는 포맷팅 함수
+  const fBigInt = str => {
+    const parts = str.split('.');
+    if(parts.length === 2) {
+      return `<span style="font-size: calc(100% + 1.5px);">${parts[0]}</span>.${parts[1]}`;
+    }
+    return str;
+  };
+
   const rowsData = [
     { id: '노버프', rIdx: 0, bottomBorder: '2px solid white' },
     { id: '체', rIdx: 1, bottomBorder: '1px solid #555' },
@@ -887,8 +896,8 @@ function renderAnalysisTable() {
       let displayStr = '';
       
       if(mode === 'bv') {
-         // 모드 1: 최대 비밸
-         displayStr = `<span style="color:var(--gold); font-weight:800;">${fBV(userVal)}</span>`;
+         // 모드 1: 최대 비밸 (색상 하얀색 변경 및 정수 확대 적용)
+         displayStr = `<span style="color:white; font-weight:800;">${fBigInt(fBV(userVal))}</span>`;
       } else if (mode === 'rank') {
          // 모드 2: 내 등수
          let rank = 1;
@@ -897,8 +906,8 @@ function renderAnalysisTable() {
          }
          if(rank === 1) displayStr = `<span style="color:var(--gold); font-weight:800;">1등</span>`;
          else displayStr = `<span style="color:var(--text); font-weight:800;">${rank}등</span>`;
-      } else if (mode === 'gap') {
-         // 모드 3: 1위와의 격차 (0.00억 적용)
+     } else if (mode === 'gap') {
+         // 모드 3: 1위와의 격차 (정수 확대 적용)
          let maxVal = -Infinity;
          for(let i=0; i<3888; i++) {
             if(allVals[i*14 + row.rIdx] > maxVal) maxVal = allVals[i*14 + row.rIdx];
@@ -906,9 +915,9 @@ function renderAnalysisTable() {
          const gap = maxVal - userVal;
          
          if(gap <= 0.0001) {
-            displayStr = `<span style="color:var(--gold); font-weight:800;">0.00억</span>`;
+            displayStr = `<span style="color:var(--gold); font-weight:800;">${fBigInt('0.00억')}</span>`;
          } else {
-            displayStr = `<span style="color:var(--red); font-weight:800;">-${fBV(gap)}</span>`;
+            displayStr = `<span style="color:var(--red); font-weight:800;">-${fBigInt(fBV(gap))}</span>`;
          }
       }
       
