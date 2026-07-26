@@ -852,146 +852,97 @@ function renderAnalysisTable() {
   wrap.style.display = 'block';
 }
 
-/* ==================== (여기까지 복사해서 덮어쓰기 완료!) ==================== */
 // ================================================================
-// 시뮬레이션 실행 및 계산 
+// 출력 포매팅 헬퍼 (삭제되었던 부분 복구)
 // ================================================================
 
-function runSim(){
-  const btn=document.getElementById('sim-btn');
-  btn.disabled=true; btn.textContent='⏳ 수만 가지 경우의 수 계산 중...';
-  
-  setTimeout(()=>{
-    try{
-      const bufCombos=getBufCombos(simBuf);
-      const ownedAcc = ACC_DB.filter(a => getAccNum(a.n) === S.accLevel);
-      const pends = getPends();
-      const pool = buildPool();
-      const allocs = genAllocs(); // 21가지
-      
-      renderResTop(doSimTop(ownedAcc, bufCombos, pends, pool, allocs));
-      renderResAvg(doSimAvg(ownedAcc, bufCombos, pends, pool, allocs));
-      
-      const rs=document.getElementById('res-sec');
-      rs.style.display='';
-      switchResTab('avg');
-      rs.scrollIntoView({behavior:'smooth',block:'start'});
-    }catch(e){console.error(e);alert('오류: '+e.message);}
-    btn.disabled=false; btn.textContent='🐉 조합 및 시뮬레이션 실행';
-  }, 20);
+const STAT_COL={체:'#fbbf24',공:'#f87171',방:'#60a5fa'};
+function fmtBufLabel(label){
+  if(label==='버프 없음')return`<span style="color:var(--dim)">버프 없음</span>`;
+  return label.split('+').map((s,i)=>{
+    const trimmed=s.trim();
+    const col=STAT_COL[trimmed]||'#fff';
+    return(i>0?`<span style="color:var(--text)">+</span>`:'')+`<span style="color:${col};font-weight:700">${trimmed}</span>`;
+  }).join('');
 }
 
-function doSimTop(ownedAcc, bufCombos, pends, pool, allocs){
-  const {plus:sP,pct:sPct,bonus:sB}=procSpirit();
-  const top10=[];
-  let minBV=-Infinity;
-
-  for(const dt of DTYPES){
-    const bs=BASE[simGrade][dt];
-    const bh=bs.hp, ba=bs.atk, bd=bs.def;
-    
-    for(const acc of ownedAcc){
-      for(const enc of ['hp','atk','def']){
-        const aH=acc.hp+(enc==='hp'?.21:0);
-        const aA=acc.atk+(enc==='atk'?.21:0);
-        const aD=acc.def+(enc==='def'?.21:0);
-        
-        for(const pend of pends){
-          const{pH,pA,pD}=calcPendPct(pend);
-          for(const alloc of allocs){
-            let gH=0,gA=0,gD=0;
-            for(let i=0;i<alloc.length;i++){gH+=alloc[i]*pool[i].h;gA+=alloc[i]*pool[i].a;gD+=alloc[i]*pool[i].d;}
-            
-            for(const buf of bufCombos){
-              const bufH = Math.floor(bh * 0.2) * buf.h;
-              const bufA = Math.floor(ba * 0.2) * buf.a;
-              const bufD = Math.floor(bd * 0.2) * buf.d;
-              
-              const fH=calcStat(bh,gH,24,aH,sPct.hp,pH,sP.hp,sB.hp,COLL.hp,bufH);
-              const fA=calcStat(ba,gA,6,aA,sPct.atk,pA,sP.atk,sB.atk,COLL.atk,bufA);
-              const fD=calcStat(bd,gD,6,aD,sPct.def,pD,sP.def,sB.def,COLL.def,bufD);
-              const bv=fH*fA*fD;
-              
-              if(bv>minBV||top10.length<10){
-                let lo=0,hi=top10.length;
-                while(lo<hi){const m=(lo+hi)>>1;if(top10[m].bv>=bv)lo=m+1;else hi=m;}
-                top10.splice(lo,0,{bv,dt,accN:acc.n,enc,pend,buf,alloc:alloc.map((k,i)=>({k,g:pool[i]})).filter(x=>x.k>0),fH,fA,fD});
-                if(top10.length>10)top10.pop();
-                minBV=top10.length===10?top10[9].bv:-Infinity;
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-  return top10;
-}
-
-function doSimAvg(ownedAcc, bufCombos, pends, pool, allocs){
-  const {plus:sP,pct:sPct,bonus:sB}=procSpirit();
-  const results=[];
-
-  for(const dt of DTYPES){
-    const bs=BASE[simGrade][dt];
-    const bh=bs.hp, ba=bs.atk, bd=bs.def;
-    const bufResults=[];
-
-    for(const buf of bufCombos){
-  const bufH = Math.floor(bh * 0.2) * buf.h;
-  const bufA = Math.floor(ba * 0.2) * buf.a;
-  const bufD = Math.floor(bd * 0.2) * buf.d;
-      const top5=[];
-      let minBV=-Infinity;
-
-      for(const acc of ownedAcc){
-        for(const enc of ['hp','atk','def']){
-          const aH=acc.hp+(enc==='hp'?.21:0);
-          const aA=acc.atk+(enc==='atk'?.21:0);
-          const aD=acc.def+(enc==='def'?.21:0);
-          
-          for(const pend of pends){
-            const{pH,pA,pD}=calcPendPct(pend);
-            for(const alloc of allocs){
-              let gH=0,gA=0,gD=0;
-              for(let i=0;i<alloc.length;i++){gH+=alloc[i]*pool[i].h;gA+=alloc[i]*pool[i].a;gD+=alloc[i]*pool[i].d;}
-              
-              const fH=calcStat(bh,gH,24,aH,sPct.hp,pH,sP.hp,sB.hp,COLL.hp,bufH);
-              const fA=calcStat(ba,gA,6,aA,sPct.atk,pA,sP.atk,sB.atk,COLL.atk,bufA);
-              const fD=calcStat(bd,gD,6,aD,sPct.def,pD,sP.def,sB.def,COLL.def,bufD);
-              const bv=fH*fA*fD;
-              
-              if(bv>minBV||top5.length<5){
-                let lo=0,hi=top5.length;
-                while(lo<hi){const m=(lo+hi)>>1;if(top5[m].bv>=bv)lo=m+1;else hi=m;}
-                top5.splice(lo,0,{bv,accN:acc.n,enc,pend,alloc:alloc.map((k,i)=>({k,g:pool[i]})).filter(x=>x.k>0),fH,fA,fD});
-                if(top5.length>5)top5.pop();
-                minBV=top5.length===5?top5[4].bv:-Infinity;
-              }
-            }
-          }
-        }
-      }
-      bufResults.push({label:buf.label, w:buf.w, top5, bestBV:top5.length?top5[0].bv:0});
-    }
-
-    bufResults.sort((a,b)=>b.bestBV-a.bestBV);
-    const avgBV=bufResults.reduce((s,b)=>s+b.w*b.bestBV,0);
-    const peakBV=bufResults[0].bestBV;
-    const bottomBV=bufResults[bufResults.length-1].bestBV;
-    const score=avgBV*0.5+bottomBV*0.3+peakBV*0.2;
-    results.push({dt,avgBV,peakBV,bottomBV,score,bufResults});
-  }
-
-  results.sort((a,b)=>b.score-a.score);
-  return results;
-}
-
-function switchResTab(t){
-  ['top','avg'].forEach(x=>{
-    document.getElementById('res-'+x).style.display=x===t?'':'none';
-    document.getElementById('res-tab-btn-'+x).classList.toggle('active',x===t);
+function fmtAccName(name){
+  return name.replace(/[체공방]/g,s=>{
+    const col=s==='체'?'#fbbf24':s==='공'?'#f87171':'#60a5fa';
+    return`<span style="color:${col}">${s}</span>`;
   });
+}
+
+function fmtAccEnc(enc){
+  if(enc==='none')return'<span class="enc-b enc-none">없음</span>';
+  const col=enc==='hp'?'#fbbf24':enc==='atk'?'#f87171':'#60a5fa';
+  const lbl=enc==='hp'?'체':enc==='atk'?'공':'방';
+  return`<span class="enc-b" style="border-color:${col};color:${col}">${lbl} +21%</span>`;
+}
+
+function fmtGem(alloc){
+  if(!alloc||!alloc.length)return'<span style="color:var(--dimmer)">없음</span>';
+  const bySt={hp:[],atk:[],def:[]};
+  alloc.forEach(({k,g})=>{for(let i=0;i<k;i++)bySt[g.s].push(g.lv);});
+  const cols={hp:'var(--hpc)',atk:'var(--atc)',def:'var(--dfc)'};
+  const parts=[];
+  for(const s of SKEYS){
+    const lvs=bySt[s].sort((a,b)=>b-a);
+    if(lvs.length)parts.push(`<span class="gem-tag" style="color:${cols[s]}">${SK[s]}${lvs.length}(${lvs[0]})</span>`);
+  }
+  return parts.length?parts.join(''):'<span style="color:var(--dimmer)">없음</span>';
+}
+
+function fmtPendMob(pend){
+  if(!pend)return'<span style="color:var(--dimmer);font-size:11px">없음</span>';
+  const mo=pend.type==='태양'?3:2;
+  const opts=pend.options.slice(0,mo).filter(o=>o&&o.stat).map(o=>{
+    const col=o.stat==='hp'?'#fbbf24':o.stat==='atk'?'#f87171':'#60a5fa';
+    return`<span style="color:${col}">${SK[o.stat]}</span><span>${o.val||0}%</span>`;
+  }).join('<span style="color:var(--dim)">/</span>');
+  const shortType=pend.type==='태양'?'태양펜':'달펜';
+  const pimg=IMG_PEND[pend.type]?`<img src="${IMG_PEND[pend.type]}" style="width:26px;height:26px;object-fit:contain;border-radius:3px">`:'';
+  return`<div style="display:flex;align-items:center;gap:6px;flex:1;min-width:0">${pimg}<span style="font-size:11px;color:var(--dim)">${shortType} <small>(${opts})</small></span></div>`;
+}
+
+function fmtPend(p){
+  if(!p)return'<span style="color:var(--dimmer)">없음</span>';
+  const mo=p.type==='태양'?3:2;
+  const opts=p.options.slice(0,mo).filter(o=>o&&o.stat).map(o=>{
+    const col=o.stat==='hp'?'#fbbf24':o.stat==='atk'?'#f87171':'#60a5fa';
+    return`<span style="color:${col}">${SK[o.stat]}</span><span style="color:var(--text)">${o.val||0}%</span>`;
+  }).join('<span style="color:var(--dim)">/</span>');
+  const img=IMG_PEND[p.type]?`<img src="${IMG_PEND[p.type]}" style="width:36px;height:36px;object-fit:contain;border-radius:4px">`:'';
+  const shortType=p.type==='태양'?'태양펜':'달펜';
+  return`<div style="display:flex;align-items:center;gap:8px">${img}<div style="color:var(--text)"><span class="pend-name-full">${p.type}의 펜던트</span><span class="pend-name-short">${shortType}</span><br><small>(${opts})</small></div></div>`;
+}
+
+function mkMobCard(rank,dc,dt,accImg,accName,enc,gems,pendMob,buf,fH,fA,fD,bv){
+  const dtBadge=dt?`<span class="dtype-b" style="color:${dc};border-color:${dc};font-size:11px">${dt}</span>`:'';
+  const bufBadge=buf?`<div style="font-size:11px;color:var(--dim);margin-bottom:2px">${buf}</div>`:'';
+  return`<div style="padding:13px 14px;border-bottom:1px solid var(--bd);box-sizing:border-box;width:100%;overflow:hidden">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:9px;min-width:0">
+      <span style="font-size:20px;width:26px;text-align:center;flex-shrink:0">${rank}</span>
+      <div style="flex-shrink:0">${accImg}</div>
+      <div style="flex:1;min-width:0;overflow:hidden">
+        <div style="font-weight:800;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${accName}</div>
+        <div style="display:flex;align-items:center;gap:5px;margin-top:2px;flex-wrap:wrap">${enc}${dtBadge}</div>
+      </div>
+      <span style="font-family:'Courier New',monospace;font-size:17px;font-weight:800;color:var(--gold);flex-shrink:0">${bv}</span>
+    </div>
+    <div style="border-top:1px solid var(--bd);padding-top:7px;margin-bottom:7px">
+      <div class="gem-tags" style="flex-wrap:wrap">${gems}</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+      <div style="flex:1;min-width:0">${pendMob}</div>
+      <div style="text-align:right;flex-shrink:0">
+        ${bufBadge}
+        <div style="font-family:'Courier New',monospace;font-size:11px;white-space:nowrap">
+          <span style="color:var(--hpc)">${fH}</span>/<span style="color:var(--atc)">${fA}</span>/<span style="color:var(--dfc)">${fD}</span>
+        </div>
+      </div>
+    </div>
+  </div>`;
 }
 
 // ================================================================
@@ -1104,7 +1055,7 @@ function renderResTop(topList){
     const a = ACC_DB.find(x => x.n === r.accN);
     const aImg = a && a.img ? `<img src="${a.img}" style="width:38px;height:38px;object-fit:contain;border-radius:5px">` : '';
     
-    // 앞서 분석표에서 수정한 소수점 3자리 + '억' 포맷을 시뮬레이터 결과에도 동일 적용
+    // 분석표의 소수점 3자리 + '억' 포맷을 동일 적용
     const formattedBv = (r.bv / 1e8).toFixed(3) + '억';
 
     mobHtml += mkMobCard(rank, dc, r.dt, aImg, fmtAccName(r.accN), fmtAccEnc(r.enc),
@@ -1134,6 +1085,8 @@ function renderResTop(topList){
   });
   el.innerHTML = mobHtml + '</div>' + pcHtml + '</tbody></table>';
 }
+
+document.addEventListener('DOMContentLoaded', doLoad);
 
 document.addEventListener('DOMContentLoaded', doLoad);
 </script>
