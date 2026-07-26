@@ -97,21 +97,22 @@ select:focus,input:focus{outline:none;border-color:var(--gold)}
 
 <!-- ■ 내 스펙 간편 설정 탭 -->
 <div id="tab-spec" class="tc active"><div class="ti">
-  <div style="max-width: 800px; margin: 0 auto; background: #111; padding: 14px; border-radius: 8px; border: 1px solid #333;">
+  <!-- CSS 변수(--ufont)를 선언하여 탭 내부의 모든 폰트 크기를 화면 비율에 맞춰 100% 동일하게 일치시킵니다 -->
+  <div style="max-width: 800px; margin: 0 auto; background: #111; padding: 14px; border-radius: 8px; border: 1px solid #333; --ufont: clamp(11px, 2.6vw, 14px);">
     
-<!-- 상단 1: 타입 / 버프 / 너프 -->
-    <table style="width: 100%; border-collapse: collapse; text-align: center; margin-bottom: 10px; font-family: 'Malgun Gothic', sans-serif;">
+    <!-- 상단 1: 타입 / 버프 / 너프 -->
+    <table style="width: 100%; border-collapse: collapse; text-align: center; margin-bottom: 10px; font-family: 'Malgun Gothic', sans-serif; table-layout: fixed;">
       <thead>
         <tr>
-          <th style="background: #ccc; color: black; border: 2px solid white; padding: 6px; font-size: 13px;">드래곤 타입</th>
-          <th style="background: #ccc; color: black; border: 2px solid white; padding: 6px; font-size: 13px;">적용 버프</th>
-          <th style="background: #ccc; color: black; border: 2px solid white; padding: 6px; font-size: 13px;">적용 너프</th>
+          <th style="background: #ccc; color: black; border: 2px solid white; padding: 6px; font-size: var(--ufont); white-space: nowrap;">드래곤 타입</th>
+          <th style="background: #ccc; color: black; border: 2px solid white; padding: 6px; font-size: var(--ufont); white-space: nowrap;">적용 버프</th>
+          <th style="background: #ccc; color: black; border: 2px solid white; padding: 6px; font-size: var(--ufont); white-space: nowrap;">적용 너프</th>
         </tr>
       </thead>
       <tbody>
         <tr>
           <td style="background: black; border: 2px solid white; padding: 4px;">
-            <select onchange="setType(this.value)" id="sel-type" style="width:100%; background:black; color:white; border:none; text-align:center; font-size:14px; font-weight:bold; cursor:pointer;">
+            <select onchange="setType(this.value)" id="sel-type" style="width:100%; background:black; color:white; border:none; text-align:center; font-size: var(--ufont); font-weight:bold; cursor:pointer;">
               <option value="체력형" selected>체력형</option>
               <option value="공격형">공격형</option>
               <option value="방어형">방어형</option>
@@ -121,7 +122,7 @@ select:focus,input:focus{outline:none;border-color:var(--gold)}
             </select>
           </td>
           <td style="background: black; border: 2px solid white; padding: 4px;">
-            <select onchange="setExactBuf(this.value)" id="sel-buf" style="width:100%; background:black; color:white; border:none; text-align:center; font-size:14px; cursor:pointer;">
+            <select onchange="setExactBuf(this.value)" id="sel-buf" style="width:100%; background:black; color:white; border:none; text-align:center; font-size: var(--ufont); cursor:pointer;">
               <option value="노버프" selected>노버프</option>
               <option value="체">체 1벞</option>
               <option value="공">공 1벞</option>
@@ -135,7 +136,7 @@ select:focus,input:focus{outline:none;border-color:var(--gold)}
             </select>
           </td>
           <td style="background: black; border: 2px solid white; padding: 4px;">
-            <select onchange="setExactNerf(this.value)" id="sel-nerf" style="width:100%; background:black; color:white; border:none; text-align:center; font-size:14px; cursor:pointer;">
+            <select onchange="setExactNerf(this.value)" id="sel-nerf" style="width:100%; background:black; color:white; border:none; text-align:center; font-size: var(--ufont); cursor:pointer;">
               <option value="노너프" selected>노너프</option>
               <option value="체">체 1너프</option>
               <option value="공">공 1너프</option>
@@ -150,23 +151,25 @@ select:focus,input:focus{outline:none;border-color:var(--gold)}
     <table style="width: 100%; border-collapse: collapse; text-align: center; margin-bottom: 20px; font-family: 'Malgun Gothic', sans-serif;">
       <thead>
         <tr>
-          <th style="background: #ccc; color: black; border: 2px solid white; padding: 6px; font-size: 13px;">드래곤 등급</th>
-          <th style="background: #ccc; color: black; border: 2px solid white; padding: 6px; font-size: 13px;">젬 수치</th>
-          <th style="background: #ccc; color: black; border: 2px solid white; padding: 6px; font-size: 13px;">장신구 수치</th>
-          <th style="background: #ccc; color: black; border: 2px solid white; padding: 6px; font-size: 13px;">펜던트</th>
+          <!-- width: 1% 를 적용하여 헤더 글자(내용물) 크기에 맞춰 칸 넓이가 최소한으로 자동 축소됩니다 -->
+          <th style="background: #ccc; color: black; border: 2px solid white; padding: 6px; font-size: var(--ufont); white-space: nowrap; width: 1%;">드래곤 등급</th>
+          <th style="background: #ccc; color: black; border: 2px solid white; padding: 6px; font-size: var(--ufont); white-space: nowrap; width: 1%;">젬 수치</th>
+          <th style="background: #ccc; color: black; border: 2px solid white; padding: 6px; font-size: var(--ufont); white-space: nowrap;">장신구 수치</th>
+          <th style="background: #ccc; color: black; border: 2px solid white; padding: 6px; font-size: var(--ufont); white-space: nowrap;">펜던트</th>
         </tr>
       </thead>
       <tbody>
         <tr>
+          <!-- 선택박스 역시 width: auto 를 통해 내용물(7.0 등)에 맞춰 폭이 딱 맞게 줄어듭니다 -->
           <td style="background: black; border: 2px solid white; padding: 4px;">
-            <select onchange="setGrade(this.value)" id="sel-grade" style="width:100%; background:black; color:white; border:none; text-align:center; font-size:14px; font-weight:bold; cursor:pointer;">
+            <select onchange="setGrade(this.value)" id="sel-grade" style="width:auto; background:black; color:white; border:none; text-align:center; font-size: var(--ufont); font-weight:bold; cursor:pointer;">
               <option value="7.0">7.0</option>
               <option value="8.0">8.0</option>
               <option value="9.0" selected>9.0</option>
             </select>
           </td>
           <td style="background: black; border: 2px solid white; padding: 4px;">
-            <select onchange="onGemLvl(parseInt(this.value))" id="sel-gem-lv" style="width:100%; background:black; color:white; border:none; text-align:center; font-size:14px; font-weight:bold; cursor:pointer;">
+            <select onchange="onGemLvl(parseInt(this.value))" id="sel-gem-lv" style="width:auto; background:black; color:white; border:none; text-align:center; font-size: var(--ufont); font-weight:bold; cursor:pointer;">
               <option value="38">38</option>
               <option value="40">40</option>
               <option value="42">42</option>
@@ -174,7 +177,7 @@ select:focus,input:focus{outline:none;border-color:var(--gold)}
             </select>
           </td>
           <td style="background: black; border: 2px solid white; padding: 4px;">
-            <select onchange="onAccLvl(parseInt(this.value))" id="sel-acc-lv" style="width:100%; background:black; color:white; border:none; text-align:center; font-size:14px; cursor:pointer;">
+            <select onchange="onAccLvl(parseInt(this.value))" id="sel-acc-lv" style="width:100%; background:black; color:white; border:none; text-align:center; text-align-last:center; font-size: var(--ufont); cursor:pointer;">
               <option value="17">17 장신구</option>
               <option value="18">18 장신구 풀</option>
               <option value="19">19 장신구 풀</option>
@@ -182,7 +185,7 @@ select:focus,input:focus{outline:none;border-color:var(--gold)}
             </select>
           </td>
           <td style="background: black; border: 2px solid white; padding: 4px;">
-            <select onchange="onPendType(this.value)" id="sel-pend-type" style="width:100%; background:black; color:white; border:none; text-align:center; font-size:14px; cursor:pointer;">
+            <select onchange="onPendType(this.value)" id="sel-pend-type" style="width:100%; background:black; color:white; border:none; text-align:center; text-align-last:center; font-size: var(--ufont); cursor:pointer;">
               <option value="달">달의 펜던트 (2옵션)</option>
               <option value="태양">태양의 펜던트 (3옵션)</option>
             </select>
@@ -194,14 +197,13 @@ select:focus,input:focus{outline:none;border-color:var(--gold)}
     <!-- 정령 옵션 테이블이 렌더링될 영역 -->
     <div id="sp-bd"></div>
 
-    <!-- 안내 문구 (컬렉션 고정) -->
-    <div style="font-size:12px; color:var(--dim); text-align:center; margin-bottom: 20px; margin-top: 14px;">
+    <!-- 안내 문구 -->
+    <div style="font-size: var(--ufont); color:var(--dim); text-align:center; margin-bottom: 20px; margin-top: 14px; white-space: nowrap;">
       * 컬렉션은 <strong>체력 240, 공격 60, 방어 60</strong>으로 자동 적용됩니다.
     </div>
 
-<!-- 📊 버프효율 분석표 버튼 -->
-    <button class="btn-sim" id="btn-run-all" onclick="runAllSims()" style="margin-top:0;">📊 일괄 시뮬레이션 연산 (분석표 + TOP 200)</button>
-    <div id="table-res-wrap" style="margin-top: 14px; overflow-x: auto; display: none;"></div>
+    <!-- 일괄 실행 버튼 -->
+    <button class="btn-sim" id="btn-run-all" onclick="runAllSims()" style="margin-top:0; font-size: var(--ufont); padding: 12px; white-space: nowrap;">📊 일괄 시뮬레이션 연산 (분석표 + TOP 200)</button>
     
   </div>
 </div></div>
@@ -359,26 +361,25 @@ function renderSpirit() {
   const sp = S.spirit;
 
   const presets = SP_PRESETS.map(p => {
-    const desc = p.types.map(spPresetLabel).join('');
-    return `<button class="sp-preset-btn ${isSpiritPresetActive(p) ? 'active' : ''}" onclick="applySpiritPreset('${p.id}')">
-      <span class="sp-preset-name">${p.name}</span>
-      <span class="sp-preset-desc">${desc}</span>
+    // 초록색 글자(desc)를 완전히 지우고, 남은 텍스트 영역을 중앙 정렬합니다.
+    return `<button class="sp-preset-btn ${isSpiritPresetActive(p) ? 'active' : ''}" onclick="applySpiritPreset('${p.id}')" style="padding: 8px 2px; display:flex; justify-content:center; align-items:center;">
+      <span class="sp-preset-name" style="font-size: var(--ufont); color: var(--gold); white-space: nowrap;">${p.name}</span>
     </button>`;
   }).join('');
 
   const makeOptCell = (idx, o) => {
-    // 초록색 텍스트(v) 출력 삭제 및 구조 변경
+    // 우측 빈 공간(v값 표시부)을 삭제하고 min-width: 0 속성으로 박스가 화면을 비집고 나가지 않게 조절합니다.
     return `
-      <div style="background: var(--sf2); border: 1px solid var(--bd); border-radius: 6px; padding: 10px; display: flex; flex-direction: column; gap: 8px;">
-        <div style="text-align: center; font-size: 11px; font-weight: 800; color: var(--dim);">${idx+1}옵션</div>
-        <div style="display: flex; gap: 6px; align-items: center; justify-content: space-between;">
-          <select onchange="onSpOpt(${idx},'stat',this.value)" style="flex: 1; ${getStatStyle(o.stat)} padding: 4px; border-radius: 4px; font-size: 12px; font-weight: 800; outline: none; cursor: pointer;">
+      <div style="background: var(--sf2); border: 1px solid var(--bd); border-radius: 6px; padding: 8px 4px; display: flex; flex-direction: column; gap: 6px; justify-content: center;">
+        <div style="text-align: center; font-weight: 800; color: var(--dim); font-size: var(--ufont); white-space: nowrap;">${idx+1}옵션</div>
+        <div style="display: flex; gap: 4px; align-items: center; justify-content: space-between;">
+          <select onchange="onSpOpt(${idx},'stat',this.value)" style="flex: 1; min-width: 0; ${getStatStyle(o.stat)} padding: 4px 2px; border-radius: 4px; font-weight: 800; outline: none; cursor: pointer; font-size: var(--ufont); text-align: center; text-align-last: center;">
             <option value="" style="background: var(--sf); color: var(--text);">-</option>
             <option value="hp" style="background: var(--sf); color: #fbbf24;" ${o.stat==='hp'?'selected':''}>체력</option>
             <option value="atk" style="background: var(--sf); color: #f87171;" ${o.stat==='atk'?'selected':''}>공격</option>
             <option value="def" style="background: var(--sf); color: #60a5fa;" ${o.stat==='def'?'selected':''}>방어</option>
           </select>
-          <select onchange="onSpOpt(${idx},'type',this.value)" style="flex: 1; background: var(--sf); border: 1px solid var(--bd); color: var(--text); padding: 4px; border-radius: 4px; font-size: 12px; outline: none; cursor: pointer;">
+          <select onchange="onSpOpt(${idx},'type',this.value)" style="flex: 1; min-width: 0; background: var(--sf); border: 1px solid var(--bd); color: var(--text); padding: 4px 2px; border-radius: 4px; outline: none; cursor: pointer; font-size: var(--ufont); text-align: center; text-align-last: center;">
             <option value="" ${!o.type?'selected':''}>(-)</option>
             <option value="+" ${o.type==='+'?'selected':''}>+</option>
             <option value="%" ${o.type==='%'?'selected':''}>%</option>
@@ -389,8 +390,8 @@ function renderSpirit() {
   };
 
   let html = `
-    <div class="sp-preset-grid" style="margin-bottom: 12px;">${presets}</div>
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
+    <div class="sp-preset-grid" style="margin-bottom: 12px; gap: 4px;">${presets}</div>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 8px;">
       ${makeOptCell(0, sp.opts[0] || {stat:'', type:''})}
       ${makeOptCell(1, sp.opts[1] || {stat:'', type:''})}
       ${makeOptCell(2, sp.opts[2] || {stat:'', type:''})}
@@ -400,9 +401,9 @@ function renderSpirit() {
 
   const bStat = sp.bonus;
   html += `
-    <div style="background: var(--sf2); border: 1px solid var(--bd); border-radius: 6px; padding: 10px; display: flex; align-items: center; justify-content: space-between; gap: 6px;">
-      <div style="font-size: 11px; font-weight: 800; color: var(--dim); width: 60px; text-align: center; flex-shrink: 0;">부가옵션</div>
-      <select onchange="onSpBonus(this.value)" style="flex: 1; ${getStatStyle(bStat)} padding: 4px; border-radius: 4px; font-size: 12px; font-weight: 800; outline: none; cursor: pointer;">
+    <div style="background: var(--sf2); border: 1px solid var(--bd); border-radius: 6px; padding: 8px 10px; display: flex; align-items: center; justify-content: space-between; gap: 6px;">
+      <div style="font-weight: 800; color: var(--dim); text-align: center; flex-shrink: 0; font-size: var(--ufont); white-space: nowrap;">부가옵션</div>
+      <select onchange="onSpBonus(this.value)" style="flex: 1; min-width: 0; ${getStatStyle(bStat)} padding: 4px; border-radius: 4px; font-weight: 800; outline: none; cursor: pointer; font-size: var(--ufont); text-align: center; text-align-last: center;">
         <option value="" style="background: var(--sf); color: var(--text);">-</option>
         <option value="hp" style="background: var(--sf); color: #fbbf24;" ${bStat==='hp'?'selected':''}>체력 (+40)</option>
         <option value="atk" style="background: var(--sf); color: #f87171;" ${bStat==='atk'?'selected':''}>공격 (+10)</option>
