@@ -210,9 +210,6 @@ select:focus,input:focus{outline:none;border-color:var(--gold)}
     
   </div>
 </div></div>
-    
-  </div>
-</div></div>
 
 <!-- ■ 시뮬레이터 탭 -->
 <div id="tab-sim" class="tc"><div class="ti">
@@ -1415,13 +1412,16 @@ function applyAccHighlight(accName) {
    const items = document.querySelectorAll('.res-item');
    items.forEach(el => {
       if(accName && el.getAttribute('data-acc') === accName) {
-         el.style.backgroundColor = 'rgba(232, 184, 75, 0.15)'; 
+         // 모바일 기기에서도 완벽하게 보이도록 투명도를 높이고 안쪽 황금색 테두리 추가
+         el.style.backgroundColor = 'rgba(232, 184, 75, 0.25)'; 
+         el.style.boxShadow = 'inset 0 0 0 2px rgba(232, 184, 75, 0.8)';
       } else {
+         // 선택 해제 시 원래 상태로 복구
          el.style.backgroundColor = ''; 
+         el.style.boxShadow = '';
       }
    });
 }
-
 document.addEventListener('DOMContentLoaded', doLoad);
 </script>
 </body>
