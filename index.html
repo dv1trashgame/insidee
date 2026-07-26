@@ -206,7 +206,7 @@ table.rtbl{width:100%;border-collapse:collapse;min-width:640px}
           </div>
         </div>
 
-        <!-- 3. 정확한 버프 선택 (신규) -->
+      <!-- 3. 정확한 버프 선택 (신규) -->
         <div>
           <div class="cfg-lbl">적용 버프 (택 1)</div>
           <div class="btn-grp" id="exact-buf-grp" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px;">
@@ -220,6 +220,17 @@ table.rtbl{width:100%;border-collapse:collapse;min-width:640px}
             <button onclick="setExactBuf('체+공')">체+공</button>
             <button onclick="setExactBuf('체+방')">체+방</button>
             <button onclick="setExactBuf('공+방')">공+방</button>
+          </div>
+        </div>
+
+        <!-- 4. 적용 너프 선택 (신규 추가) -->
+        <div>
+          <div class="cfg-lbl">적용 너프 (택 1)</div>
+          <div class="btn-grp" id="exact-nerf-grp" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px;">
+            <button class="active" onclick="setExactNerf('노너프')">노너프</button>
+            <button onclick="setExactNerf('체')">체 1너프</button>
+            <button onclick="setExactNerf('공')">공 1너프</button>
+            <button onclick="setExactNerf('방')">방 1너프</button>
           </div>
         </div>
         
@@ -314,7 +325,7 @@ const mkState=()=>({
 });
 
 let S = mkState();
-let simGrade = '9.0', simType = '체력형', simExactBuf = '노버프';
+let simGrade = '9.0', simType = '체력형', simExactBuf = '노버프', simExactNerf = '노너프';
 const SAVE_KEY = 'dv1sim_calc_v4';
 
 function doLoad() {
@@ -344,7 +355,8 @@ function updateUIs() {
 function onGemLvl(lv) { S.gemLevel = lv; qSave(); }
 function onAccLvl(lv) { S.accLevel = lv; qSave(); }
 function onPendType(t) { S.pendType = t; qSave(); }
-/* ==================== (여기서부터 복사) ==================== */
+
+/* ... (이하 renderSpirit 등의 코드는 그대로 유지) ... */
 /* ==================== (여기서부터 아래를 통째로 복사해서 덮어쓰기!) ==================== */
 
 // ================================================================
@@ -471,7 +483,24 @@ function setExactBuf(val){
      b.classList.toggle('active', b.textContent === targetText);
   });
 }
+// 버튼 제어 및 텍스트 변환 (신규 너프)
+function setExactNerf(val){
+  simExactNerf = val;
+  const map = {'노너프':'노너프', '체':'체 1너프', '공':'공 1너프', '방':'방 1너프'};
+  const targetText = map[val] || val;
+  document.querySelectorAll('#exact-nerf-grp button').forEach(b => {
+     b.classList.toggle('active', b.textContent === targetText);
+  });
+}
 
+function parseExactNerf(nStr){
+  if(nStr === '노너프') return {h:0, a:0, d:0, label:'노너프'};
+  let h=0, a=0, d=0;
+  if(nStr === '체') h = 1;
+  if(nStr === '공') a = 1;
+  if(nStr === '방') d = 1;
+  return {h, a, d, label: nStr + ' 너프'};
+}
 // 텍스트로 들어온 버프를 스탯으로 변환
 function parseExactBuf(bStr){
   if(bStr === '노버프') return {h:0, a:0, d:0, label:'노버프'};
@@ -853,17 +882,33 @@ function renderAnalysisTable() {
 }
 
 // ================================================================
-// 출력 포매팅 헬퍼 (삭제되었던 부분 복구)
+// 출력 포매팅 헬퍼
 // ================================================================
 
 const STAT_COL={체:'#fbbf24',공:'#f87171',방:'#60a5fa'};
-function fmtBufLabel(label){
-  if(label==='버프 없음')return`<span style="color:var(--dim)">버프 없음</span>`;
-  return label.split('+').map((s,i)=>{
-    const trimmed=s.trim();
-    const col=STAT_COL[trimmed]||'#fff';
-    return(i>0?`<span style="color:var(--text)">+</span>`:'')+`<span style="color:${col};font-weight:700">${trimmed}</span>`;
-  }).join('');
+
+// 버프와 너프를 함께 예쁘게 렌더링하는 통합 라벨 함수
+function fmtBufNerfLabel(bLabel, nLabel){
+  let bHtml = '';
+  if(bLabel === '노버프'){
+    bHtml = `<span style="color:var(--dim)">버프 없음</span>`;
+  } else {
+    bHtml = bLabel.split('+').map((s,i)=>{
+      const trimmed=s.trim();
+      const col=STAT_COL[trimmed]||'#fff';
+      return(i>0?`<span style="color:var(--text)">+</span>`:'')+`<span style="color:${col};font-weight:700">${trimmed}</span>`;
+    }).join('');
+  }
+
+  if(nLabel && nLabel !== '노너프') {
+    const nHtml = `<div style="color:var(--red); font-weight:800; font-size:11px; margin-top:3px; display:inline-block; padding: 2px 6px; background: rgba(248,113,113,0.15); border-radius: 4px; border: 1px solid rgba(248,113,113,0.3);">▼ ${nLabel}</div>`;
+    if (bLabel === '노버프') {
+       return nHtml; // 버프가 없으면 너프 뱃지만 출력
+    } else {
+       return bHtml + '<br>' + nHtml; // 버프 밑에 너프 뱃지 출력
+    }
+  }
+  return bHtml;
 }
 
 function fmtAccName(name){
@@ -917,9 +962,8 @@ function fmtPend(p){
   return`<div style="display:flex;align-items:center;gap:8px">${img}<div style="color:var(--text)"><span class="pend-name-full">${p.type}의 펜던트</span><span class="pend-name-short">${shortType}</span><br><small>(${opts})</small></div></div>`;
 }
 
-function mkMobCard(rank,dc,dt,accImg,accName,enc,gems,pendMob,buf,fH,fA,fD,bv){
+function mkMobCard(rank,dc,dt,accImg,accName,enc,gems,pendMob,bufHtml,fH,fA,fD,bv){
   const dtBadge=dt?`<span class="dtype-b" style="color:${dc};border-color:${dc};font-size:11px">${dt}</span>`:'';
-  const bufBadge=buf?`<div style="font-size:11px;color:var(--dim);margin-bottom:2px">${buf}</div>`:'';
   return`<div style="padding:13px 14px;border-bottom:1px solid var(--bd);box-sizing:border-box;width:100%;overflow:hidden">
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:9px;min-width:0">
       <span style="font-size:20px;width:26px;text-align:center;flex-shrink:0">${rank}</span>
@@ -936,7 +980,7 @@ function mkMobCard(rank,dc,dt,accImg,accName,enc,gems,pendMob,buf,fH,fA,fD,bv){
     <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
       <div style="flex:1;min-width:0">${pendMob}</div>
       <div style="text-align:right;flex-shrink:0">
-        ${bufBadge}
+        <div style="font-size:11px;color:var(--dim);margin-bottom:4px">${bufHtml}</div>
         <div style="font-family:'Courier New',monospace;font-size:11px;white-space:nowrap">
           <span style="color:var(--hpc)">${fH}</span>/<span style="color:var(--atc)">${fA}</span>/<span style="color:var(--dfc)">${fD}</span>
         </div>
@@ -946,7 +990,7 @@ function mkMobCard(rank,dc,dt,accImg,accName,enc,gems,pendMob,buf,fH,fA,fD,bv){
 }
 
 // ================================================================
-// 시뮬레이션 실행 및 계산 (단일 조건 TOP 200 전용)
+// 시뮬레이션 실행 및 계산 (단일 조건 TOP 200 전용 + 너프 계산 포함)
 // ================================================================
 
 function runSim(){
@@ -956,18 +1000,18 @@ function runSim(){
   
   setTimeout(() => {
     try {
-      // 계산 전 화면 값 동기화
       S.gemLevel = parseInt(document.getElementById('sel-gem-lv').value);
       S.accLevel = parseInt(document.getElementById('sel-acc-lv').value);
       S.pendType = document.getElementById('sel-pend-type').value;
 
       const exactBufObj = parseExactBuf(simExactBuf);
+      const exactNerfObj = parseExactNerf(simExactNerf); // 너프 정보 가져오기
       const ownedAcc = ACC_DB.filter(a => getAccNum(a.n) === S.accLevel);
       const pends = getPends();
       const pool = buildPool();
       const allocs = genAllocs(); 
       
-      const top200 = doSimExact(ownedAcc, exactBufObj, pends, pool, allocs);
+      const top200 = doSimExact(ownedAcc, exactBufObj, exactNerfObj, pends, pool, allocs);
       renderResTop(top200);
       
       const rs = document.getElementById('res-sec');
@@ -982,18 +1026,20 @@ function runSim(){
   }, 20);
 }
 
-function doSimExact(ownedAcc, buf, pends, pool, allocs){
+// 너프(nerf) 매개변수를 추가하여 버프와 상쇄 계산을 수행
+function doSimExact(ownedAcc, buf, nerf, pends, pool, allocs){
   const {plus:sP, pct:sPct, bonus:sB} = procSpirit();
   const topList = [];
   let minBV = -Infinity;
 
-  const dt = simType; // 선택한 단일 타입
+  const dt = simType; 
   const bs = BASE[simGrade][dt];
   const bh = bs.hp, ba = bs.atk, bd = bs.def;
   
-  const bufH = Math.floor(bh * 0.2) * buf.h;
-  const bufA = Math.floor(ba * 0.2) * buf.a;
-  const bufD = Math.floor(bd * 0.2) * buf.d;
+  // 버프(+)에서 너프(-)를 뺀 최종 증감치를 계산 (공식 동기화)
+  const finalH = Math.floor(bh * 0.2) * buf.h - Math.floor(bh * 0.2) * nerf.h;
+  const finalA = Math.floor(ba * 0.2) * buf.a - Math.floor(ba * 0.2) * nerf.a;
+  const finalD = Math.floor(bd * 0.2) * buf.d - Math.floor(bd * 0.2) * nerf.d;
 
   for(const acc of ownedAcc){
     for(const enc of ['hp','atk','def']){
@@ -1009,9 +1055,9 @@ function doSimExact(ownedAcc, buf, pends, pool, allocs){
             gH += alloc[i]*pool[i].h; gA += alloc[i]*pool[i].a; gD += alloc[i]*pool[i].d;
           }
           
-          const fH = calcStat(bh, gH, 24, aH, sPct.hp, pH, sP.hp, sB.hp, COLL.hp, bufH);
-          const fA = calcStat(ba, gA, 6, aA, sPct.atk, pA, sP.atk, sB.atk, COLL.atk, bufA);
-          const fD = calcStat(bd, gD, 6, aD, sPct.def, pD, sP.def, sB.def, COLL.def, bufD);
+          const fH = calcStat(bh, gH, 24, aH, sPct.hp, pH, sP.hp, sB.hp, COLL.hp, finalH);
+          const fA = calcStat(ba, gA, 6, aA, sPct.atk, pA, sP.atk, sB.atk, COLL.atk, finalA);
+          const fD = calcStat(bd, gD, 6, aD, sPct.def, pD, sP.def, sB.def, COLL.def, finalD);
           const bv = fH * fA * fD;
           
           if(bv > minBV || topList.length < 200){
@@ -1022,11 +1068,12 @@ function doSimExact(ownedAcc, buf, pends, pool, allocs){
               else hi = m; 
             }
             topList.splice(lo, 0, {
-              bv, dt, accN:acc.n, enc, pend, buf, 
+              bv, dt, accN:acc.n, enc, pend, 
+              bufLabel: buf.label, nerfLabel: nerf.label, // 렌더링용 정보 개별 저장
               alloc:alloc.map((k,i)=>({k, g:pool[i]})).filter(x=>x.k>0), 
               fH, fA, fD
             });
-            if(topList.length > 200) topList.pop(); // 200등까지만 유지
+            if(topList.length > 200) topList.pop(); 
             minBV = topList.length === 200 ? topList[199].bv : -Infinity;
           }
         }
@@ -1046,7 +1093,7 @@ function renderResTop(topList){
   let mobHtml = '<div class="mob-only">';
   let pcHtml = `<table class="rtbl pc-only"><thead><tr>
     <th>순위</th><th>타입</th><th>장신구 / 인챈트</th>
-    <th>젬 배분</th><th>펜던트</th><th>버프</th><th>체 / 공 / 방</th><th>비밸</th>
+    <th>젬 배분</th><th>펜던트</th><th>버프 및 너프</th><th>체 / 공 / 방</th><th>비밸</th>
   </tr></thead><tbody>`;
   
   topList.forEach((r, i) => {
@@ -1055,11 +1102,11 @@ function renderResTop(topList){
     const a = ACC_DB.find(x => x.n === r.accN);
     const aImg = a && a.img ? `<img src="${a.img}" style="width:38px;height:38px;object-fit:contain;border-radius:5px">` : '';
     
-    // 분석표의 소수점 3자리 + '억' 포맷을 동일 적용
     const formattedBv = (r.bv / 1e8).toFixed(3) + '억';
+    const combinedBufHtml = fmtBufNerfLabel(r.bufLabel, r.nerfLabel);
 
     mobHtml += mkMobCard(rank, dc, r.dt, aImg, fmtAccName(r.accN), fmtAccEnc(r.enc),
-      fmtGem(r.alloc), fmtPendMob(r.pend), fmtBufLabel(r.buf.label),
+      fmtGem(r.alloc), fmtPendMob(r.pend), combinedBufHtml,
       r.fH.toLocaleString('ko-KR'), r.fA.toLocaleString('ko-KR'), r.fD.toLocaleString('ko-KR'),
       formattedBv);
       
@@ -1074,7 +1121,7 @@ function renderResTop(topList){
       </td>
       <td><div class="gem-tags">${fmtGem(r.alloc)}</div></td>
       <td style="font-size:12px;color:var(--dim)">${fmtPend(r.pend)}</td>
-      <td style="font-size:12px">${fmtBufLabel(r.buf.label)}</td>
+      <td style="font-size:12px">${combinedBufHtml}</td>
       <td class="st-cell">
         <span style="color:var(--hpc)">${r.fH.toLocaleString('ko-KR')}</span> /
         <span style="color:var(--atc)">${r.fA.toLocaleString('ko-KR')}</span> /
