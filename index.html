@@ -1,12 +1,10 @@
 <!DOCTYPE html>
-<html lang="ko" data-theme="dark">
+<html lang="ko">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>드래곤빌리지1 비밸 시뮬레이터</title>
 <link href="https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800&display=swap" rel="stylesheet">
-<link id="theme-css" rel="stylesheet" href="./theme-dark.css">
-<script src="./theme.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Nanum Gothic',-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px}
@@ -68,18 +66,21 @@ select:focus,input:focus{outline:none;border-color:var(--gold)}
 .res-tab-btn{padding:9px 18px;background:none;border:none;border-bottom:3px solid transparent;color:var(--dim);font-family:'Nanum Gothic',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .15s}
 .res-tab-btn.active{color:var(--gold);border-bottom-color:var(--gold)}
 
-[data-theme="dark"]{
-  --bg:#0e1116;--bg2:#161a22;--bg3:#1c212c;
-  --border:#23293a;--border2:#1b1f2a;--border3:#2d3447;
-  --text:#eaecf2;--text2:#b3b9c7;--text3:#7d8597;--text4:#565d6e;
-  --accent:#7aa2f7;--accent-bg:rgba(122,162,247,0.12);--accent-border:rgba(122,162,247,0.30);
-}
-:root{
-  --sf:var(--bg2);--sf2:var(--bg3);--bd:var(--border);
-  --gold:var(--accent);--gold2:var(--accent);
-  --dim:var(--text3);--dimmer:var(--text4);
-  --red:#f87171;--green:#4ade80;--blue:#60a5fa;
-  --hpc:#fbbf24;--atc:#f87171;--dfc:#60a5fa;
+/* 다크모드 여부와 상관없이 항상 라이트 테마(디시인사이드 스타일) 색상 강제 고정 */
+:root, [data-theme="dark"], [data-theme="light"] {
+  --bg:#f5f5f5; --bg2:#ffffff; --bg3:#ebebeb;
+  --border:#d5d5d5; --border2:#cccccc; --border3:#e0e0e0;
+  --text:#333333; --text2:#555555; --text3:#666666; --text4:#999999;
+  --accent:#3b4890; --accent-bg:rgba(59,72,144,0.12); --accent-border:rgba(59,72,144,0.30);
+  
+  --sf:var(--bg2); --sf2:var(--bg3); --bd:var(--border);
+  --gold:var(--accent); --gold2:var(--accent);
+  --dim:var(--text3); --dimmer:var(--text4);
+  --red:#f87171; --green:#4ade80; --blue:#60a5fa;
+  --hpc:#fbbf24; --atc:#f87171; --dfc:#60a5fa;
+  
+  /* 브라우저 기본 스크롤바 및 UI를 강제로 라이트 모드로 고정 */
+  color-scheme: light !important; 
 }
 </style>
 </head>
