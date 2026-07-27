@@ -97,8 +97,8 @@ select:focus,input:focus{outline:none;border-color:var(--gold)}
 
 <!-- ■ 내 스펙 간편 설정 탭 -->
 <div id="tab-spec" class="tc active"><div class="ti">
-  <!-- CSS 변수(--ufont)를 선언하여 탭 내부의 모든 폰트 크기를 화면 비율에 맞춰 100% 동일하게 일치시킵니다 -->
-  <div style="max-width: 820px; margin: 0 auto; background: #111; padding: 14px; border-radius: 8px; border: 1px solid #333; --ufont: clamp(11px, 2.6vw, 14px);">
+  <!-- CSS 변수를 인라인으로 덮어씌워 스펙 설정 탭에만 dcinside 테마(딥블루 포인트, 톤 다운된 라이트모드)를 적용합니다 -->
+  <div style="max-width: 820px; margin: 0 auto; background: #f5f5f5; padding: 14px; border-radius: 8px; border: 1px solid #d5d5d5; --ufont: clamp(11px, 2.6vw, 14px); --sf: #f5f5f5; --sf2: #ebebeb; --bd: #d5d5d5; --text: #333333; --dim: #666666; --gold: #3b4890; --gold2: #4a5a9f; color: var(--text);">
     
    <!-- 상단 1: 타입 / 버프 / 너프 (정령 박스 UI 적용) -->
     <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px;">
