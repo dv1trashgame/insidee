@@ -816,10 +816,8 @@ function renderAnalysisTable() {
   if(!window.tableSimData) return;
   const { userRowBVs, allRowBVs, mode } = window.tableSimData;
 
-  // 무조건 소수점 2자리로 고정 (이전 요청 반영)
   const fBV = v => (v / 1e8).toFixed(2) + '억';
 
-  // (신규 추가) 정수 부분만 1.5px 더 크게 만드는 포맷팅 함수
   const fBigInt = str => {
     const parts = str.split('.');
     if(parts.length === 2) {
@@ -828,21 +826,22 @@ function renderAnalysisTable() {
     return str;
   };
 
+  // 분석표 테두리 및 구분선을 디시인사이드 블루(#3b4890)와 회색(#d5d5d5)으로 변경
   const rowsData = [
-    { id: '노버프', rIdx: 0, bottomBorder: '2px solid white' },
-    { id: '체', rIdx: 1, bottomBorder: '1px solid #555' },
-    { id: '공', rIdx: 2, bottomBorder: '1px solid #555' },
-    { id: '방', rIdx: 3, bottomBorder: '1px solid #555' },
-    { id: '1벞', rIdx: 4, bottomBorder: '2px solid white' },
-    { id: '체_체', rIdx: 5, bottomBorder: '1px solid #555' },
-    { id: '공_공', rIdx: 6, bottomBorder: '1px solid #555' },
-    { id: '방_방', rIdx: 7, bottomBorder: '1px solid #555' },
-    { id: '체_공', rIdx: 8, bottomBorder: '1px solid #555' },
-    { id: '체_방', rIdx: 9, bottomBorder: '1px solid #555' },
-    { id: '공_방', rIdx: 10, bottomBorder: '1px solid #555' },
-    { id: '2벞', rIdx: 11, bottomBorder: '2px solid white' },
-    { id: '고점', rIdx: 12, bottomBorder: '1px solid #555' },
-    { id: '저점', rIdx: 13, bottomBorder: '2px solid white' }
+    { id: '노버프', rIdx: 0, bottomBorder: '2px solid #3b4890' },
+    { id: '체', rIdx: 1, bottomBorder: '1px solid #d5d5d5' },
+    { id: '공', rIdx: 2, bottomBorder: '1px solid #d5d5d5' },
+    { id: '방', rIdx: 3, bottomBorder: '1px solid #d5d5d5' },
+    { id: '1벞', rIdx: 4, bottomBorder: '2px solid #3b4890' },
+    { id: '체_체', rIdx: 5, bottomBorder: '1px solid #d5d5d5' },
+    { id: '공_공', rIdx: 6, bottomBorder: '1px solid #d5d5d5' },
+    { id: '방_방', rIdx: 7, bottomBorder: '1px solid #d5d5d5' },
+    { id: '체_공', rIdx: 8, bottomBorder: '1px solid #d5d5d5' },
+    { id: '체_방', rIdx: 9, bottomBorder: '1px solid #d5d5d5' },
+    { id: '공_방', rIdx: 10, bottomBorder: '1px solid #d5d5d5' },
+    { id: '2벞', rIdx: 11, bottomBorder: '2px solid #3b4890' },
+    { id: '고점', rIdx: 12, bottomBorder: '1px solid #d5d5d5' },
+    { id: '저점', rIdx: 13, bottomBorder: '2px solid #3b4890' }
   ];
 
   let html = `
@@ -850,35 +849,33 @@ function renderAnalysisTable() {
      <span style="font-size: clamp(10px, 2.5vw, 12px); color:var(--dim); line-height: 1.3; white-space:nowrap;">
         3888개의 정령 조합과 비교합니다.
      </span>
-     <select onchange="changeTableMode(this.value)" style="background:var(--sf2); padding:4px 8px; border-radius:6px; border:1px solid var(--gold); color:var(--text); font-size: clamp(11px, 2.5vw, 12px); font-weight:800; cursor:pointer; outline:none; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
+     <select onchange="changeTableMode(this.value)" style="background:var(--sf2); padding:4px 8px; border-radius:6px; border:1px solid var(--gold); color:var(--text); font-size: clamp(11px, 2.5vw, 12px); font-weight:800; cursor:pointer; outline:none; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
        <option value="bv" ${mode === 'bv' ? 'selected' : ''}>최대 비밸 수치 보기</option>
        <option value="rank" ${mode === 'rank' ? 'selected' : ''}>전체 정령 중 내 등수 보기</option>
        <option value="gap" ${mode === 'gap' ? 'selected' : ''}>1위와의 비밸 격차 보기</option>
      </select>
   </div>
-  <!-- 가로 스크롤을 유발하던 min-width를 삭제하고 너비를 100%로 꽉 맞춥니다 -->
   <div style="width: 100%;">
-    <table style="width:100%; table-layout: fixed; border-collapse: collapse; border: 2px solid white; color: white; background: #111; font-family: 'Courier New', 'Malgun Gothic', sans-serif; text-align: center; font-size: clamp(9px, 2.4vw, 12px); white-space: nowrap; letter-spacing: -0.5px;">
+    <table style="width:100%; table-layout: fixed; border-collapse: collapse; border: 2px solid #3b4890; color: #333333; background: #f5f5f5; font-family: 'Courier New', 'Malgun Gothic', sans-serif; text-align: center; font-size: clamp(9px, 2.4vw, 12px); white-space: nowrap; letter-spacing: -0.5px;">
       <thead>
         <tr>
-           <th colspan="7" style="background: white; color: black; padding: 4px; font-size: clamp(11px, 3vw, 13px); font-weight: 800; border: 2px solid white; letter-spacing: 0;">&lt;_정령 버프효율 분석표_&gt;</th>
+           <th colspan="7" style="background: #3b4890; color: #f5f5f5; padding: 4px; font-size: clamp(11px, 3vw, 13px); font-weight: 800; border: 2px solid #3b4890; letter-spacing: 0;">&lt;_정령 버프효율 분석표_&gt;</th>
         </tr>
         <tr>
-           <!-- 화면이 줄어들면 패딩(좌우 여백)도 최소화되어 공간을 절약합니다 -->
-           <th style="width: 10%; border: 1px solid #777; padding: 4px 1px; background: #222; border-bottom: 2px solid white;">/</th>
-           <th style="width: 15%; border: 1px solid #777; padding: 4px 1px; background: #222; border-bottom: 2px solid white;">체력</th>
-           <th style="width: 15%; border: 1px solid #777; padding: 4px 1px; background: #222; border-bottom: 2px solid white;">공격</th>
-           <th style="width: 15%; border: 1px solid #777; padding: 4px 1px; background: #222; border-bottom: 2px solid white;">방어</th>
-           <th style="width: 15%; border: 1px solid #777; padding: 4px 1px; background: #222; border-bottom: 2px solid white;">체공</th>
-           <th style="width: 15%; border: 1px solid #777; padding: 4px 1px; background: #222; border-bottom: 2px solid white;">체방</th>
-           <th style="width: 15%; border: 1px solid #777; padding: 4px 1px; background: #222; border-bottom: 2px solid white;">공방</th>
+           <th style="width: 10%; border: 1px solid #d5d5d5; padding: 4px 1px; background: #ebebeb; border-bottom: 2px solid #3b4890;">/</th>
+           <th style="width: 15%; border: 1px solid #d5d5d5; padding: 4px 1px; background: #ebebeb; border-bottom: 2px solid #3b4890;">체력</th>
+           <th style="width: 15%; border: 1px solid #d5d5d5; padding: 4px 1px; background: #ebebeb; border-bottom: 2px solid #3b4890;">공격</th>
+           <th style="width: 15%; border: 1px solid #d5d5d5; padding: 4px 1px; background: #ebebeb; border-bottom: 2px solid #3b4890;">방어</th>
+           <th style="width: 15%; border: 1px solid #d5d5d5; padding: 4px 1px; background: #ebebeb; border-bottom: 2px solid #3b4890;">체공</th>
+           <th style="width: 15%; border: 1px solid #d5d5d5; padding: 4px 1px; background: #ebebeb; border-bottom: 2px solid #3b4890;">체방</th>
+           <th style="width: 15%; border: 1px solid #d5d5d5; padding: 4px 1px; background: #ebebeb; border-bottom: 2px solid #3b4890;">공방</th>
         </tr>
       </thead>
       <tbody>
   `;
 
   rowsData.forEach(row => {
-    html += `<tr><th style="border: 1px solid #555; border-bottom: ${row.bottomBorder}; padding: 4px 1px; background: #222; font-size: clamp(9px, 2.4vw, 12px);">${row.id}</th>`;
+    html += `<tr><th style="border: 1px solid #d5d5d5; border-bottom: ${row.bottomBorder}; padding: 4px 1px; background: #ebebeb; font-size: clamp(9px, 2.4vw, 12px);">${row.id}</th>`;
     
     DTYPES.forEach((dt, dtIdx) => {
       const userVal = userRowBVs[dtIdx][row.rIdx];
@@ -886,8 +883,8 @@ function renderAnalysisTable() {
       let displayStr = '';
       
       if(mode === 'bv') {
-         // 모드 1: 최대 비밸 (색상 하얀색 변경 및 정수 확대 적용)
-         displayStr = `<span style="color:white; font-weight:800;">${fBigInt(fBV(userVal))}</span>`;
+         // 모드 1: 최대 비밸 (색상 톤 다운된 검정으로 변경)
+         displayStr = `<span style="color:#333333; font-weight:800;">${fBigInt(fBV(userVal))}</span>`;
       } else if (mode === 'rank') {
          // 모드 2: 내 등수
          let rank = 1;
@@ -897,7 +894,7 @@ function renderAnalysisTable() {
          if(rank === 1) displayStr = `<span style="color:var(--gold); font-weight:800;">1등</span>`;
          else displayStr = `<span style="color:var(--text); font-weight:800;">${rank}등</span>`;
      } else if (mode === 'gap') {
-         // 모드 3: 1위와의 격차 (정수 확대 적용)
+         // 모드 3: 1위와의 격차
          let maxVal = -Infinity;
          for(let i=0; i<3888; i++) {
             if(allVals[i*14 + row.rIdx] > maxVal) maxVal = allVals[i*14 + row.rIdx];
@@ -911,7 +908,7 @@ function renderAnalysisTable() {
          }
       }
       
-      html += `<td style="border: 1px solid #555; border-bottom: ${row.bottomBorder}; padding: 4px 1px;">${displayStr}</td>`;
+      html += `<td style="border: 1px solid #d5d5d5; border-bottom: ${row.bottomBorder}; padding: 4px 1px;">${displayStr}</td>`;
     });
     html += `</tr>`;
   });
@@ -920,7 +917,6 @@ function renderAnalysisTable() {
   wrap.innerHTML = html;
   wrap.style.display = 'block';
 }
-
 // ================================================================
 // 출력 포매팅 헬퍼
 // ================================================================
