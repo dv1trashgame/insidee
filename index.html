@@ -881,21 +881,25 @@ function renderAnalysisTable() {
       const allVals = allRowBVs[dtIdx];
       let displayStr = '';
       
-      // 1. 모든 모드에서 동일한 색상을 적용하기 위해 등수부터 먼저 계산합니다.
       let rank = 1;
       for(let i=0; i<3888; i++) {
          if(allVals[i*14 + row.rIdx] > userVal) rank++;
       }
       
-      // 2. 1등(0.1)부터 1000등(0.0)까지 알파(투명도) 값을 그라데이션으로 계산합니다.
-      // 1000등 초과는 자동으로 0.0이 되어 기존 표의 하얀색 배경을 그대로 보여줍니다.
+      // 등수 구간별 계단식 알파값(투명도) 적용
       let alpha = 0;
-      if (rank <= 1000) {
-         alpha = 0.5 * (1 - ((rank - 1) / 999));
-      }
+      if (rank === 1) alpha = 0.35;
+      else if (rank <= 15) alpha = 0.31;
+      else if (rank <= 30) alpha = 0.27;
+      else if (rank <= 50) alpha = 0.23;
+      else if (rank <= 100) alpha = 0.19;
+      else if (rank <= 250) alpha = 0.15;
+      else if (rank <= 450) alpha = 0.11;
+      else if (rank <= 700) alpha = 0.07;
+      else if (rank <= 1000) alpha = 0.03;
+      
       const cellBgColor = `rgba(59, 72, 144, ${alpha})`;
       
-      // 3. 모드에 따른 텍스트 출력 결정
       if(mode === 'bv') {
          displayStr = `<span style="color:#333333; font-weight:800;">${fBigInt(fBV(userVal))}</span>`;
       } else if (mode === 'rank') {
@@ -915,7 +919,6 @@ function renderAnalysisTable() {
          }
       }
       
-      // 4. 계산된 배경색(cellBgColor)을 td 인라인 스타일에 주입
       html += `<td style="border: 1px solid #d5d5d5; border-bottom: ${row.bottomBorder}; padding: 4px 1px; background-color: ${cellBgColor};">${displayStr}</td>`;
     });
     html += `</tr>`;
