@@ -891,7 +891,7 @@ function renderAnalysisTable() {
       // 1000등 초과는 자동으로 0.0이 되어 기존 표의 하얀색 배경을 그대로 보여줍니다.
       let alpha = 0;
       if (rank <= 1000) {
-         alpha = 0.1 * (1 - ((rank - 1) / 999));
+         alpha = 0.5 * (1 - ((rank - 1) / 999));
       }
       const cellBgColor = `rgba(59, 72, 144, ${alpha})`;
       
