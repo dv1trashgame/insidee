@@ -1353,7 +1353,6 @@ function renderSimSpiritDisplay() {
     </div>
   `;
 
-  // 장신구 하이라이트 드롭다운 동적 생성
   const ownedAcc = ACC_DB.filter(a => getAccNum(a.n) === S.accLevel);
   let accOpts = '<option value="">-- 하이라이트 해제 --</option>';
   ownedAcc.forEach(a => {
@@ -1374,17 +1373,23 @@ function renderSimSpiritDisplay() {
          </div>
          <div id="hl-acc-text" style="font-size:var(--ssfont); color:var(--dim); text-align:center; word-break:keep-all;">장신구 선택</div>
          
-         <select id="hl-enc-sel" onchange="applyHighlight()" style="width: 100%; background: var(--sf2); border: 1px solid var(--bd); color: var(--text); padding: 4px 2px; border-radius: 4px; font-weight: 800; outline: none; cursor: pointer; font-size: var(--ssfont); text-align: center; text-align-last: center; margin-top: auto;">
-            <option value="">인첸트 전체</option>
-            <option value="hp">체력</option>
-            <option value="atk">공격</option>
-            <option value="def">방어</option>
-         </select>
+         <div style="width: 100%; margin-top: auto; display: flex; flex-direction: column; gap: 6px;">
+             <select id="hl-enc-sel" onchange="applyHighlight()" style="width: 100%; background: var(--sf2); border: 1px solid var(--bd); color: var(--text); padding: 4px 2px; border-radius: 4px; font-weight: 800; outline: none; cursor: pointer; font-size: var(--ssfont); text-align: center; text-align-last: center;">
+                <option value="">인첸트 전체</option>
+                <option value="hp">체력</option>
+                <option value="atk">공격</option>
+                <option value="def">방어</option>
+             </select>
+             
+             <label style="display: flex; align-items: center; justify-content: center; gap: 4px; cursor: pointer;">
+                <input type="checkbox" id="hl-filter-cb" onchange="applyHighlight()" style="accent-color: var(--gold); cursor: pointer; width: 14px; height: 14px; margin: 0;">
+                <span style="font-size: var(--ssfont); color: var(--dim); font-weight: 700; white-space: nowrap;">선택만 보기</span>
+             </label>
+         </div>
       </div>
     </div>
   `;
 
-  // 펜던트 하이라이트 UI 동적 생성
   const pType = S.pendType;
   const pImg = IMG_PEND[pType];
   const pName = pType === '태양' ? '태양펜' : '달펜';
@@ -1417,7 +1422,6 @@ function renderSimSpiritDisplay() {
     </div>
   `;
 
-  // flex 비율을 재조정하여 세 개의 박스가 화면에 꽉 차고 예쁘게 배치되게 합니다.
   el.innerHTML = `<div style="--sfont: clamp(10px, 2.4vw, 14px); --ssfont: clamp(9px, 2vw, 12px); display: flex; gap: clamp(6px, 1.5vw, 10px); flex-wrap: nowrap;">
      <div style="flex: 1.1; min-width: 0; display:flex; flex-direction:column;">${spiritHtml}</div>
      ${hlHtml}
@@ -1429,6 +1433,7 @@ function renderSimSpiritDisplay() {
 function applyHighlight() {
    const accEl = document.getElementById('hl-acc-sel');
    const encEl = document.getElementById('hl-enc-sel');
+   const filterCb = document.getElementById('hl-filter-cb');
    const imgEl = document.getElementById('hl-acc-img');
    const phEl = document.getElementById('hl-acc-placeholder');
    const textEl = document.getElementById('hl-acc-text');
@@ -1437,6 +1442,7 @@ function applyHighlight() {
    
    const accName = accEl.value;
    const encName = encEl.value;
+   const onlyShow = filterCb ? filterCb.checked : false; // 체크박스 상태 확인
    
    // 선택된 펜던트 옵션들 배열화 (빈 값은 제외)
    const pendSels = Array.from(document.querySelectorAll('.hl-pend-sel')).map(el => el.value).filter(v => v);
@@ -1456,7 +1462,7 @@ function applyHighlight() {
       }
    }
 
-   // 다중 조건 (장신구 + 인첸트 + 펜던트) 일치 여부에 따른 하이라이팅 적용
+   // 다중 조건 일치 여부에 따른 하이라이팅 및 필터링 적용
    const items = document.querySelectorAll('.res-item');
    items.forEach(el => {
       const itemAcc = el.getAttribute('data-acc');
@@ -1467,30 +1473,39 @@ function applyHighlight() {
       const matchAcc = !accName || itemAcc === accName;
       const matchEnc = !encName || itemEnc === encName;
       
-      // 펜던트 필터링 로직: 사용자가 고른 옵션들이 아이템 펜던트 옵션에 모두 들어있는지 검사
       let matchPend = true;
       if(pendSels.length > 0) {
          let itemPendCopy = [...itemPend];
          for(let p of pendSels) {
             let idx = itemPendCopy.indexOf(p);
             if(idx >= 0) {
-               itemPendCopy.splice(idx, 1); // 매칭된 옵션은 삭제 (중복 옵션 검사용)
+               itemPendCopy.splice(idx, 1);
             } else {
                matchPend = false;
-               break; // 하나라도 안 맞으면 실패
+               break; 
             }
          }
       }
       
-      // 하나라도 필터 조건이 설정되어 있고, 모든 조건이 만족될 경우 하이라이트
       const hasCondition = accName || encName || pendSels.length > 0;
+      const isMatch = matchAcc && matchEnc && matchPend;
       
-      if(hasCondition && matchAcc && matchEnc && matchPend) {
+      // 1. 하이라이팅 적용 (조건이 있고 일치할 때)
+      if(hasCondition && isMatch) {
          el.style.backgroundColor = 'rgba(232, 184, 75, 0.25)'; 
          el.style.boxShadow = 'inset 0 0 0 2px rgba(232, 184, 75, 0.8)';
       } else {
          el.style.backgroundColor = ''; 
          el.style.boxShadow = '';
+      }
+      
+      // 2. 필터링 (숨김) 적용
+      if(onlyShow && hasCondition) {
+         // 체크박스가 켜져있고 검색 조건이 하나라도 있으면, 일치하는 것만 표시
+         el.style.display = isMatch ? 'block' : 'none';
+      } else {
+         // 체크박스가 꺼져있거나 검색 조건이 전혀 없으면 모두 표시
+         el.style.display = 'block'; 
       }
    });
 }
