@@ -1359,47 +1359,57 @@ function renderSimSpiritDisplay() {
      accOpts += `<option value="${a.n}">${a.n}</option>`;
   });
 
+  const pType = S.pendType;
+  const pImg = IMG_PEND[pType];
+  const pName = pType === '태양' ? '태양펜' : '달펜';
+  const numOpts = pType === '태양' ? 3 : 2;
+
+  // 태양펜(3옵션)일 경우에만 장신구 칸 3번째 위치에 동일한 높이의 투명한 더미 박스를 생성합니다.
+  let dummyAcc = numOpts === 3 ? `<select style="width: 100%; padding: 4px 2px; margin-top: 2px; border: 1px solid transparent; font-size: var(--ssfont); box-sizing: border-box; visibility: hidden;"><option>-</option></select>` : '';
+
   let hlHtml = `
     <div style="display:flex; flex-direction:column; min-width: 0; flex: 0.65;">
       <div class="sec-hd" style="border-radius: 8px 8px 0 0; margin-bottom: 0; justify-content: center; letter-spacing: 0; font-size: var(--sfont); white-space: nowrap; padding: 9px 4px;">🔍 장신구 조건</div>
-      <div class="sec-bd" style="background: var(--sf); border: 1px solid var(--bd); border-top: none; border-radius: 0 0 8px 8px; flex: 1; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; gap: clamp(4px, 1vw, 8px); padding: clamp(8px, 1.5vw, 14px) clamp(4px, 1vw, 8px);">
+      <div class="sec-bd" style="background: var(--sf); border: 1px solid var(--bd); border-top: none; border-radius: 0 0 8px 8px; flex: 1; display:flex; flex-direction:column; padding: clamp(8px, 1.5vw, 14px) clamp(4px, 1vw, 8px);">
          
-         <div style="position: relative; width: clamp(38px, 8vw, 56px); height: clamp(38px, 8vw, 56px); border: 2px dashed var(--gold); border-radius: 8px; overflow: hidden; cursor: pointer; background: var(--bg); display:flex; align-items:center; justify-content:center; transition: all 0.2s; margin-top: 2px;" onmouseover="this.style.backgroundColor='rgba(232,184,75,0.1)'" onmouseout="this.style.backgroundColor='var(--bg)'">
-           <img id="hl-acc-img" src="" style="width: 100%; height: 100%; object-fit: contain; display: none; z-index: 1;">
-           <div id="hl-acc-placeholder" style="position: absolute; width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:var(--gold); font-size:clamp(16px, 3vw, 24px); font-weight:800; line-height:1; z-index: 0;">+</div>
-           <select id="hl-acc-sel" onchange="applyHighlight()" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; z-index: 2;">
-              ${accOpts}
-           </select>
+         <!-- 상단(이미지+텍스트) 공간을 flex: 1로 묶어 펜던트 박스와 정확히 동일한 높이에서 끝나도록 설정 -->
+         <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: clamp(4px, 1vw, 8px);">
+             <div style="position: relative; width: clamp(38px, 8vw, 56px); height: clamp(38px, 8vw, 56px); border: 2px dashed var(--gold); border-radius: 8px; overflow: hidden; cursor: pointer; background: var(--bg); display:flex; align-items:center; justify-content:center; transition: all 0.2s; margin-top: 2px;" onmouseover="this.style.backgroundColor='rgba(232,184,75,0.1)'" onmouseout="this.style.backgroundColor='var(--bg)'">
+               <img id="hl-acc-img" src="" style="width: 100%; height: 100%; object-fit: contain; display: none; z-index: 1;">
+               <div id="hl-acc-placeholder" style="position: absolute; width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:var(--gold); font-size:clamp(16px, 3vw, 24px); font-weight:800; line-height:1; z-index: 0;">+</div>
+               <select id="hl-acc-sel" onchange="applyHighlight()" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; z-index: 2;">
+                  ${accOpts}
+               </select>
+             </div>
+             <div id="hl-acc-text" style="font-size:var(--ssfont); color:var(--dim); text-align:center; word-break:keep-all;">장신구 선택</div>
          </div>
-         <div id="hl-acc-text" style="font-size:var(--ssfont); color:var(--dim); text-align:center; word-break:keep-all;">장신구 선택</div>
          
-         <!-- 펜던트 칸과 완벽하게 동일한 높이와 여백(gap: 1px)을 사용하도록 수정 -->
-         <div style="display:flex; flex-direction:column; width: 100%; gap: 1px; margin-top: auto;">
-             <select id="hl-enc-sel" onchange="applyHighlight()" style="width: 100%; background: var(--sf2); border: 1px solid var(--bd); color: var(--text); padding: 4px 2px; border-radius: 4px; font-weight: 800; outline: none; cursor: pointer; font-size: var(--ssfont); text-align: center; text-align-last: center; margin-top: 2px;">
+         <!-- 하단(인첸트+체크박스) 공간 -->
+         <div style="display:flex; flex-direction:column; width: 100%; gap: 1px;">
+             <!-- 1번 위치: 인첸트 선택 (펜던트 1옵션과 정렬) -->
+             <select id="hl-enc-sel" onchange="applyHighlight()" style="width: 100%; background: var(--sf2); border: 1px solid var(--bd); color: var(--text); padding: 4px 2px; border-radius: 4px; font-weight: 800; outline: none; cursor: pointer; font-size: var(--ssfont); text-align: center; text-align-last: center; margin-top: 2px; box-sizing: border-box;">
                 <option value="">인첸트 전체</option>
                 <option value="hp">체력</option>
                 <option value="atk">공격</option>
                 <option value="def">방어</option>
              </select>
              
-             <!-- 펜던트의 옵션2 셀렉트 박스와 동일한 높이를 갖도록 패딩과 마진 통일 -->
+             <!-- 2번 위치: 체크박스 (펜던트 2옵션과 정렬) -->
              <label style="display: flex; align-items: center; justify-content: center; gap: 4px; cursor: pointer; width: 100%; padding: 4px 2px; margin-top: 2px; box-sizing: border-box; border: 1px solid transparent;">
                 <input type="checkbox" id="hl-filter-cb" onchange="applyHighlight()" style="accent-color: var(--gold); cursor: pointer; width: 14px; height: 14px; margin: 0;">
                 <span style="font-size: var(--ssfont); color: var(--dim); font-weight: 700; white-space: nowrap;">선택만 보기</span>
              </label>
+             
+             <!-- 3번 위치: 더미 박스 (펜던트 3옵션과 정렬) -->
+             ${dummyAcc}
          </div>
       </div>
     </div>
   `;
 
-  const pType = S.pendType;
-  const pImg = IMG_PEND[pType];
-  const pName = pType === '태양' ? '태양펜' : '달펜';
-  const numOpts = pType === '태양' ? 3 : 2;
-
   let pendSelects = '';
   for(let i=0; i<numOpts; i++) {
-     pendSelects += `<select class="hl-pend-sel" onchange="applyHighlight()" style="width: 100%; background: var(--sf2); border: 1px solid var(--bd); color: var(--text); padding: 4px 2px; border-radius: 4px; font-weight: 800; outline: none; cursor: pointer; font-size: var(--ssfont); text-align: center; text-align-last: center; margin-top: 2px;">
+     pendSelects += `<select class="hl-pend-sel" onchange="applyHighlight()" style="width: 100%; background: var(--sf2); border: 1px solid var(--bd); color: var(--text); padding: 4px 2px; border-radius: 4px; font-weight: 800; outline: none; cursor: pointer; font-size: var(--ssfont); text-align: center; text-align-last: center; margin-top: 2px; box-sizing: border-box;">
         <option value="">옵션${i+1}</option>
         <option value="hp">체력</option>
         <option value="atk">공격</option>
@@ -1410,14 +1420,16 @@ function renderSimSpiritDisplay() {
   let pendHtml = `
     <div style="display:flex; flex-direction:column; min-width: 0; flex: 0.65;">
       <div class="sec-hd" style="border-radius: 8px 8px 0 0; margin-bottom: 0; justify-content: center; letter-spacing: 0; font-size: var(--sfont); white-space: nowrap; padding: 9px 4px;">🔍 펜던트 조건</div>
-      <div class="sec-bd" style="background: var(--sf); border: 1px solid var(--bd); border-top: none; border-radius: 0 0 8px 8px; flex: 1; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; gap: clamp(4px, 1vw, 8px); padding: clamp(8px, 1.5vw, 14px) clamp(4px, 1vw, 8px);">
+      <div class="sec-bd" style="background: var(--sf); border: 1px solid var(--bd); border-top: none; border-radius: 0 0 8px 8px; flex: 1; display:flex; flex-direction:column; padding: clamp(8px, 1.5vw, 14px) clamp(4px, 1vw, 8px);">
          
-         <div style="width: clamp(38px, 8vw, 56px); height: clamp(38px, 8vw, 56px); border: 1px solid var(--bd); border-radius: 8px; overflow: hidden; background: var(--bg); display:flex; align-items:center; justify-content:center; margin-top: 2px;">
-           <img src="${pImg}" style="width: 85%; height: 85%; object-fit: contain;">
+         <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: clamp(4px, 1vw, 8px);">
+             <div style="width: clamp(38px, 8vw, 56px); height: clamp(38px, 8vw, 56px); border: 1px solid var(--bd); border-radius: 8px; overflow: hidden; background: var(--bg); display:flex; align-items:center; justify-content:center; margin-top: 2px;">
+               <img src="${pImg}" style="width: 85%; height: 85%; object-fit: contain;">
+             </div>
+             <div style="font-size:var(--ssfont); color:var(--text); font-weight:800; text-align:center; word-break:keep-all;">${pName}</div>
          </div>
-         <div style="font-size:var(--ssfont); color:var(--text); font-weight:800; text-align:center; word-break:keep-all;">${pName}</div>
          
-         <div style="display:flex; flex-direction:column; width: 100%; gap: 1px; margin-top: auto;">
+         <div style="display:flex; flex-direction:column; width: 100%; gap: 1px;">
            ${pendSelects}
          </div>
       </div>
