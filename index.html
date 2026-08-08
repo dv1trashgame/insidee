@@ -1010,7 +1010,7 @@ function fmtPendMob(pend){
 }
 
 // 전체 레이아웃을 중앙 정렬, 지정된 요소 폰트 +3px, 반응형으로 재배치
-function mkMobCard(rank,dc,dt,accImg,accName,enc,gems,pendMob,bufHtml,fH,fA,fD,bv, rawAccName, rawEnc){
+function mkMobCard(rank,dc,dt,accImg,accName,enc,gems,pendMob,bufHtml,fH,fA,fD,bv, rawAccName, rawEnc, rawPend){
   const dtBadge=dt?`<span class="dtype-b" style="color:${dc};border-color:${dc};padding:2px 6px; font-size:inherit;">${dt}</span>`:'';
   
   // 장신구 이미지 반응형 크기 조절
@@ -1019,8 +1019,8 @@ function mkMobCard(rank,dc,dt,accImg,accName,enc,gems,pendMob,bufHtml,fH,fA,fD,b
      sizedAccImg = accImg.replace(/width:[^;]+;height:[^;]+;/, 'width:clamp(20px, 5vw, 36px);height:clamp(20px, 5vw, 36px);');
   }
   
-  // 모든 폰트를 동일하게 자동 조절 (data-enc 속성 추가)
-  return `<div class="res-item" data-acc="${rawAccName}" data-enc="${rawEnc}" style="padding:14px 10px; border-bottom:1px solid var(--border2); box-sizing:border-box; width:100%; transition: background-color 0.2s; font-size: clamp(10px, 2.5vw, 13px);">
+  // data-pend 속성 추가
+  return `<div class="res-item" data-acc="${rawAccName}" data-enc="${rawEnc}" data-pend="${rawPend}" style="padding:14px 10px; border-bottom:1px solid var(--border2); box-sizing:border-box; width:100%; transition: background-color 0.2s; font-size: clamp(10px, 2.5vw, 13px);">
     
     <!-- 상단: 랭크/타입(좌), 스탯(중앙), 비밸(우) -->
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; width:100%;">
@@ -1288,22 +1288,23 @@ function renderResTop(topList){
     const rank = i < 3 ? medals[i] : `<span class="rank-n">${i+1}</span>`;
     const dc = DCOLORS[r.dt];
     const a = ACC_DB.find(x => x.n === r.accN);
-    // 장신구 이미지를 원본 사진처럼 조금 더 크게 설정
     const aImg = a && a.img ? `<img src="${a.img}" style="width:48px;height:48px;object-fit:contain;border-radius:5px">` : '';
     
     const formattedBv = (r.bv / 1e8).toFixed(3) + '억';
     const combinedBufHtml = fmtBufNerfLabel(r.bufLabel, r.nerfLabel);
 
+    // 펜던트의 옵션 값들을 콤마로 연결해서 문자열로 만듭니다. (예: "hp,atk")
+    const rawPend = r.pend ? r.pend.options.slice(0, r.pend.type==='태양'?3:2).map(o=>o.stat).join(',') : '';
+
     html += mkMobCard(rank, dc, r.dt, aImg, fmtAccName(r.accN), fmtAccEnc(r.enc),
       fmtGem(r.alloc), fmtPendMob(r.pend), combinedBufHtml,
       r.fH.toLocaleString('ko-KR'), r.fA.toLocaleString('ko-KR'), r.fD.toLocaleString('ko-KR'),
-      formattedBv, r.accN, r.enc);
+      formattedBv, r.accN, r.enc, rawPend);
   });
   
   html += '</div>';
   el.innerHTML = html;
 
-  // 테이블이 새로 그려졌으므로, 현재 드롭다운에 선택된 조건이 있다면 다시 하이라이트 적용
   applyHighlight();
 }
 
@@ -1321,7 +1322,7 @@ function renderSimSpiritDisplay() {
 
   const makeOptCell = (idx, o) => {
     return `
-      <div style="background: var(--sf2); border: 1px solid var(--bd); border-radius: 6px; padding: clamp(6px, 1.5vw, 10px); display: flex; flex-direction: column; gap: clamp(4px, 1vw, 8px);">
+      <div style="background: var(--sf2); border: 1px solid var(--bd); border-radius: 6px; padding: clamp(4px, 1vw, 8px); display: flex; flex-direction: column; gap: clamp(4px, 1vw, 6px);">
         <div style="text-align: center; font-size: var(--ssfont); font-weight: 800; color: var(--dim); white-space:nowrap;">${idx+1}옵션</div>
         <div style="text-align: center;">${getOptText(o)}</div>
       </div>
@@ -1337,15 +1338,15 @@ function renderSimSpiritDisplay() {
   }
 
   let spiritHtml = `
-    <div class="sec-hd" style="border-radius: 8px 8px 0 0; margin-bottom: 0; font-size: var(--sfont); white-space: nowrap;">🔮 적용된 정령 정보 (수정 불가)</div>
-    <div class="sec-bd" style="background: var(--sf); border: 1px solid var(--bd); border-top: none; border-radius: 0 0 8px 8px; height: calc(100% - clamp(24px, 6vw, 32px)); display:flex; flex-direction:column; justify-content:center; padding: clamp(8px, 2vw, 14px);">
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: clamp(4px, 1vw, 8px); margin-bottom: clamp(4px, 1vw, 8px);">
+    <div class="sec-hd" style="border-radius: 8px 8px 0 0; margin-bottom: 0; font-size: var(--sfont); white-space: nowrap; padding: 9px 4px; justify-content:center;">🔮 정령 정보</div>
+    <div class="sec-bd" style="background: var(--sf); border: 1px solid var(--bd); border-top: none; border-radius: 0 0 8px 8px; height: calc(100% - clamp(24px, 6vw, 32px)); display:flex; flex-direction:column; justify-content:center; padding: clamp(6px, 1.5vw, 10px);">
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: clamp(4px, 1vw, 6px); margin-bottom: clamp(4px, 1vw, 6px);">
         ${makeOptCell(0, sp.opts[0])}
         ${makeOptCell(1, sp.opts[1])}
         ${makeOptCell(2, sp.opts[2])}
         ${makeOptCell(3, sp.opts[3])}
       </div>
-      <div style="background: var(--sf2); border: 1px solid var(--bd); border-radius: 6px; padding: clamp(6px, 1.5vw, 10px); display: flex; align-items: center; justify-content: center; gap: clamp(8px, 2vw, 14px);">
+      <div style="background: var(--sf2); border: 1px solid var(--bd); border-radius: 6px; padding: clamp(6px, 1vw, 8px); display: flex; align-items: center; justify-content: center; gap: clamp(6px, 1.5vw, 10px);">
         <div style="font-size: var(--ssfont); font-weight: 800; color: var(--dim); white-space:nowrap;">부가옵션</div>
         <div>${bHtml}</div>
       </div>
@@ -1360,22 +1361,20 @@ function renderSimSpiritDisplay() {
   });
 
   let hlHtml = `
-    <div style="display:flex; flex-direction:column; min-width: 0; flex: 0.6;">
-      <div class="sec-hd" style="border-radius: 8px 8px 0 0; margin-bottom: 0; justify-content: center; letter-spacing: 0; font-size: var(--sfont); white-space: nowrap;">🔍 지정 조건 검색</div>
-      <div class="sec-bd" style="background: var(--sf); border: 1px solid var(--bd); border-top: none; border-radius: 0 0 8px 8px; flex: 1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap: clamp(6px, 1.5vw, 10px); padding: clamp(8px, 2vw, 14px);">
+    <div style="display:flex; flex-direction:column; min-width: 0; flex: 0.65;">
+      <div class="sec-hd" style="border-radius: 8px 8px 0 0; margin-bottom: 0; justify-content: center; letter-spacing: 0; font-size: var(--sfont); white-space: nowrap; padding: 9px 4px;">🔍 장신구 조건</div>
+      <div class="sec-bd" style="background: var(--sf); border: 1px solid var(--bd); border-top: none; border-radius: 0 0 8px 8px; flex: 1; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; gap: clamp(4px, 1vw, 8px); padding: clamp(8px, 1.5vw, 14px) clamp(4px, 1vw, 8px);">
          
-         <div style="position: relative; width: clamp(40px, 9vw, 60px); height: clamp(40px, 9vw, 60px); border: 2px dashed var(--gold); border-radius: 8px; overflow: hidden; cursor: pointer; background: var(--bg); display:flex; align-items:center; justify-content:center; transition: all 0.2s;" onmouseover="this.style.backgroundColor='rgba(232,184,75,0.1)'" onmouseout="this.style.backgroundColor='var(--bg)'">
+         <div style="position: relative; width: clamp(38px, 8vw, 56px); height: clamp(38px, 8vw, 56px); border: 2px dashed var(--gold); border-radius: 8px; overflow: hidden; cursor: pointer; background: var(--bg); display:flex; align-items:center; justify-content:center; transition: all 0.2s; margin-top: 2px;" onmouseover="this.style.backgroundColor='rgba(232,184,75,0.1)'" onmouseout="this.style.backgroundColor='var(--bg)'">
            <img id="hl-acc-img" src="" style="width: 100%; height: 100%; object-fit: contain; display: none; z-index: 1;">
            <div id="hl-acc-placeholder" style="position: absolute; width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:var(--gold); font-size:clamp(16px, 3vw, 24px); font-weight:800; line-height:1; z-index: 0;">+</div>
-           <!-- 함수 호출명 applyHighlight 로 통일 -->
            <select id="hl-acc-sel" onchange="applyHighlight()" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; z-index: 2;">
               ${accOpts}
            </select>
          </div>
          <div id="hl-acc-text" style="font-size:var(--ssfont); color:var(--dim); text-align:center; word-break:keep-all;">장신구 선택</div>
          
-         <!-- 인첸트 선택 박스 추가 -->
-         <select id="hl-enc-sel" onchange="applyHighlight()" style="width: 100%; background: var(--sf2); border: 1px solid var(--bd); color: var(--text); padding: 4px 2px; border-radius: 4px; font-weight: 800; outline: none; cursor: pointer; font-size: var(--ssfont); text-align: center; text-align-last: center; margin-top: 2px;">
+         <select id="hl-enc-sel" onchange="applyHighlight()" style="width: 100%; background: var(--sf2); border: 1px solid var(--bd); color: var(--text); padding: 4px 2px; border-radius: 4px; font-weight: 800; outline: none; cursor: pointer; font-size: var(--ssfont); text-align: center; text-align-last: center; margin-top: auto;">
             <option value="">인첸트 전체</option>
             <option value="hp">체력</option>
             <option value="atk">공격</option>
@@ -1385,10 +1384,44 @@ function renderSimSpiritDisplay() {
     </div>
   `;
 
-  // --sfont와 --ssfont 변수를 통해 컨테이너 내부의 글자 크기를 화면 너비에 맞춰 자동 조율합니다.
-  el.innerHTML = `<div style="--sfont: clamp(11px, 2.6vw, 14px); --ssfont: clamp(9px, 2.2vw, 12px); display: flex; gap: clamp(8px, 2vw, 14px); flex-wrap: nowrap;">
-     <div style="flex: 1.4; min-width: 0; display:flex; flex-direction:column;">${spiritHtml}</div>
+  // 펜던트 하이라이트 UI 동적 생성
+  const pType = S.pendType;
+  const pImg = IMG_PEND[pType];
+  const pName = pType === '태양' ? '태양펜' : '달펜';
+  const numOpts = pType === '태양' ? 3 : 2;
+
+  let pendSelects = '';
+  for(let i=0; i<numOpts; i++) {
+     pendSelects += `<select class="hl-pend-sel" onchange="applyHighlight()" style="width: 100%; background: var(--sf2); border: 1px solid var(--bd); color: var(--text); padding: 4px 2px; border-radius: 4px; font-weight: 800; outline: none; cursor: pointer; font-size: var(--ssfont); text-align: center; text-align-last: center; margin-top: 2px;">
+        <option value="">옵션${i+1}</option>
+        <option value="hp">체력</option>
+        <option value="atk">공격</option>
+        <option value="def">방어</option>
+     </select>`;
+  }
+
+  let pendHtml = `
+    <div style="display:flex; flex-direction:column; min-width: 0; flex: 0.65;">
+      <div class="sec-hd" style="border-radius: 8px 8px 0 0; margin-bottom: 0; justify-content: center; letter-spacing: 0; font-size: var(--sfont); white-space: nowrap; padding: 9px 4px;">🔍 펜던트 조건</div>
+      <div class="sec-bd" style="background: var(--sf); border: 1px solid var(--bd); border-top: none; border-radius: 0 0 8px 8px; flex: 1; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; gap: clamp(4px, 1vw, 8px); padding: clamp(8px, 1.5vw, 14px) clamp(4px, 1vw, 8px);">
+         
+         <div style="width: clamp(38px, 8vw, 56px); height: clamp(38px, 8vw, 56px); border: 1px solid var(--bd); border-radius: 8px; overflow: hidden; background: var(--bg); display:flex; align-items:center; justify-content:center; margin-top: 2px;">
+           <img src="${pImg}" style="width: 85%; height: 85%; object-fit: contain;">
+         </div>
+         <div style="font-size:var(--ssfont); color:var(--text); font-weight:800; text-align:center; word-break:keep-all;">${pName}</div>
+         
+         <div style="display:flex; flex-direction:column; width: 100%; gap: 1px; margin-top: auto;">
+           ${pendSelects}
+         </div>
+      </div>
+    </div>
+  `;
+
+  // flex 비율을 재조정하여 세 개의 박스가 화면에 꽉 차고 예쁘게 배치되게 합니다.
+  el.innerHTML = `<div style="--sfont: clamp(10px, 2.4vw, 14px); --ssfont: clamp(9px, 2vw, 12px); display: flex; gap: clamp(6px, 1.5vw, 10px); flex-wrap: nowrap;">
+     <div style="flex: 1.1; min-width: 0; display:flex; flex-direction:column;">${spiritHtml}</div>
      ${hlHtml}
+     ${pendHtml}
   </div>`;
   el.style.display = 'block';
 }
@@ -1405,6 +1438,9 @@ function applyHighlight() {
    const accName = accEl.value;
    const encName = encEl.value;
    
+   // 선택된 펜던트 옵션들 배열화 (빈 값은 제외)
+   const pendSels = Array.from(document.querySelectorAll('.hl-pend-sel')).map(el => el.value).filter(v => v);
+   
    // 장신구 이미지 및 텍스트 업데이트
    if(!accName) {
       imgEl.style.display = 'none';
@@ -1420,17 +1456,36 @@ function applyHighlight() {
       }
    }
 
-   // 다중 조건 (장신구 + 인첸트) 일치 여부에 따른 하이라이팅 적용
+   // 다중 조건 (장신구 + 인첸트 + 펜던트) 일치 여부에 따른 하이라이팅 적용
    const items = document.querySelectorAll('.res-item');
    items.forEach(el => {
       const itemAcc = el.getAttribute('data-acc');
       const itemEnc = el.getAttribute('data-enc');
+      const itemPendAttr = el.getAttribute('data-pend');
+      const itemPend = itemPendAttr ? itemPendAttr.split(',') : [];
       
       const matchAcc = !accName || itemAcc === accName;
       const matchEnc = !encName || itemEnc === encName;
       
-      // 장신구나 인첸트 중 최소 하나가 선택되어 있고, 선택된 모든 조건이 부합할 경우 강조
-      if((accName || encName) && matchAcc && matchEnc) {
+      // 펜던트 필터링 로직: 사용자가 고른 옵션들이 아이템 펜던트 옵션에 모두 들어있는지 검사
+      let matchPend = true;
+      if(pendSels.length > 0) {
+         let itemPendCopy = [...itemPend];
+         for(let p of pendSels) {
+            let idx = itemPendCopy.indexOf(p);
+            if(idx >= 0) {
+               itemPendCopy.splice(idx, 1); // 매칭된 옵션은 삭제 (중복 옵션 검사용)
+            } else {
+               matchPend = false;
+               break; // 하나라도 안 맞으면 실패
+            }
+         }
+      }
+      
+      // 하나라도 필터 조건이 설정되어 있고, 모든 조건이 만족될 경우 하이라이트
+      const hasCondition = accName || encName || pendSels.length > 0;
+      
+      if(hasCondition && matchAcc && matchEnc && matchPend) {
          el.style.backgroundColor = 'rgba(232, 184, 75, 0.25)'; 
          el.style.boxShadow = 'inset 0 0 0 2px rgba(232, 184, 75, 0.8)';
       } else {
