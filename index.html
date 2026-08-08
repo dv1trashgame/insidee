@@ -912,7 +912,7 @@ function runAllSims() {
   const btn = document.getElementById('btn-run-all');
   if (btn) {
     btn.disabled = true;
-    btn.textContent = '⏳ 분석표 및 TOP 200 일괄 연산 중...';
+    btn.textContent = '⏳ 분석표 및 TOP 500 일괄 연산 중...';
   }
 
   // 시뮬레이터 탭에 정령 정보 및 하이라이트 UI 렌더링
@@ -1038,7 +1038,7 @@ function runAllSims() {
          
          const rowInfo = rowsDataMap.find(r => r.id === currentBufId);
          
-         // 1. 유효한 타입과 버프가 선택된 경우에만 등수/격차 계산
+         // 유효한 타입과 버프가 선택된 경우에만 등수/격차 계산
          if (dtIdx !== -1 && rowInfo) {
             const rIdx = rowInfo.rIdx;
             const userVal = window.tableSimData.userRowBVs[dtIdx][rIdx];
@@ -1059,30 +1059,39 @@ function runAllSims() {
             
             let gapHtml = '';
             if(gap <= 0.0001) {
-               gapHtml = `<span style="color:var(--text); font-weight:800;">0.00억</span>`;
+               gapHtml = `<span style="color:#333333; font-weight:800;">0.00억</span>`;
             } else {
-               gapHtml = `<span style="color:var(--red); font-weight:800;">-</span><span style="color:var(--text); font-weight:800;">${fBV(gap)}</span>`;
+               gapHtml = `<span style="color:#333333; font-weight:800;">-${fBV(gap)}</span>`;
             }
 
             const rankHtml = rank === 1 ? `<span style="color:var(--gold); font-weight:800;">1등</span>` : `<span style="color:var(--text); font-weight:800;">${rank}등</span>`;
+            
+            // 노버프, 노너프일 경우 글자색을 회색(dim)으로 처리하여 시각적 구분을 줍니다.
+            const bufColor = simExactBuf === '노버프' ? 'var(--dim)' : 'var(--green)';
+            const nerfColor = simExactNerf === '노너프' ? 'var(--dim)' : 'var(--red)';
 
+            // 5열 레이아웃을 위한 HTML 구성
             summaryEl.innerHTML = `
-              <div style="background: var(--sf); border: 1px solid var(--bd); border-radius: 8px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; gap: 10px;">
-                <div style="display: flex; flex-direction: column; gap: 4px; flex: 1; align-items: center; border-right: 1px solid var(--bd); padding-right: 10px;">
-                  <span style="font-size: 11px; color: var(--dim); font-weight: 800;">타입</span>
-                  <span style="font-size: 14px; color: var(--gold); font-weight: 800;">${simType}</span>
+              <div style="background: var(--sf); border: 1px solid var(--bd); border-radius: 8px; padding: 12px 6px; display: flex; justify-content: space-between; align-items: center; gap: 4px;">
+                <div style="display: flex; flex-direction: column; gap: 4px; flex: 1; align-items: center; border-right: 1px solid var(--bd);">
+                  <span style="font-size: clamp(9px, 2.2vw, 11px); color: var(--dim); font-weight: 800; white-space: nowrap;">타입</span>
+                  <span style="font-size: clamp(11px, 2.8vw, 14px); color: var(--gold); font-weight: 800; white-space: nowrap;">${simType}</span>
                 </div>
-                <div style="display: flex; flex-direction: column; gap: 4px; flex: 1; align-items: center; border-right: 1px solid var(--bd); padding-right: 10px;">
-                  <span style="font-size: 11px; color: var(--dim); font-weight: 800;">적용 버프</span>
-                  <span style="font-size: 14px; color: var(--green); font-weight: 800;">${simExactBuf}</span>
+                <div style="display: flex; flex-direction: column; gap: 4px; flex: 1; align-items: center; border-right: 1px solid var(--bd);">
+                  <span style="font-size: clamp(9px, 2.2vw, 11px); color: var(--dim); font-weight: 800; white-space: nowrap;">적용 버프</span>
+                  <span style="font-size: clamp(11px, 2.8vw, 14px); color: ${bufColor}; font-weight: 800; white-space: nowrap;">${simExactBuf}</span>
                 </div>
-                <div style="display: flex; flex-direction: column; gap: 4px; flex: 1; align-items: center; border-right: 1px solid var(--bd); padding-right: 10px;">
-                  <span style="font-size: 11px; color: var(--dim); font-weight: 800;">정령 등수</span>
-                  <span style="font-size: 14px;">${rankHtml}</span>
+                <div style="display: flex; flex-direction: column; gap: 4px; flex: 1; align-items: center; border-right: 1px solid var(--bd);">
+                  <span style="font-size: clamp(9px, 2.2vw, 11px); color: var(--dim); font-weight: 800; white-space: nowrap;">적용 너프</span>
+                  <span style="font-size: clamp(11px, 2.8vw, 14px); color: ${nerfColor}; font-weight: 800; white-space: nowrap;">${simExactNerf}</span>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 4px; flex: 1; align-items: center; border-right: 1px solid var(--bd);">
+                  <span style="font-size: clamp(9px, 2.2vw, 11px); color: var(--dim); font-weight: 800; white-space: nowrap;">정령 등수</span>
+                  <span style="font-size: clamp(11px, 2.8vw, 14px); white-space: nowrap;">${rankHtml}</span>
                 </div>
                 <div style="display: flex; flex-direction: column; gap: 4px; flex: 1; align-items: center;">
-                  <span style="font-size: 11px; color: var(--dim); font-weight: 800;">1위 격차</span>
-                  <span style="font-size: 14px;">${gapHtml}</span>
+                  <span style="font-size: clamp(9px, 2.2vw, 11px); color: var(--dim); font-weight: 800; white-space: nowrap;">1위 격차</span>
+                  <span style="font-size: clamp(11px, 2.8vw, 14px); white-space: nowrap;">${gapHtml}</span>
                 </div>
               </div>
             `;
@@ -1093,7 +1102,7 @@ function runAllSims() {
       }
 
       // ==========================================================
-      // 3. 단일 조건 TOP 500 계산 로직
+      // 2. 단일 조건 TOP 500 계산 로직
       // ==========================================================
       const exactBufObj = parseExactBuf(simExactBuf);
       const exactNerfObj = parseExactNerf(simExactNerf);
@@ -1113,7 +1122,6 @@ function runAllSims() {
     }
   }, 30);
 }
-
 function doSimExact(ownedAcc, buf, nerf, pends, pool, allocs){
   const {plus:sP, pct:sPct, bonus:sB} = procSpirit();
   const topList = [];
