@@ -735,7 +735,7 @@ function renderAnalysisTable() {
             displayStr = `<span style="color:#333333; font-weight:800;">${fBigInt('0.00억')}</span>`;
          } else {
             // 마이너스(-) 기호만 빨간색으로, 숫자는 검은색으로 처리합니다.
-            displayStr = `<span style="color:var(--red); font-weight:800;">-</span><span style="color:#333333; font-weight:800;">${fBigInt(fBV(gap))}</span>`;
+            displayStr = `<span style="color:#333333; font-weight:800;">-${fBigInt(fBV(gap))}</span>`;
          }
       }
       
