@@ -1251,7 +1251,7 @@ function doSimExact(ownedAcc, buf, nerf, pends, pool, allocs){
           const fD = calcStat(bd, gD, 6, aD, sPct.def, pD, sP.def, sB.def, COLL.def, finalD);
           const bv = fH * fA * fD;
           
-          if(bv > minBV || topList.length < 500){
+          if(bv > minBV || topList.length < 800){
             let lo=0, hi=topList.length;
             while(lo < hi){ 
               const m = (lo + hi) >> 1; 
@@ -1264,8 +1264,8 @@ function doSimExact(ownedAcc, buf, nerf, pends, pool, allocs){
               alloc:alloc.map((k,i)=>({k, g:pool[i]})).filter(x=>x.k>0), 
               fH, fA, fD
             });
-            if(topList.length > 500) topList.pop(); 
-            minBV = topList.length === 500 ? topList[499].bv : -Infinity;
+            if(topList.length > 800) topList.pop(); 
+            minBV = topList.length === 800 ? topList[799].bv : -Infinity;
           }
         }
       }
@@ -1373,15 +1373,17 @@ function renderSimSpiritDisplay() {
          </div>
          <div id="hl-acc-text" style="font-size:var(--ssfont); color:var(--dim); text-align:center; word-break:keep-all;">장신구 선택</div>
          
-         <div style="width: 100%; margin-top: auto; display: flex; flex-direction: column; gap: 6px;">
-             <select id="hl-enc-sel" onchange="applyHighlight()" style="width: 100%; background: var(--sf2); border: 1px solid var(--bd); color: var(--text); padding: 4px 2px; border-radius: 4px; font-weight: 800; outline: none; cursor: pointer; font-size: var(--ssfont); text-align: center; text-align-last: center;">
+         <!-- 펜던트 칸과 완벽하게 동일한 높이와 여백(gap: 1px)을 사용하도록 수정 -->
+         <div style="display:flex; flex-direction:column; width: 100%; gap: 1px; margin-top: auto;">
+             <select id="hl-enc-sel" onchange="applyHighlight()" style="width: 100%; background: var(--sf2); border: 1px solid var(--bd); color: var(--text); padding: 4px 2px; border-radius: 4px; font-weight: 800; outline: none; cursor: pointer; font-size: var(--ssfont); text-align: center; text-align-last: center; margin-top: 2px;">
                 <option value="">인첸트 전체</option>
                 <option value="hp">체력</option>
                 <option value="atk">공격</option>
                 <option value="def">방어</option>
              </select>
              
-             <label style="display: flex; align-items: center; justify-content: center; gap: 4px; cursor: pointer;">
+             <!-- 펜던트의 옵션2 셀렉트 박스와 동일한 높이를 갖도록 패딩과 마진 통일 -->
+             <label style="display: flex; align-items: center; justify-content: center; gap: 4px; cursor: pointer; width: 100%; padding: 4px 2px; margin-top: 2px; box-sizing: border-box; border: 1px solid transparent;">
                 <input type="checkbox" id="hl-filter-cb" onchange="applyHighlight()" style="accent-color: var(--gold); cursor: pointer; width: 14px; height: 14px; margin: 0;">
                 <span style="font-size: var(--ssfont); color: var(--dim); font-weight: 700; white-space: nowrap;">선택만 보기</span>
              </label>
