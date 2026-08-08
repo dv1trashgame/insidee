@@ -1023,11 +1023,10 @@ function runAllSims() {
       renderAnalysisTable();
 
       // ==========================================================
-      // [신규 추가] 시뮬레이션 결과 탭 상단 요약 박스 렌더링
+      // 시뮬레이션 결과 탭 상단 요약 박스 렌더링 (가운데 정렬 완벽 보정 적용)
       // ==========================================================
       const summaryEl = document.getElementById('sim-summary-box');
       if (summaryEl && window.tableSimData) {
-         // 현재 타입 인덱스와 버프 행 인덱스 찾기
          const dtIdx = DTYPES.indexOf(simType);
          const currentBufId = simExactBuf.replace('+', '_');
          const rowsDataMap = [
@@ -1038,13 +1037,11 @@ function runAllSims() {
          
          const rowInfo = rowsDataMap.find(r => r.id === currentBufId);
          
-         // 유효한 타입과 버프가 선택된 경우에만 등수/격차 계산
          if (dtIdx !== -1 && rowInfo) {
             const rIdx = rowInfo.rIdx;
             const userVal = window.tableSimData.userRowBVs[dtIdx][rIdx];
             const allVals = window.tableSimData.allRowBVs[dtIdx];
             
-            // 등수 계산
             let rank = 1;
             let maxVal = -Infinity;
             for(let i=0; i<3888; i++) {
@@ -1053,45 +1050,43 @@ function runAllSims() {
                if(val > maxVal) maxVal = val;
             }
             
-            // 격차 계산
             const gap = maxVal - userVal;
             const fBV = v => (v / 1e8).toFixed(2) + '억';
             
             let gapHtml = '';
             if(gap <= 0.0001) {
-               gapHtml = `<span style="color:#333333; font-weight:800;">0.00억</span>`;
+               gapHtml = `<span style="color:#333333; font-weight:800; text-align:center; line-height:1;">0.00억</span>`;
             } else {
-               gapHtml = `<span style="color:#333333; font-weight:800;">-${fBV(gap)}</span>`;
+               gapHtml = `<span style="color:#333333; font-weight:800; text-align:center; line-height:1;">-${fBV(gap)}</span>`;
             }
 
-            const rankHtml = rank === 1 ? `<span style="color:var(--gold); font-weight:800;">1등</span>` : `<span style="color:var(--text); font-weight:800;">${rank}등</span>`;
+            const rankHtml = rank === 1 ? `<span style="color:var(--gold); font-weight:800; text-align:center; line-height:1;">1등</span>` : `<span style="color:var(--text); font-weight:800; text-align:center; line-height:1;">${rank}등</span>`;
             
-            // 노버프, 노너프일 경우 글자색을 회색(dim)으로 처리하여 시각적 구분을 줍니다.
             const bufColor = simExactBuf === '노버프' ? 'var(--dim)' : 'var(--green)';
             const nerfColor = simExactNerf === '노너프' ? 'var(--dim)' : 'var(--red)';
 
-            // 5열 레이아웃을 위한 HTML 구성
+            // 모든 항목 내부 텍스트 라인 높이(line-height)를 1로 고정하고, align-items: stretch 로 세로 높이를 완벽하게 통일합니다.
             summaryEl.innerHTML = `
-              <div style="background: var(--sf); border: 1px solid var(--bd); border-radius: 8px; padding: 12px 6px; display: flex; justify-content: space-between; align-items: center; gap: 4px;">
-                <div style="display: flex; flex-direction: column; gap: 4px; flex: 1; align-items: center; border-right: 1px solid var(--bd);">
-                  <span style="font-size: clamp(9px, 2.2vw, 11px); color: var(--dim); font-weight: 800; white-space: nowrap;">타입</span>
-                  <span style="font-size: clamp(11px, 2.8vw, 14px); color: var(--gold); font-weight: 800; white-space: nowrap;">${simType}</span>
+              <div style="background: var(--sf); border: 1px solid var(--bd); border-radius: 8px; padding: 12px 6px; display: flex; justify-content: space-evenly; align-items: stretch; text-align: center; gap: 4px; min-height: 64px;">
+                <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 6px; flex: 1; border-right: 1px solid var(--bd);">
+                  <span style="font-size: clamp(9px, 2.2vw, 11px); color: var(--dim); font-weight: 800; white-space: nowrap; line-height: 1;">타입</span>
+                  <span style="font-size: clamp(11px, 2.8vw, 14px); color: var(--gold); font-weight: 800; white-space: nowrap; line-height: 1;">${simType}</span>
                 </div>
-                <div style="display: flex; flex-direction: column; gap: 4px; flex: 1; align-items: center; border-right: 1px solid var(--bd);">
-                  <span style="font-size: clamp(9px, 2.2vw, 11px); color: var(--dim); font-weight: 800; white-space: nowrap;">적용 버프</span>
-                  <span style="font-size: clamp(11px, 2.8vw, 14px); color: ${bufColor}; font-weight: 800; white-space: nowrap;">${simExactBuf}</span>
+                <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 6px; flex: 1; border-right: 1px solid var(--bd);">
+                  <span style="font-size: clamp(9px, 2.2vw, 11px); color: var(--dim); font-weight: 800; white-space: nowrap; line-height: 1;">적용 버프</span>
+                  <span style="font-size: clamp(11px, 2.8vw, 14px); color: ${bufColor}; font-weight: 800; white-space: nowrap; line-height: 1;">${simExactBuf}</span>
                 </div>
-                <div style="display: flex; flex-direction: column; gap: 4px; flex: 1; align-items: center; border-right: 1px solid var(--bd);">
-                  <span style="font-size: clamp(9px, 2.2vw, 11px); color: var(--dim); font-weight: 800; white-space: nowrap;">적용 너프</span>
-                  <span style="font-size: clamp(11px, 2.8vw, 14px); color: ${nerfColor}; font-weight: 800; white-space: nowrap;">${simExactNerf}</span>
+                <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 6px; flex: 1; border-right: 1px solid var(--bd);">
+                  <span style="font-size: clamp(9px, 2.2vw, 11px); color: var(--dim); font-weight: 800; white-space: nowrap; line-height: 1;">적용 너프</span>
+                  <span style="font-size: clamp(11px, 2.8vw, 14px); color: ${nerfColor}; font-weight: 800; white-space: nowrap; line-height: 1;">${simExactNerf}</span>
                 </div>
-                <div style="display: flex; flex-direction: column; gap: 4px; flex: 1; align-items: center; border-right: 1px solid var(--bd);">
-                  <span style="font-size: clamp(9px, 2.2vw, 11px); color: var(--dim); font-weight: 800; white-space: nowrap;">정령 등수</span>
-                  <span style="font-size: clamp(11px, 2.8vw, 14px); white-space: nowrap;">${rankHtml}</span>
+                <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 6px; flex: 1; border-right: 1px solid var(--bd);">
+                  <span style="font-size: clamp(9px, 2.2vw, 11px); color: var(--dim); font-weight: 800; white-space: nowrap; line-height: 1;">정령 등수</span>
+                  <span style="font-size: clamp(11px, 2.8vw, 14px); white-space: nowrap; line-height: 1;">${rankHtml}</span>
                 </div>
-                <div style="display: flex; flex-direction: column; gap: 4px; flex: 1; align-items: center;">
-                  <span style="font-size: clamp(9px, 2.2vw, 11px); color: var(--dim); font-weight: 800; white-space: nowrap;">1위 격차</span>
-                  <span style="font-size: clamp(11px, 2.8vw, 14px); white-space: nowrap;">${gapHtml}</span>
+                <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 6px; flex: 1;">
+                  <span style="font-size: clamp(9px, 2.2vw, 11px); color: var(--dim); font-weight: 800; white-space: nowrap; line-height: 1;">1위 격차</span>
+                  <span style="font-size: clamp(11px, 2.8vw, 14px); white-space: nowrap; line-height: 1;">${gapHtml}</span>
                 </div>
               </div>
             `;
