@@ -835,16 +835,25 @@ function fmtPendMob(pend){
 }
 
 // 전체 레이아웃을 중앙 정렬, 지정된 요소 폰트 +3px, 반응형으로 재배치
-function mkMobCard(rank,dc,dt,accImg,accName,enc,gems,pendMob,bufHtml,fH,fA,fD,bv, rawAccName, rawEnc, rawPend){
+function mkMobCard(rank,dc,dt,accImg,accName,enc,gems,pendMob,bufHtml,fH,fA,fD,bH,bA,bD,bv, rawAccName, rawEnc, rawPend){
   const dtBadge=dt?`<span class="dtype-b" style="color:${dc};border-color:${dc};padding:2px 6px; font-size:inherit;">${dt}</span>`:'';
   
-  // 장신구 이미지 반응형 크기 조절
   let sizedAccImg = '';
   if(accImg) {
      sizedAccImg = accImg.replace(/width:[^;]+;height:[^;]+;/, 'width:clamp(20px, 5vw, 36px);height:clamp(20px, 5vw, 36px);');
   }
+
+  // 스탯과 버프값을 위아래로 분리해서 출력하는 헬퍼 함수
+  const statCol = (base, buff, cVar) => {
+     const isZero = buff === 0;
+     const bStr = isZero ? `(+0)` : (buff > 0 ? `(+${buff})` : `(${buff})`);
+     const visibility = isZero ? 'visibility:hidden;' : '';
+     return `<div style="display:flex; flex-direction:column; align-items:center; gap: 3px;">
+               <span style="color:var(${cVar}); font-size:inherit; line-height:1;">${base.toLocaleString('ko-KR')}</span>
+               <span style="font-size: clamp(9px, 2.2vw, 11px); color: var(--dim); font-weight: 800; line-height:1; letter-spacing: 0; ${visibility}">${bStr}</span>
+             </div>`;
+  };
   
-  // data-pend 속성 추가
   return `<div class="res-item" data-acc="${rawAccName}" data-enc="${rawEnc}" data-pend="${rawPend}" style="padding:14px 10px; border-bottom:1px solid var(--border2); box-sizing:border-box; width:100%; transition: background-color 0.2s; font-size: clamp(10px, 2.5vw, 13px);">
     
     <!-- 상단: 랭크/타입(좌), 스탯(중앙), 비밸(우) -->
@@ -859,12 +868,16 @@ function mkMobCard(rank,dc,dt,accImg,accName,enc,gems,pendMob,bufHtml,fH,fA,fD,b
         </div>
       </div>
 
-      <!-- 중앙: 스탯 (정가운데, 폰트 3px 크게) -->
-      <div style="display:flex; justify-content:center; align-items:center; flex:1; font-family:'Courier New',monospace; font-weight:800; white-space:nowrap; letter-spacing:-0.5px; font-size:calc(100% + 3px);">
-        <span style="color:var(--hpc); font-size:inherit;">${fH}</span><span style="color:var(--dim); margin:0 3px; font-size:inherit;">/</span><span style="color:var(--atc); font-size:inherit;">${fA}</span><span style="color:var(--dim); margin:0 3px; font-size:inherit;">/</span><span style="color:var(--dfc); font-size:inherit;">${fD}</span>
+      <!-- 중앙: 스탯 (버프 적용 전 기본 스탯 + 하단 버프 수치) -->
+      <div style="display:flex; justify-content:center; align-items:flex-start; flex:1; font-family:'Courier New',monospace; font-weight:800; white-space:nowrap; letter-spacing:-0.5px; font-size:calc(100% + 3px);">
+        ${statCol(fH - bH, bH, '--hpc')}
+        <span style="color:var(--dim); margin:0 4px; font-size:inherit; line-height:1;">/</span>
+        ${statCol(fA - bA, bA, '--atc')}
+        <span style="color:var(--dim); margin:0 4px; font-size:inherit; line-height:1;">/</span>
+        ${statCol(fD - bD, bD, '--dfc')}
       </div>
 
-      <!-- 우측: 비밸 (폰트 3px 크게) -->
+      <!-- 우측: 비밸 -->
       <div style="display:flex; justify-content:flex-end; align-items:center; flex:1; font-family:'Nanum Gothic',sans-serif; font-weight:900; color:var(--accent); white-space:nowrap; font-size:calc(100% + 3px);">
         ${bv}
       </div>
@@ -876,7 +889,6 @@ function mkMobCard(rank,dc,dt,accImg,accName,enc,gems,pendMob,bufHtml,fH,fA,fD,b
     <!-- 하단: 젬 배치, 장신구, 펜던트 -->
     <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
       
-      <!-- 좌측: 젬 배치 -->
       <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; flex:1; min-width:0;">
         <div style="font-weight:800; font-family:'Nanum Gothic',sans-serif; white-space:nowrap; font-size:inherit;">젬 배치</div>
         <div style="font-family:'Courier New',monospace; font-weight:800; white-space:nowrap; font-size:inherit;">
@@ -884,7 +896,6 @@ function mkMobCard(rank,dc,dt,accImg,accName,enc,gems,pendMob,bufHtml,fH,fA,fD,b
         </div>
       </div>
       
-      <!-- 중앙: 장신구 정보 -->
       <div style="display:flex; align-items:center; justify-content:center; gap:6px; flex:1; min-width:0;">
         <div style="flex-shrink:0; display:flex; align-items:center;">
            ${sizedAccImg}
@@ -895,7 +906,6 @@ function mkMobCard(rank,dc,dt,accImg,accName,enc,gems,pendMob,bufHtml,fH,fA,fD,b
         </div>
       </div>
 
-      <!-- 우측: 펜던트 정보 -->
       <div style="display:flex; justify-content:center; flex:1; min-width:0; font-size:inherit;">
         ${pendMob}
       </div>
@@ -1160,7 +1170,8 @@ function doSimExact(ownedAcc, buf, nerf, pends, pool, allocs){
               bv, dt, accN:acc.n, enc, pend, 
               bufLabel: buf.label, nerfLabel: nerf.label,
               alloc:alloc.map((k,i)=>({k, g:pool[i]})).filter(x=>x.k>0), 
-              fH, fA, fD
+              fH, fA, fD,
+              bH: finalH, bA: finalA, bD: finalD // 분리할 버프 수치 추가
             });
             if(topList.length > 500) topList.pop(); 
             minBV = topList.length === 500 ? topList[499].bv : -Infinity;
@@ -1191,12 +1202,12 @@ function renderResTop(topList){
     const formattedBv = (r.bv / 1e8).toFixed(3) + '억';
     const combinedBufHtml = fmtBufNerfLabel(r.bufLabel, r.nerfLabel);
 
-    // 펜던트의 옵션 값들을 콤마로 연결해서 문자열로 만듭니다. (예: "hp,atk")
     const rawPend = r.pend ? r.pend.options.slice(0, r.pend.type==='태양'?3:2).map(o=>o.stat).join(',') : '';
 
+    // r.bH, r.bA, r.bD 를 함께 전달하여 카드 생성 (fH, fA, fD는 그대로 숫자로 전달)
     html += mkMobCard(rank, dc, r.dt, aImg, fmtAccName(r.accN), fmtAccEnc(r.enc),
       fmtGem(r.alloc), fmtPendMob(r.pend), combinedBufHtml,
-      r.fH.toLocaleString('ko-KR'), r.fA.toLocaleString('ko-KR'), r.fD.toLocaleString('ko-KR'),
+      r.fH, r.fA, r.fD, r.bH, r.bA, r.bD,
       formattedBv, r.accN, r.enc, rawPend);
   });
   
