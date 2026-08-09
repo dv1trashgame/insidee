@@ -436,9 +436,9 @@
                                     <div class="detail-card">
                                         <span class="d-name">${renderDragonName(row.g1?.name)}</span>
                                         <div style="display:flex; justify-content:space-around; margin:8px 0; padding-bottom:6px; border-bottom: 1px dashed var(--bd);">
-                                            ${formatDetailStat('♥ HP', row.g1?.base_hp, row.g1?.buff_hp)}
-                                            ${formatDetailStat('⚔ ATK', row.g1?.base_atk, row.g1?.buff_atk)}
-                                            ${formatDetailStat('🛡 DEF', row.g1?.base_def, row.g1?.buff_def)}
+                                            ${formatDetailStat('HP', row.g1?.base_hp, row.g1?.buff_hp)}
+                                            ${formatDetailStat('ATK', row.g1?.base_atk, row.g1?.buff_atk)}
+                                            ${formatDetailStat('DEF', row.g1?.base_def, row.g1?.buff_def)}
                                         </div>
                                         <div style="display:flex; justify-content:space-between; align-items:center; padding:4px 5px 0;">
                                             <span style="font-size:12px; color:var(--dim); font-weight:bold;">Eval: ${g1Eval.toLocaleString()}</span>
@@ -448,9 +448,9 @@
                                     <div class="detail-card">
                                         <span class="d-name">${renderDragonName(row.g2?.name)}</span>
                                         <div style="display:flex; justify-content:space-around; margin:8px 0; padding-bottom:6px; border-bottom: 1px dashed var(--bd);">
-                                            ${formatDetailStat('♥ HP', row.g2?.base_hp, row.g2?.buff_hp)}
-                                            ${formatDetailStat('⚔ ATK', row.g2?.base_atk, row.g2?.buff_atk)}
-                                            ${formatDetailStat('🛡 DEF', row.g2?.base_def, row.g2?.buff_def)}
+                                            ${formatDetailStat('HP', row.g2?.base_hp, row.g2?.buff_hp)}
+                                            ${formatDetailStat('ATK', row.g2?.base_atk, row.g2?.buff_atk)}
+                                            ${formatDetailStat('DEF', row.g2?.base_def, row.g2?.buff_def)}
                                         </div>
                                         <div style="display:flex; justify-content:space-between; align-items:center; padding:4px 5px 0;">
                                             <span style="font-size:12px; color:var(--dim); font-weight:bold;">Eval: ${g2Eval.toLocaleString()}</span>
@@ -460,9 +460,9 @@
                                     <div class="detail-card">
                                         <span class="d-name">${renderDragonName(row.g3?.name)}</span>
                                         <div style="display:flex; justify-content:space-around; margin:8px 0; padding-bottom:6px; border-bottom: 1px dashed var(--bd);">
-                                            ${formatDetailStat('♥ HP', row.g3?.base_hp, row.g3?.buff_hp)}
-                                            ${formatDetailStat('⚔ ATK', row.g3?.base_atk, row.g3?.buff_atk)}
-                                            ${formatDetailStat('🛡 DEF', row.g3?.base_def, row.g3?.buff_def)}
+                                            ${formatDetailStat('HP', row.g3?.base_hp, row.g3?.buff_hp)}
+                                            ${formatDetailStat('ATK', row.g3?.base_atk, row.g3?.buff_atk)}
+                                            ${formatDetailStat('DEF', row.g3?.base_def, row.g3?.buff_def)}
                                         </div>
                                         <div style="display:flex; justify-content:space-between; align-items:center; padding:4px 5px 0;">
                                             <span style="font-size:12px; color:var(--dim); font-weight:bold;">Eval: ${g3Eval.toLocaleString()}</span>
@@ -1019,14 +1019,14 @@
                                     ${gradeHtml}
                                 </div>
                                 <div class="badges-container">
-                                    <span class="eval-badge">순수 원본 Eval: ${calculatedEval}</span>
+                                    <span class="eval-badge">Eval: ${calculatedEval}</span>
                                     <span class="badge-success">스탯 인식 완료</span>
                                 </div>
                                 
                                 <div class="stat-container">
-                                    <div class="stat-box stat-hp">♥ HP${formatStat(base_hp, buff_hp)}</div>
-                                    <div class="stat-box stat-atk">⚔ ATK${formatStat(base_atk, buff_atk)}</div>
-                                    <div class="stat-box stat-def">🛡 DEF${formatStat(base_def, buff_def)}</div>
+                                    <div class="stat-box stat-hp">HP${formatStat(base_hp, buff_hp)}</div>
+                                    <div class="stat-box stat-atk">ATK${formatStat(base_atk, buff_atk)}</div>
+                                    <div class="stat-box stat-def">DEF${formatStat(base_def, buff_def)}</div>
                                 </div>
                                 
                                 <div class="bival-box">
