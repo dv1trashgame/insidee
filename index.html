@@ -536,7 +536,7 @@
             document.addEventListener('click', function(e) { if (e.target !== input && e.target !== list && !list.contains(e.target)) { list.style.display = 'none'; } });
         }
 
-        const noCacheUrl = '?v=' + new Date().getTime();
+       const noCacheUrl = '?v=' + new Date().getTime();
         Promise.all([
             fetch('dragon_db.json' + noCacheUrl).then(res => res.json()),
             fetch('buff.json' + noCacheUrl).then(res => res.json())
@@ -551,43 +551,50 @@
             // 영문 스탯을 한글로 변환하기 위한 매핑 객체
             const statKor = { 'hp': '체력', 'atk': '공격', 'def': '방어' };
 
-            let buffNames = [];
-            let buffStats = [];
+            // 개별 속성/타입과 스탯을 위아래로 묶어주는 블럭 생성 함수
+            const renderBlock = (item, isBuff) => {
+                const name = item.e || item.t;
+                const stat = statKor[item.stat] || item.stat;
+                const arrow = isBuff ? '▲' : '▼';
+                const color = isBuff ? 'var(--green)' : 'var(--red)';
+                
+                return `
+                    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                        <div style="color: var(--text); font-weight: 800; font-size: 13px;">${name}</div>
+                        <div style="color: ${color}; font-weight: 800; font-size: 13px; margin-top: 3px;">${arrow} ${stat}</div>
+                    </div>
+                `;
+            };
+
+            let buffHtml = '';
             if (weeklyData.buff && weeklyData.buff.length > 0) {
-                weeklyData.buff.forEach(b => {
-                    buffNames.push(b.e || b.t); // 속성(e)이나 타입(t) 이름 저장
-                    buffStats.push(statKor[b.stat] || b.stat); // 한글 스탯명 저장
-                });
+                // 여러 개일 경우 가운데 옅은 세로선(border3)으로 구분합니다.
+                buffHtml = weeklyData.buff.map(b => renderBlock(b, true)).join('<div style="width: 1px; height: 30px; background: var(--border3); margin: 0 12px;"></div>');
+            } else {
+                buffHtml = `<div style="color:var(--dim); font-size: 13px; font-weight: 800;">없음</div>`;
             }
 
-            let nerfNames = [];
-            let nerfStats = [];
+            let nerfHtml = '';
             if (weeklyData.nerf && weeklyData.nerf.length > 0) {
-                weeklyData.nerf.forEach(n => {
-                    nerfNames.push(n.e || n.t);
-                    nerfStats.push(statKor[n.stat] || n.stat);
-                });
+                nerfHtml = weeklyData.nerf.map(n => renderBlock(n, false)).join('<div style="width: 1px; height: 30px; background: var(--border3); margin: 0 12px;"></div>');
+            } else {
+                nerfHtml = `<div style="color:var(--dim); font-size: 13px; font-weight: 800;">없음</div>`;
             }
 
-            // 배열에 담긴 정보들을 ' / ' 기호로 연결
-            const buffNameHtml = buffNames.length > 0 ? buffNames.join(' <span style="color:var(--dim);font-weight:normal;">/</span> ') : '없음';
-            const buffStatHtml = buffStats.length > 0 ? buffStats.join(' <span style="color:var(--dim);font-weight:normal;">/</span> ') : '-';
-            
-            const nerfNameHtml = nerfNames.length > 0 ? nerfNames.join(' <span style="color:var(--dim);font-weight:normal;">/</span> ') : '없음';
-            const nerfStatHtml = nerfStats.length > 0 ? nerfStats.join(' <span style="color:var(--dim);font-weight:normal;">/</span> ') : '-';
-
-            // 가로 레이아웃(좌측 버프, 우측 너프)에 위아래로 이름/스탯 분리
+            // 가로 레이아웃(좌측 버프, 우측 너프) 및 내부 블럭 정렬 적용
             notice.innerHTML = `
                 <div style="display: flex; width: 100%; justify-content: space-evenly; align-items: stretch; text-align: center;">
                     <div style="display: flex; flex-direction: column; flex: 1; border-right: 1px solid var(--bd); padding: 0 4px;">
-                        <span style="font-size: 11px; color: var(--dim); font-weight: 800; border-bottom: 1px dashed var(--bd); padding-bottom: 6px; margin-bottom: 6px;">이번 주 버프</span>
-                        <div style="color: var(--green); font-weight: 800; font-size: 14px;">${buffNameHtml}</div>
-                        <div style="color: var(--text); font-weight: 800; font-size: 13px; margin-top: 4px;">${buffStatHtml}</div>
+                        <span style="font-size: 11px; color: var(--dim); font-weight: 800; border-bottom: 1px dashed var(--bd); padding-bottom: 6px; margin-bottom: 8px;">이번 주 버프</span>
+                        <div style="display: flex; justify-content: center; align-items: center; height: 100%;">
+                            ${buffHtml}
+                        </div>
                     </div>
                     <div style="display: flex; flex-direction: column; flex: 1; padding: 0 4px;">
-                        <span style="font-size: 11px; color: var(--dim); font-weight: 800; border-bottom: 1px dashed var(--bd); padding-bottom: 6px; margin-bottom: 6px;">이번 주 너프</span>
-                        <div style="color: var(--red); font-weight: 800; font-size: 14px;">${nerfNameHtml}</div>
-                        <div style="color: var(--text); font-weight: 800; font-size: 13px; margin-top: 4px;">${nerfStatHtml}</div>
+                        <span style="font-size: 11px; color: var(--dim); font-weight: 800; border-bottom: 1px dashed var(--bd); padding-bottom: 6px; margin-bottom: 8px;">이번 주 너프</span>
+                        <div style="display: flex; justify-content: center; align-items: center; height: 100%;">
+                            ${nerfHtml}
+                        </div>
                     </div>
                 </div>
             `;
