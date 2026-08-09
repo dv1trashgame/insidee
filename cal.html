@@ -118,33 +118,62 @@
 
         #imagePreview { width: 100%; border-radius: 8px; display: none; border: 1px solid var(--bd); margin-top: 10px; }
         
-        /* 모달 스타일 (great.html 테마 기반 수정) */
-        .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); backdrop-filter: blur(2px); }
-        .modal-content { 
-            background-color: var(--sf); margin: 10% auto; padding: 25px; 
-            border: 1px solid var(--bd); border-radius: 12px; width: 95%; max-width: 820px; 
-            max-height: 80vh; overflow-y: auto; color: var(--text); position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.15); 
-        }
-        .close-btn { color: var(--dim); float: right; font-size: 28px; font-weight: bold; cursor: pointer; line-height: 1; margin-top: -5px; }
-        .close-btn:hover { color: var(--gold); }
-
-        /* 분석표 형식 랭킹 테이블 */
-        .rank-table { 
-            width: 100%; table-layout: fixed; border-collapse: collapse; border: 2px solid var(--gold); 
-            text-align: center; font-size: 12px; font-family: 'Nanum Gothic', sans-serif; white-space: nowrap; 
-        }
-        .rank-table th { background: var(--gold); color: #ffffff; padding: 8px 4px; font-weight: 800; border: 1px solid var(--gold); }
-        .rank-table td { padding: 10px 4px; border-bottom: 1px solid var(--border); background: var(--bg3); font-weight: 700; color: var(--text); vertical-align: middle; }
+        /* 모달 및 순위표 스타일 (기존 cal.html 복구) */
+        .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); backdrop-filter: blur(4px); }
+        .modal-content { background-color: #1e1e1e; margin: 10% auto; padding: 25px; border: 1px solid #444; border-radius: 12px; width: 95%; max-width: 700px; max-height: 80vh; overflow-y: auto; color: white; position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .close-btn { color: #94a3b8; float: right; font-size: 28px; font-weight: bold; cursor: pointer; line-height: 1; margin-top: -5px; }
+        .close-btn:hover { color: #fff; }
         
-        .detail-toggle-btn { background: var(--sf2); color: var(--dim); border: 1px solid var(--bd); padding: 6px 12px; border-radius: 4px; font-size: 12px; font-weight: 800; cursor: pointer; }
-        .detail-toggle-btn:hover { background: rgba(59,72,144,0.1); border-color: var(--gold); color: var(--gold); }
-        .details-row td { background: var(--sf) !important; padding: 15px; border-bottom: 2px solid var(--gold); }
+        .rank-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px; table-layout: fixed; }
+        .rank-table th, .rank-table td { padding: 12px 4px; border-bottom: 1px solid #333; text-align: center; vertical-align: middle; background: transparent; color: white; }
+        .rank-table th { color: #94a3b8; font-weight: bold; border-bottom: 2px solid #444; }
+        
+        .rank-td-cell { font-weight: bold; font-size: 15px; color: #ffffff; }
+        .score-text { color: #a7f3d0; font-weight: bold; font-size: 15px; letter-spacing: -0.5px; }
+        .nickname-text { font-weight: bold; font-size: 15px; word-break: break-all; }
+        
+        .leaderboard-medal-icon { width: 24px; height: 24px; vertical-align: middle; object-fit: contain; }
+        .leaderboard-dragon-icon { width: 22px; height: 22px; vertical-align: middle; border-radius: 4px; margin: 0 2px; object-fit: cover; }
+        .nickname-container { display: flex; align-items: center; justify-content: center; gap: 6px; flex-wrap: wrap; }
+        
+        .buff-badge { padding: 4px 8px; border-radius: 6px; font-size: 13px; font-weight: 900; display: inline-block; text-shadow: 0px 1px 2px rgba(0,0,0,0.3); white-space: nowrap; border: none; }
+        .buff-6 { background-color: #ef4444; color: white; } 
+        .buff-5 { background-color: #f97316; color: white; } 
+        .buff-4 { background-color: #facc15; color: #1e1e1e; text-shadow: none; } 
+        .buff-3 { background-color: #22c55e; color: white; } 
+        .buff-2 { background-color: #3b82f6; color: white; } 
+        .buff-1 { background-color: #a855f7; color: white; } 
+        .buff-0 { background-color: transparent; color: #94a3b8; border: 1px solid #444; text-shadow: none; } 
+
+        .detail-toggle-btn { background: #4f46e5; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-size: 12px; cursor: pointer; font-weight: bold; margin-top: 0; white-space: nowrap; }
+        .detail-toggle-btn:hover { background: #4338ca; }
+        .details-row td { background: #151515 !important; padding: 15px 10px; border-bottom: 2px solid #444; }
+        .details-container { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+        .detail-card { background: #252525; border: 1px solid #333; border-radius: 8px; padding: 10px; flex: 1; min-width: 140px; font-size: 12px; text-align: center; }
+        .detail-card span.d-name { display: block; color: #94a3b8; margin-bottom: 6px; font-size: 12px; font-weight: bold; }
+        .detail-card b { color: #fff; font-size: 13px; }
+        .detail-bival { display: block; margin-top: 8px; padding-top: 6px; border-top: 1px dashed #444; color: #a7f3d0; font-weight: bold; font-size: 13px; }
         
         /* 모바일 대응 */
         @media (max-width: 600px) {
             .groups-wrapper, .pre-select-container { grid-template-columns: 1fr; }
             .hd-t { font-size: 13px; }
             .btn-sim { font-size: 14px; padding: 10px; }
+            
+            /* 순위표 모바일 복구 */
+            .modal-content { padding: 15px 4px; width: 95%; max-width: 100vw; box-sizing: border-box; overflow-x: hidden; }
+            .rank-table { word-break: break-all; }
+            .rank-table th, .rank-table td { padding: 6px 1px; font-size: 10px; }
+            .rank-td-cell { font-size: 11px; }
+            .score-text { font-size: 9.5px; word-break: break-all; } 
+            .nickname-text { font-size: 10px; }
+            .nickname-container { flex-direction: column; gap: 2px; }
+            .leaderboard-dragon-icon { width: 12px; height: 12px; margin: 0 1px; }
+            .leaderboard-medal-icon { width: 16px; height: 16px; }
+            .buff-badge { font-size: 9px; padding: 2px 4px; } 
+            .detail-toggle-btn { padding: 5px 2px; font-size: 9px; width: 95%; }
+            .details-container { flex-direction: column; gap: 6px; width: 100%; box-sizing: border-box; }
+            .detail-card { min-width: 0 !important; width: 100%; margin: 0; box-sizing: border-box; overflow: hidden; }
         }
     </style>
 </head>
@@ -227,11 +256,12 @@
 
     </div>
 
-    <!-- 랭킹 모달 -->
+<!-- 랭킹 모달 -->
     <div id="leaderboardModal" class="modal">
         <div class="modal-content">
             <span class="close-btn" id="closeModalBtn">&times;</span>
-            <h3 style="margin-top: 0; color: var(--gold); text-align: center; font-weight: 900; margin-bottom: 14px;">🏆 주간 랭킹 (순위표)</h3>
+            <h3 style="margin-top: 0; color: #f59e0b; text-align: center;">🏆 주간 랭킹 (순위표)</h3>
+            <p style="text-align: center; font-size: 13px; color: #94a3b8; margin-bottom: 15px;">서버에서 데이터를 불러오는 중입니다...</p>
             <div style="overflow-x: auto;">
                 <table class="rank-table">
                     <thead>
@@ -288,40 +318,48 @@
 
         async function loadLeaderboard() {
             const tbody = document.getElementById('leaderboardBody');
-            tbody.innerHTML = `<tr><td colspan="5" style="color:var(--dim);">데이터를 불러오는 중입니다... ⏳</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="5" style="color:#94a3b8;">데이터를 불러오는 중입니다... ⏳</td></tr>`;
             try {
                 const response = await fetch(GAS_URL);
                 const data = await response.json();
                 
                 tbody.innerHTML = '';
                 if(data.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="5" style="color:var(--dim);">아직 등록된 랭킹이 없습니다.</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="5" style="color:#94a3b8;">아직 등록된 랭킹이 없습니다.</td></tr>`;
                     return;
                 }
 
                 data.forEach((row, index) => {
-                    let medalHtml = `<span style="font-weight:900; color:var(--text);">${index + 1}위</span>`;
-                    if(index === 0) medalHtml = `<span style="font-weight:900; color:#fbbf24;">1위</span>`;
-                    if(index === 1) medalHtml = `<span style="font-weight:900; color:#9ca3af;">2위</span>`;
-                    if(index === 2) medalHtml = `<span style="font-weight:900; color:#d97706;">3위</span>`;
+                    let medalHtml = `<span class="rank-td-cell">${index + 1}위</span>`;
+                    if(index === 0) medalHtml = `<img src="./images/medal_1.png" class="leaderboard-medal-icon" alt="1위" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';"><span style="display:none;" class="rank-td-cell">1위</span>`;
+                    if(index === 1) medalHtml = `<img src="./images/medal_2.png" class="leaderboard-medal-icon" alt="2위" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';"><span style="display:none;" class="rank-td-cell">2위</span>`;
+                    if(index === 2) medalHtml = `<img src="./images/medal_3.png" class="leaderboard-medal-icon" alt="3위" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';"><span style="display:none;" class="rank-td-cell">3위</span>`;
                     let iconsHtml = '';
                     const dNames = [row.g1?.name, row.g2?.name, row.g3?.name];
                     dNames.forEach(dName => {
                         if(dName && !dName.startsWith("그룹 ")) {
-                            iconsHtml += `<img src="./images/icons/${dName}.png" style="width:20px; height:20px; border-radius:4px; margin: 0 2px; object-fit:cover;" onerror="this.style.display='none'">`;
+                            iconsHtml += `<img src="./images/icons/${dName}.png" class="leaderboard-dragon-icon" onerror="this.style.display='none'">`;
                         }
                     });
                     
                     const buffCount = row.totalBuffCount || 0;
                     const nerfCount = row.totalNerfCount || 0;
 
-                    let buffText = "";
-                    if (buffCount > 0 && nerfCount > 0) buffText = `${buffCount}-${nerfCount}버프`;
-                    else if (buffCount === 0 && nerfCount > 0) buffText = `${nerfCount}너프`;
-                    else buffText = `${buffCount}버프`;
+                    let buffClass = `buff-${buffCount}`;
+                    if (buffCount > 6) buffClass = "buff-6"; 
+                    if (buffCount === 0 && nerfCount > 0) buffClass = "buff-0"; 
 
-                    const buffBadge = `<span style="padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 800; background: rgba(59,72,144,0.1); border: 1px solid var(--accent-border); color: var(--gold);">${buffText}</span>`;
-                    const bivalText = `<span style="color:var(--gold); font-weight:900; font-size:14px;">${Number(row.score).toLocaleString()}</span>`;
+                    let buffText = "";
+                    if (buffCount > 0 && nerfCount > 0) {
+                        buffText = `${buffCount}-${nerfCount}버프`;
+                    } else if (buffCount === 0 && nerfCount > 0) {
+                        buffText = `${nerfCount}너프`;
+                    } else {
+                        buffText = `${buffCount}버프`;
+                    }
+
+                    const buffBadge = `<span class="buff-badge ${buffClass}">${buffText}</span>`;
+                    const bivalText = `<span class="score-text">${Number(row.score).toLocaleString()}</span>`;
                     
                     const calcBival = (g) => {
                         if(!g || !g.base_hp) return 0;
@@ -338,33 +376,34 @@
                     const g1Eval = calcEval(row.g1);
                     const g2Eval = calcEval(row.g2);
                     const g3Eval = calcEval(row.g3);
+                    
                     const totalEval = g1Eval + g2Eval + g3Eval;
 
                     const renderDragonName = (name) => {
                         if (!name || name === '-') return `🐲 -`;
-                        return `<img src="./images/icons/${name}.png" style="width:16px; height:16px; border-radius:3px; vertical-align:middle; margin-right:4px;" onerror="this.style.display='none'"><span style="color:var(--text); font-weight:800;">${name}</span>`;
+                        return `<img src="./images/icons/${name}.png" style="width:16px; height:16px; border-radius:3px; vertical-align:middle; margin-right:4px;" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';"><span style="display:none;">🐲</span>${name}`;
                     };
 
-                    const formatDetailStat = (icon, base, buff, colorVar) => {
+                    const formatDetailStat = (icon, base, buff) => {
                         let buffHtml = '';
-                        if (buff > 0) buffHtml = `<span style="color:var(--green); font-size:10px; font-weight:800;">(+${buff})</span>`;
-                        else if (buff < 0) buffHtml = `<span style="color:var(--red); font-size:10px; font-weight:800;">(${buff})</span>`;
-                        else buffHtml = `<span style="visibility:hidden; font-size:10px;">(+0)</span>`;
+                        if (buff > 0) buffHtml = `<span style="color:#4ade80; font-size:11px; font-weight:bold;">(+${buff})</span>`;
+                        else if (buff < 0) buffHtml = `<span style="color:#f87171; font-size:11px; font-weight:bold;">(${buff})</span>`;
+                        else buffHtml = `<span style="visibility:hidden; font-size:11px;">(+0)</span>`;
                         
                         return `
-                        <div style="display:flex; flex-direction:column; align-items:center; line-height:1.2;">
-                            <span style="font-size:11px; color:var(--dim); font-weight:800;">${icon}</span>
-                            <b style="font-size:13px; color:var(${colorVar});">${base || 0}</b>
+                        <div style="display:flex; flex-direction:column; align-items:center; line-height:1.3;">
+                            <span style="font-size:12px; color:#cbd5e1;">${icon}</span>
+                            <b style="font-size:14px; color:#fff;">${base || 0}</b>
                             ${buffHtml}
                         </div>`;
                     };
 
                     tbody.innerHTML += `
-                        <tr>
+                        <tr class="main-row">
                             <td>${medalHtml}</td>
                             <td>
-                                <div style="display:flex; flex-direction:column; align-items:center; gap:4px;">
-                                    <span style="font-weight:800; color:var(--text); font-size:13px;">${row.nickname}</span>
+                                <div class="nickname-container">
+                                    <span class="nickname-text">${row.nickname}</span>
                                     <div>${iconsHtml}</div>
                                 </div>
                             </td>
@@ -374,56 +413,54 @@
                         </tr>
                         <tr class="details-row" style="display:none;">
                             <td colspan="5">
-                                <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center;">
-                                    <!-- 그룹 1 -->
-                                    <div style="background:var(--sf2); border:1px solid var(--bd); border-radius:6px; padding:10px; flex:1; min-width:140px;">
-                                        <div style="margin-bottom:8px;">${renderDragonName(row.g1?.name)}</div>
-                                        <div style="display:flex; justify-content:space-around; border-bottom: 1px solid var(--border); padding-bottom:6px; margin-bottom:6px;">
-                                            ${formatDetailStat('HP', row.g1?.base_hp, row.g1?.buff_hp, '--hpc')}
-                                            ${formatDetailStat('ATK', row.g1?.base_atk, row.g1?.buff_atk, '--atc')}
-                                            ${formatDetailStat('DEF', row.g1?.base_def, row.g1?.buff_def, '--dfc')}
+                                <div class="details-container">
+                                    <div class="detail-card">
+                                        <span class="d-name">${renderDragonName(row.g1?.name)}</span>
+                                        <div style="display:flex; justify-content:space-around; margin:8px 0; padding-bottom:6px; border-bottom: 1px dashed #444;">
+                                            ${formatDetailStat('♥ HP', row.g1?.base_hp, row.g1?.buff_hp)}
+                                            ${formatDetailStat('⚔ ATK', row.g1?.base_atk, row.g1?.buff_atk)}
+                                            ${formatDetailStat('🛡 DEF', row.g1?.base_def, row.g1?.buff_def)}
                                         </div>
-                                        <div style="display:flex; justify-content:space-between; font-size:11px; font-weight:800;">
-                                            <span style="color:var(--dim);">Eval: ${g1Eval.toLocaleString()}</span>
-                                            <span style="color:var(--gold);">📊 ${g1Bival.toLocaleString()}</span>
-                                        </div>
-                                    </div>
-                                    <!-- 그룹 2 -->
-                                    <div style="background:var(--sf2); border:1px solid var(--bd); border-radius:6px; padding:10px; flex:1; min-width:140px;">
-                                        <div style="margin-bottom:8px;">${renderDragonName(row.g2?.name)}</div>
-                                        <div style="display:flex; justify-content:space-around; border-bottom: 1px solid var(--border); padding-bottom:6px; margin-bottom:6px;">
-                                            ${formatDetailStat('HP', row.g2?.base_hp, row.g2?.buff_hp, '--hpc')}
-                                            ${formatDetailStat('ATK', row.g2?.base_atk, row.g2?.buff_atk, '--atc')}
-                                            ${formatDetailStat('DEF', row.g2?.base_def, row.g2?.buff_def, '--dfc')}
-                                        </div>
-                                        <div style="display:flex; justify-content:space-between; font-size:11px; font-weight:800;">
-                                            <span style="color:var(--dim);">Eval: ${g2Eval.toLocaleString()}</span>
-                                            <span style="color:var(--gold);">📊 ${g2Bival.toLocaleString()}</span>
+                                        <div style="display:flex; justify-content:space-between; align-items:center; padding:4px 5px 0;">
+                                            <span style="font-size:12px; color:#94a3b8; font-weight:bold;">Eval: ${g1Eval.toLocaleString()}</span>
+                                            <span style="font-size:13px; color:#a7f3d0; font-weight:bold;">📊 ${g1Bival.toLocaleString()}</span>
                                         </div>
                                     </div>
-                                    <!-- 그룹 3 -->
-                                    <div style="background:var(--sf2); border:1px solid var(--bd); border-radius:6px; padding:10px; flex:1; min-width:140px;">
-                                        <div style="margin-bottom:8px;">${renderDragonName(row.g3?.name)}</div>
-                                        <div style="display:flex; justify-content:space-around; border-bottom: 1px solid var(--border); padding-bottom:6px; margin-bottom:6px;">
-                                            ${formatDetailStat('HP', row.g3?.base_hp, row.g3?.buff_hp, '--hpc')}
-                                            ${formatDetailStat('ATK', row.g3?.base_atk, row.g3?.buff_atk, '--atc')}
-                                            ${formatDetailStat('DEF', row.g3?.base_def, row.g3?.buff_def, '--dfc')}
+                                    <div class="detail-card">
+                                        <span class="d-name">${renderDragonName(row.g2?.name)}</span>
+                                        <div style="display:flex; justify-content:space-around; margin:8px 0; padding-bottom:6px; border-bottom: 1px dashed #444;">
+                                            ${formatDetailStat('♥ HP', row.g2?.base_hp, row.g2?.buff_hp)}
+                                            ${formatDetailStat('⚔ ATK', row.g2?.base_atk, row.g2?.buff_atk)}
+                                            ${formatDetailStat('🛡 DEF', row.g2?.base_def, row.g2?.buff_def)}
                                         </div>
-                                        <div style="display:flex; justify-content:space-between; font-size:11px; font-weight:800;">
-                                            <span style="color:var(--dim);">Eval: ${g3Eval.toLocaleString()}</span>
-                                            <span style="color:var(--gold);">📊 ${g3Bival.toLocaleString()}</span>
+                                        <div style="display:flex; justify-content:space-between; align-items:center; padding:4px 5px 0;">
+                                            <span style="font-size:12px; color:#94a3b8; font-weight:bold;">Eval: ${g2Eval.toLocaleString()}</span>
+                                            <span style="font-size:13px; color:#a7f3d0; font-weight:bold;">📊 ${g2Bival.toLocaleString()}</span>
+                                        </div>
+                                    </div>
+                                    <div class="detail-card">
+                                        <span class="d-name">${renderDragonName(row.g3?.name)}</span>
+                                        <div style="display:flex; justify-content:space-around; margin:8px 0; padding-bottom:6px; border-bottom: 1px dashed #444;">
+                                            ${formatDetailStat('♥ HP', row.g3?.base_hp, row.g3?.buff_hp)}
+                                            ${formatDetailStat('⚔ ATK', row.g3?.base_atk, row.g3?.buff_atk)}
+                                            ${formatDetailStat('🛡 DEF', row.g3?.base_def, row.g3?.buff_def)}
+                                        </div>
+                                        <div style="display:flex; justify-content:space-between; align-items:center; padding:4px 5px 0;">
+                                            <span style="font-size:12px; color:#94a3b8; font-weight:bold;">Eval: ${g3Eval.toLocaleString()}</span>
+                                            <span style="font-size:13px; color:#a7f3d0; font-weight:bold;">📊 ${g3Bival.toLocaleString()}</span>
                                         </div>
                                     </div>
                                 </div>
-                                <div style="margin-top: 10px; text-align: center; font-size: 13px; font-weight: 800; color: var(--text);">
-                                    Eval 총합: <span style="color:var(--gold); font-size:15px;">${totalEval.toLocaleString()}</span>
+                                <div style="margin-top: 12px; padding: 10px; background: #1a1a1a; border: 1px solid #333; border-radius: 8px; text-align: center;">
+                                    <span style="color: #cbd5e1; font-size: 13px; font-weight: bold;">Eval 총합:</span>
+                                    <span style="color: #fef08a; font-size: 16px; font-weight: 900; margin-left: 5px;">${totalEval.toLocaleString()}</span>
                                 </div>
                             </td>
                         </tr>
                     `;
                 });
             } catch (error) {
-                tbody.innerHTML = `<tr><td colspan="5" style="color:var(--red);">순위표를 불러오는 데 실패했습니다.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="5" style="color:#fca5a5;">순위표를 불러오는 데 실패했습니다.</td></tr>`;
             }
         }
 
