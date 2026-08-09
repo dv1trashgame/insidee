@@ -1351,14 +1351,39 @@ function applyHighlight() {
    
    if(!accEl || !encEl) return;
    
+   // --- 셀렉트 박스 선택 시 색상을 실시간으로 변경하는 헬퍼 함수 ---
+   const updateSelectStyle = (el) => {
+      const val = el.value;
+      if (val === 'hp') {
+         el.style.color = '#fbbf24';
+         el.style.borderColor = '#fbbf24';
+         el.style.backgroundColor = 'rgba(251, 191, 36, 0.15)';
+      } else if (val === 'atk') {
+         el.style.color = '#f87171';
+         el.style.borderColor = '#f87171';
+         el.style.backgroundColor = 'rgba(248, 113, 113, 0.15)';
+      } else if (val === 'def') {
+         el.style.color = '#60a5fa';
+         el.style.borderColor = '#60a5fa';
+         el.style.backgroundColor = 'rgba(96, 165, 250, 0.15)';
+      } else {
+         el.style.color = 'var(--text)';
+         el.style.borderColor = 'var(--bd)';
+         el.style.backgroundColor = 'var(--sf2)';
+      }
+   };
+
+   // 인첸트 및 펜던트 셀렉트 박스 스타일 업데이트
+   updateSelectStyle(encEl);
+   document.querySelectorAll('.hl-pend-sel').forEach(el => updateSelectStyle(el));
+   // -----------------------------------------------------------
+
    const accName = accEl.value;
    const encName = encEl.value;
-   const onlyShow = filterCb ? filterCb.checked : false; // 체크박스 상태 확인
+   const onlyShow = filterCb ? filterCb.checked : false; 
    
-   // 선택된 펜던트 옵션들 배열화 (빈 값은 제외)
    const pendSels = Array.from(document.querySelectorAll('.hl-pend-sel')).map(el => el.value).filter(v => v);
    
-   // 장신구 이미지 및 텍스트 업데이트
    if(!accName) {
       imgEl.style.display = 'none';
       phEl.style.display = 'flex';
@@ -1373,7 +1398,6 @@ function applyHighlight() {
       }
    }
 
-   // 다중 조건 일치 여부에 따른 하이라이팅 및 필터링 적용
    const items = document.querySelectorAll('.res-item');
    items.forEach(el => {
       const itemAcc = el.getAttribute('data-acc');
@@ -1401,7 +1425,6 @@ function applyHighlight() {
       const hasCondition = accName || encName || pendSels.length > 0;
       const isMatch = matchAcc && matchEnc && matchPend;
       
-      // 1. 하이라이팅 적용 (조건이 있고 일치할 때)
       if(hasCondition && isMatch) {
          el.style.backgroundColor = 'rgba(232, 184, 75, 0.25)'; 
          el.style.boxShadow = 'inset 0 0 0 2px rgba(232, 184, 75, 0.8)';
@@ -1410,12 +1433,9 @@ function applyHighlight() {
          el.style.boxShadow = '';
       }
       
-      // 2. 필터링 (숨김) 적용
       if(onlyShow && hasCondition) {
-         // 체크박스가 켜져있고 검색 조건이 하나라도 있으면, 일치하는 것만 표시
          el.style.display = isMatch ? 'block' : 'none';
       } else {
-         // 체크박스가 꺼져있거나 검색 조건이 전혀 없으면 모두 표시
          el.style.display = 'block'; 
       }
    });
