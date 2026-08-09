@@ -130,9 +130,19 @@ body{font-family:'Nanum Gothic',-apple-system,sans-serif;background:var(--bg);co
     /* 하단 정보 글자 크기 축소 (기존 13px -> 12px) */
     font-size: 12px;
     color: var(--text4);
+    display: flex;       /* 아이콘과 텍스트를 가로로 정렬하기 위해 추가 */
+    align-items: center; /* 세로 중앙 정렬 */
+    gap: 4px;            /* 아이콘과 텍스트 사이 간격 */
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+/* 닉네임 옆 작은 아이콘 스타일 추가 */
+.item-meta img {
+    width: 14px;
+    height: 14px;
+    object-fit: cover;
 }
 </style>
 </head>
@@ -173,7 +183,7 @@ body{font-family:'Nanum Gothic',-apple-system,sans-serif;background:var(--bg);co
         </div>
         <!-- 하단 텍스트 입력 부분 -->
         <div class="item-meta">
-          버프좀봐라 | 05:23
+          <img src="작은사진경로1.jpg" alt="아이콘"> 버프좀봐라 | 05:23
         </div>
       </div>
     </a>
@@ -190,9 +200,9 @@ body{font-family:'Nanum Gothic',-apple-system,sans-serif;background:var(--bg);co
         <div class="item-title-wrap">
           <span class="item-title">INSIDE 계산기_2.0v</span>
         </div>
-        <!-- 하단 텍스트 입력 부분 -->
+<!-- 하단 텍스트 입력 부분 -->
         <div class="item-meta">
-          정령분석표 | 15:57
+          <img src="작은사진경로2.jpg" alt="아이콘"> 정령분석표 | 15:57
         </div>
       </div>
     </a>
@@ -209,9 +219,9 @@ body{font-family:'Nanum Gothic',-apple-system,sans-serif;background:var(--bg);co
         <div class="item-title-wrap">
           <span class="item-title">무관의 정석 (예정)</span>
         </div>
-        <!-- 하단 텍스트 입력 부분 -->
+<!-- 하단 텍스트 입력 부분 -->
         <div class="item-meta">
-          챔대계산기 | 88:48
+          <img src="작은사진경로3.jpg" alt="아이콘"> 챔대계산기 | 88:48
         </div>
       </div>
     </a>
