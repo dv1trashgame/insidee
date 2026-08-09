@@ -547,10 +547,41 @@
             weeklyData = buffData;
 
             const notice = document.getElementById('sysNotice');
-            notice.innerHTML = `✅ <b>데이터 로드 성공:</b> 드래곤 DB 및 버프 정보가 연결되었습니다.`;
-            notice.style.backgroundColor = "rgba(74, 222, 128, 0.15)";
-            notice.style.color = "#16a34a";
-            notice.style.borderColor = "var(--green)";
+            
+            // 기존 단순 성공 메시지를 지우고, 버프/너프 내용을 렌더링합니다.
+            let buffHtml = '';
+            if (weeklyData.buff && weeklyData.buff.length > 0) {
+                buffHtml = weeklyData.buff.map(b => `<div style="color: var(--green); font-weight: 800;">${b.e || ''} ${b.e && b.t ? '/' : ''} ${b.t || ''}</div>`).join('');
+            } else {
+                buffHtml = `<div style="color: var(--dim);">없음</div>`;
+            }
+
+            let nerfHtml = '';
+            if (weeklyData.nerf && weeklyData.nerf.length > 0) {
+                nerfHtml = weeklyData.nerf.map(n => `<div style="color: var(--red); font-weight: 800;">${n.e || ''} ${n.e && n.t ? '/' : ''} ${n.t || ''}</div>`).join('');
+            } else {
+                nerfHtml = `<div style="color: var(--dim);">없음</div>`;
+            }
+
+            // 가로 레이아웃(좌측 버프, 우측 너프)으로 구성
+            notice.innerHTML = `
+                <div style="display: flex; width: 100%; justify-content: space-evenly; align-items: flex-start; text-align: center;">
+                    <div style="display: flex; flex-direction: column; gap: 6px; flex: 1; border-right: 1px solid var(--bd);">
+                        <span style="font-size: 11px; color: var(--dim); font-weight: 800; border-bottom: 1px dashed var(--bd); padding-bottom: 4px; margin-bottom: 4px;">이번 주 버프</span>
+                        ${buffHtml}
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 6px; flex: 1;">
+                        <span style="font-size: 11px; color: var(--dim); font-weight: 800; border-bottom: 1px dashed var(--bd); padding-bottom: 4px; margin-bottom: 4px;">이번 주 너프</span>
+                        ${nerfHtml}
+                    </div>
+                </div>
+            `;
+            
+            notice.style.backgroundColor = "var(--sf)";
+            notice.style.color = "var(--text)";
+            notice.style.borderColor = "var(--bd)";
+            // 패딩을 살짝 줄여서 레이아웃을 다듬습니다.
+            notice.style.padding = "10px";
 
             setupAutocomplete('preInput1', 'autoList1');
             setupAutocomplete('preInput2', 'autoList2');
@@ -563,6 +594,8 @@
             notice.style.backgroundColor = "rgba(248, 113, 113, 0.15)";
             notice.style.color = "#dc2626";
             notice.style.borderColor = "var(--red)";
+            notice.style.justifyContent = "center";
+            notice.style.padding = "12px 16px";
         });
 
         function preprocessImageForOCR(imgSrc) {
