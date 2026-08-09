@@ -11,7 +11,7 @@
   --bg:#f5f5f5; --bg2:#ffffff; --bg3:#ebebeb;
   --border:#d5d5d5; --border2:#cccccc; --border3:#e0e0e0;
   --text:#333333; --text2:#555555; --text3:#666666; --text4:#999999;
-  --accent:#3b4890; --accent-bg:rgba(59,72,144,0.12);
+  --accent:#3b4890; --accent-bg:rgba(59,72,144,0.08);
   
   --sf:var(--bg2); --sf2:var(--bg3); --bd:var(--border);
   --gold:var(--accent); --gold2:#4a5a9f;
@@ -42,49 +42,78 @@ body{font-family:'Nanum Gothic',-apple-system,sans-serif;background:var(--bg);co
 }
 .notice-sec strong { color: var(--gold); font-weight: 800; }
 
-/* 링크 버튼 그리드 구성 */
-.menu-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
-@media(min-width: 600px) { .menu-grid { grid-template-columns: 1fr 1fr; } }
+/* 디시인사이드 스타일 리스트 UI */
+.board-list {
+    display: flex;
+    flex-direction: column;
+    border-top: 1px solid var(--border2);
+    background: var(--sf);
+    border-radius: 4px;
+    overflow: hidden;
+}
 
-/* 링크 카드 UI */
-.menu-card {
+.board-item {
+    display: flex;
+    align-items: center;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border3);
+    text-decoration: none;
+    transition: background-color 0.15s ease;
+}
+
+.board-item:hover {
+    background-color: var(--accent-bg);
+}
+
+.item-thumb {
+    width: 90px;
+    height: 60px;
+    flex-shrink: 0;
+    margin-right: 14px;
+    background-color: var(--border3);
+    border-radius: 2px;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.item-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.item-content {
     display: flex;
     flex-direction: column;
     justify-content: center;
+    gap: 6px;
+    flex: 1;
+    min-width: 0; /* 말줄임표(ellipsis) 작동을 위해 필수 */
+}
+
+.item-title-wrap {
+    display: flex;
     align-items: center;
-    background: var(--sf);
-    border: 1px solid var(--bd);
-    border-radius: 8px;
-    padding: 48px 20px;
-    text-decoration: none;
-    transition: all 0.2s ease;
+    font-size: 17px;
+    color: var(--text);
 }
 
-.menu-card:hover {
-    border-color: var(--gold);
-    background: var(--accent-bg);
-    transform: translateY(-3px);
-    box-shadow: 0 6px 12px rgba(59,72,144,0.1);
+.item-title {
+    font-weight: 400;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    letter-spacing: -0.5px;
 }
 
-.menu-icon {
-    font-size: 46px;
-    margin-bottom: 20px;
-}
-
-.menu-title {
-    font-size: 20px;
-    font-weight: 800;
-    color: var(--gold);
-    margin-bottom: 10px;
-}
-
-.menu-desc {
-    font-size: 14px;
-    color: var(--dim);
-    font-weight: 700;
-    text-align: center;
-    word-break: keep-all;
+.item-meta {
+    font-size: 13px;
+    color: var(--text4);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 </style>
 </head>
@@ -107,20 +136,44 @@ body{font-family:'Nanum Gothic',-apple-system,sans-serif;background:var(--bg);co
      클릭 시 <strong>해당 페이지</strong>로 즉시 이동합니다.
   </div>
   
-  <!-- 메뉴 선택 영역 -->
-  <div class="menu-grid">
-    <!-- 첫 번째 칸: cal.html 링크 -->
-    <a href="cal.html" class="menu-card">
-      <div class="menu-icon">📊</div>
-      <div class="menu-title">INSIDE 계산기</div>
-      <div class="menu-desc">정령 티어 분석표 및 세팅 계산 결과 확인</div>
+  <!-- 게시판 형태 메뉴 리스트 -->
+  <div class="board-list">
+    <!-- 첫 번째 항목: cal.html 링크 -->
+    <a href="cal.html" class="board-item">
+      <!-- 썸네일 이미지 (아래 src에 원하는 이미지 경로를 넣으세요) -->
+      <div class="item-thumb">
+        <img src="https://via.placeholder.com/150x100/cccccc/999999?text=IMG" alt="썸네일">
+      </div>
+      
+      <!-- 제목 및 텍스트 정보 -->
+      <div class="item-content">
+        <div class="item-title-wrap">
+          <span class="item-title">INSIDE 계산기 - 정령 티어 분석 및 세팅 확인</span>
+        </div>
+        <!-- 하단 텍스트 입력 부분 -->
+        <div class="item-meta">
+          호날두 | 15:00
+        </div>
+      </div>
     </a>
     
-    <!-- 두 번째 칸: great.html 링크 -->
-    <a href="great.html" class="menu-card">
-      <div class="menu-icon">✨</div>
-      <div class="menu-title">Great 페이지</div>
-      <div class="menu-desc">기타 부가 기능 및 추가 메뉴 이동</div>
+    <!-- 두 번째 항목: great.html 링크 -->
+    <a href="great.html" class="board-item">
+      <!-- 썸네일 이미지 (아래 src에 원하는 이미지 경로를 넣으세요) -->
+      <div class="item-thumb">
+        <img src="https://via.placeholder.com/150x100/cccccc/999999?text=IMG" alt="썸네일">
+      </div>
+      
+      <!-- 제목 및 텍스트 정보 -->
+      <div class="item-content">
+        <div class="item-title-wrap">
+          <span class="item-title">[공지] Great 페이지 부가 기능으로 이동합니다</span>
+        </div>
+        <!-- 하단 텍스트 입력 부분 -->
+        <div class="item-meta">
+          챗지피티(ChatGPT) | 15:00
+        </div>
+      </div>
     </a>
   </div>
 
