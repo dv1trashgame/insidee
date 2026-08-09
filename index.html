@@ -699,18 +699,18 @@ function renderAnalysisTable() {
          if(allVals[i*14 + row.rIdx] > userVal) rank++;
       }
       
-      let alpha = 0;
-      if (rank === 1) alpha = 0.35;
-      else if (rank <= 15) alpha = 0.31;
-      else if (rank <= 30) alpha = 0.27;
-      else if (rank <= 50) alpha = 0.23;
-      else if (rank <= 100) alpha = 0.19;
-      else if (rank <= 250) alpha = 0.15;
-      else if (rank <= 450) alpha = 0.11;
-      else if (rank <= 700) alpha = 0.07;
-      else if (rank <= 1000) alpha = 0.03;
+// 푸른색(59, 72, 144)과 배경색(#f5f5f5)이 섞인 단일 색상(HEX)을 직접 지정합니다. (투명도 연산 제거)
+      let cellBgColor = '#f5f5f5'; // 1000위 밖 기본 배경
       
-      const cellBgColor = `rgba(59, 72, 144, ${alpha})`;
+      if (rank === 1) cellBgColor = '#b4b8d2'; // 1등 (기존 alpha 0.35 색상)
+      else if (rank <= 15) cellBgColor = '#bbbfd6'; // 기존 alpha 0.31
+      else if (rank <= 30) cellBgColor = '#c3c6da'; // 기존 alpha 0.27
+      else if (rank <= 50) cellBgColor = '#cacdde'; // 기존 alpha 0.23
+      else if (rank <= 100) cellBgColor = '#d2d4e2'; // 기존 alpha 0.19
+      else if (rank <= 250) cellBgColor = '#d9dbe6'; // 기존 alpha 0.15
+      else if (rank <= 450) cellBgColor = '#e1e2ea'; // 기존 alpha 0.11
+      else if (rank <= 700) cellBgColor = '#e8e9ee'; // 기존 alpha 0.07
+      else if (rank <= 1000) cellBgColor = '#efeff2'; // 기존 alpha 0.03
       
       if(mode === 'bv') {
          displayStr = `<span style="color:#333333; font-weight:800;">${fBigInt(fBV(userVal))}</span>`;
