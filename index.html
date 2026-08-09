@@ -1223,41 +1223,41 @@ function renderSimSpiritDisplay() {
   const sp = S.spirit;
 
   const getOptText = (o) => {
-     if(!o || !o.stat || !o.type) return '<span style="color:var(--dimmer);">-</span>';
+     if(!o || !o.stat || !o.type) return '<span style="color:var(--dimmer); text-align:center;">-</span>';
      const st = o.stat==='hp'?'체':o.stat==='atk'?'공':'방';
      const col = o.stat==='hp'?'#fbbf24':o.stat==='atk'?'#f87171':'#60a5fa';
-     return `<span style="color:${col}; font-weight:800; font-size:var(--sfont);">${st}${o.type}</span>`;
+     return `<span style="color:${col}; font-weight:800; font-size:var(--sfont); text-align:center;">${st}${o.type}</span>`;
   };
 
   const makeOptCell = (idx, o) => {
     return `
-      <div style="background: var(--sf2); border: 1px solid var(--bd); border-radius: 6px; padding: clamp(4px, 1vw, 8px); display: flex; flex-direction: column; gap: clamp(4px, 1vw, 6px);">
-        <div style="text-align: center; font-size: var(--ssfont); font-weight: 800; color: var(--dim); white-space:nowrap;">${idx+1}옵션</div>
-        <div style="text-align: center;">${getOptText(o)}</div>
+      <div style="background: var(--sf2); border: 1px solid var(--bd); border-radius: 6px; padding: clamp(4px, 1vw, 8px); display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; gap: clamp(4px, 1vw, 6px);">
+        <div style="font-size: var(--ssfont); font-weight: 800; color: var(--dim); white-space:nowrap; text-align:center;">${idx+1}옵션</div>
+        <div style="display: flex; justify-content: center; align-items: center; text-align: center;">${getOptText(o)}</div>
       </div>
     `;
   };
 
-  let bHtml = '<span style="color:var(--dimmer);">-</span>';
+  let bHtml = '<span style="color:var(--dimmer); text-align:center;">-</span>';
   if(sp.bonus) {
      const st = sp.bonus==='hp'?'체':sp.bonus==='atk'?'공':'방';
      const v = sp.bonus==='hp'?'+40':'+10';
      const col = sp.bonus==='hp'?'#fbbf24':sp.bonus==='atk'?'#f87171':'#60a5fa';
-     bHtml = `<span style="color:${col}; font-weight:800; font-size:var(--sfont); white-space:nowrap;">${st} (${v})</span>`;
+     bHtml = `<span style="color:${col}; font-weight:800; font-size:var(--sfont); white-space:nowrap; text-align:center;">${st} (${v})</span>`;
   }
 
   let spiritHtml = `
-    <div class="sec-hd" style="border-radius: 8px 8px 0 0; margin-bottom: 0; font-size: var(--sfont); white-space: nowrap; padding: 9px 4px; justify-content:center;">🔮 정령 정보</div>
-    <div class="sec-bd" style="background: var(--sf); border: 1px solid var(--bd); border-top: none; border-radius: 0 0 8px 8px; height: calc(100% - clamp(24px, 6vw, 32px)); display:flex; flex-direction:column; justify-content:center; padding: clamp(6px, 1.5vw, 10px);">
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: clamp(4px, 1vw, 6px); margin-bottom: clamp(4px, 1vw, 6px);">
+    <div class="sec-hd" style="border-radius: 8px 8px 0 0; margin-bottom: 0; display: flex; justify-content: center; align-items: center; text-align: center; letter-spacing: 0; font-size: var(--sfont); white-space: nowrap; padding: 9px 4px;">🔮 정령 정보</div>
+    <div class="sec-bd" style="background: var(--sf); border: 1px solid var(--bd); border-top: none; border-radius: 0 0 8px 8px; flex: 1; display:flex; flex-direction:column; justify-content:center; align-items: center; text-align: center; padding: clamp(6px, 1.5vw, 10px);">
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: clamp(4px, 1vw, 6px); margin-bottom: clamp(4px, 1vw, 6px); width: 100%;">
         ${makeOptCell(0, sp.opts[0])}
         ${makeOptCell(1, sp.opts[1])}
         ${makeOptCell(2, sp.opts[2])}
         ${makeOptCell(3, sp.opts[3])}
       </div>
-      <div style="background: var(--sf2); border: 1px solid var(--bd); border-radius: 6px; padding: clamp(6px, 1vw, 8px); display: flex; align-items: center; justify-content: center; gap: clamp(6px, 1.5vw, 10px);">
-        <div style="font-size: var(--ssfont); font-weight: 800; color: var(--dim); white-space:nowrap;">부가옵션</div>
-        <div>${bHtml}</div>
+      <div style="background: var(--sf2); border: 1px solid var(--bd); border-radius: 6px; padding: clamp(6px, 1vw, 8px); display: flex; justify-content: center; align-items: center; text-align: center; gap: clamp(6px, 1.5vw, 10px); width: 100%;">
+        <div style="font-size: var(--ssfont); font-weight: 800; color: var(--dim); white-space:nowrap; text-align: center;">부가옵션</div>
+        <div style="display: flex; justify-content: center; align-items: center; text-align: center;">${bHtml}</div>
       </div>
     </div>
   `;
@@ -1268,73 +1268,80 @@ function renderSimSpiritDisplay() {
      accOpts += `<option value="${a.n}">${a.n}</option>`;
   });
 
+  const pType = S.pendType;
+  const numOpts = pType === '태양' ? 3 : 2;
+
+  let dummyAcc = numOpts === 3 ? `<select style="width: 100%; padding: 4px 2px; border: 1px solid transparent; font-size: var(--ssfont); box-sizing: border-box; visibility: hidden;"><option>-</option></select>` : '';
+
   let hlHtml = `
-    <div style="display:flex; flex-direction:column; min-width: 0; flex: 0.65;">
-      <div class="sec-hd" style="border-radius: 8px 8px 0 0; margin-bottom: 0; justify-content: center; letter-spacing: 0; font-size: var(--sfont); white-space: nowrap; padding: 9px 4px;">🔍 장신구 조건</div>
-      <div class="sec-bd" style="background: var(--sf); border: 1px solid var(--bd); border-top: none; border-radius: 0 0 8px 8px; flex: 1; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; gap: clamp(4px, 1vw, 8px); padding: clamp(8px, 1.5vw, 14px) clamp(4px, 1vw, 8px);">
+    <div style="display:flex; flex-direction:column; min-width: 0; flex: 0.65; height: 100%;">
+      <div class="sec-hd" style="border-radius: 8px 8px 0 0; margin-bottom: 0; display: flex; justify-content: center; align-items: center; text-align: center; letter-spacing: 0; font-size: var(--sfont); white-space: nowrap; padding: 9px 4px;">🔍 장신구 조건</div>
+      <div class="sec-bd" style="background: var(--sf); border: 1px solid var(--bd); border-top: none; border-radius: 0 0 8px 8px; flex: 1; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align: center; gap: clamp(6px, 1.5vw, 12px); padding: clamp(8px, 1.5vw, 14px) clamp(4px, 1vw, 8px);">
          
-         <div style="position: relative; width: clamp(38px, 8vw, 56px); height: clamp(38px, 8vw, 56px); border: 2px dashed var(--gold); border-radius: 8px; overflow: hidden; cursor: pointer; background: var(--bg); display:flex; align-items:center; justify-content:center; transition: all 0.2s; margin-top: 2px;" onmouseover="this.style.backgroundColor='rgba(232,184,75,0.1)'" onmouseout="this.style.backgroundColor='var(--bg)'">
-           <img id="hl-acc-img" src="" style="width: 100%; height: 100%; object-fit: contain; display: none; z-index: 1;">
-           <div id="hl-acc-placeholder" style="position: absolute; width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:var(--gold); font-size:clamp(16px, 3vw, 24px); font-weight:800; line-height:1; z-index: 0;">+</div>
-           <select id="hl-acc-sel" onchange="applyHighlight()" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; z-index: 2;">
-              ${accOpts}
-           </select>
+         <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; gap: clamp(4px, 1vw, 8px);">
+             <div style="position: relative; width: clamp(38px, 8vw, 56px); height: clamp(38px, 8vw, 56px); border: 2px dashed var(--gold); border-radius: 8px; overflow: hidden; cursor: pointer; background: var(--bg); display:flex; justify-content:center; align-items:center; transition: all 0.2s;" onmouseover="this.style.backgroundColor='rgba(232,184,75,0.1)'" onmouseout="this.style.backgroundColor='var(--bg)'">
+               <img id="hl-acc-img" src="" style="width: 100%; height: 100%; object-fit: contain; display: none; z-index: 1;">
+               <div id="hl-acc-placeholder" style="position: absolute; width:100%; height:100%; display:flex; justify-content:center; align-items:center; text-align: center; color:var(--gold); font-size:clamp(16px, 3vw, 24px); font-weight:800; line-height:1; z-index: 0;">+</div>
+               <select id="hl-acc-sel" onchange="applyHighlight()" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; z-index: 2;">
+                  ${accOpts}
+               </select>
+             </div>
+             <div id="hl-acc-text" style="font-size:var(--ssfont); color:var(--dim); text-align:center; word-break:keep-all;">장신구 선택</div>
          </div>
-         <div id="hl-acc-text" style="font-size:var(--ssfont); color:var(--dim); text-align:center; word-break:keep-all;">장신구 선택</div>
          
-         <!-- 펜던트 칸과 완벽하게 동일한 높이와 여백(gap: 1px)을 사용하도록 수정 -->
-         <div style="display:flex; flex-direction:column; width: 100%; gap: 1px; margin-top: auto;">
-             <select id="hl-enc-sel" onchange="applyHighlight()" style="width: 100%; background: var(--sf2); border: 1px solid var(--bd); color: var(--text); padding: 4px 2px; border-radius: 4px; font-weight: 800; outline: none; cursor: pointer; font-size: var(--ssfont); text-align: center; text-align-last: center; margin-top: 2px;">
-                <option value="">인첸트 전체</option>
-                <option value="hp">체력</option>
-                <option value="atk">공격</option>
-                <option value="def">방어</option>
+         <div style="display:flex; flex-direction:column; justify-content: center; align-items: center; text-align: center; width: 100%; gap: 1px;">
+             <!-- 인첸트 옵션 텍스트를 '+21%' 형식으로 직관적으로 변경 -->
+             <select id="hl-enc-sel" onchange="applyHighlight()" style="width: 100%; background: var(--sf2); border: 1px solid var(--bd); color: var(--text); padding: 4px 2px; border-radius: 4px; font-weight: 800; outline: none; cursor: pointer; font-size: var(--ssfont); text-align: center; text-align-last: center; box-sizing: border-box; transition: all 0.2s;">
+                <option value="" style="background: var(--sf); color: var(--text);">인첸트 전체</option>
+                <option value="hp" style="background: var(--sf); color: #fbbf24;">체 +21%</option>
+                <option value="atk" style="background: var(--sf); color: #f87171;">공 +21%</option>
+                <option value="def" style="background: var(--sf); color: #60a5fa;">방 +21%</option>
              </select>
              
-             <!-- 펜던트의 옵션2 셀렉트 박스와 동일한 높이를 갖도록 패딩과 마진 통일 -->
-             <label style="display: flex; align-items: center; justify-content: center; gap: 4px; cursor: pointer; width: 100%; padding: 4px 2px; margin-top: 2px; box-sizing: border-box; border: 1px solid transparent;">
+             <label style="display: flex; align-items: center; justify-content: center; text-align: center; gap: 4px; cursor: pointer; width: 100%; padding: 4px 2px; box-sizing: border-box; border: 1px solid transparent;">
                 <input type="checkbox" id="hl-filter-cb" onchange="applyHighlight()" style="accent-color: var(--gold); cursor: pointer; width: 14px; height: 14px; margin: 0;">
-                <span style="font-size: var(--ssfont); color: var(--dim); font-weight: 700; white-space: nowrap;">선택만 보기</span>
+                <span style="font-size: var(--ssfont); color: var(--dim); font-weight: 700; white-space: nowrap; text-align: center;">선택만 보기</span>
              </label>
+             ${dummyAcc}
          </div>
       </div>
     </div>
   `;
 
-  const pType = S.pendType;
   const pImg = IMG_PEND[pType];
   const pName = pType === '태양' ? '태양펜' : '달펜';
-  const numOpts = pType === '태양' ? 3 : 2;
 
   let pendSelects = '';
   for(let i=0; i<numOpts; i++) {
-     pendSelects += `<select class="hl-pend-sel" onchange="applyHighlight()" style="width: 100%; background: var(--sf2); border: 1px solid var(--bd); color: var(--text); padding: 4px 2px; border-radius: 4px; font-weight: 800; outline: none; cursor: pointer; font-size: var(--ssfont); text-align: center; text-align-last: center; margin-top: 2px;">
-        <option value="">옵션${i+1}</option>
-        <option value="hp">체력</option>
-        <option value="atk">공격</option>
-        <option value="def">방어</option>
+     pendSelects += `<select class="hl-pend-sel" onchange="applyHighlight()" style="width: 100%; background: var(--sf2); border: 1px solid var(--bd); color: var(--text); padding: 4px 2px; border-radius: 4px; font-weight: 800; outline: none; cursor: pointer; font-size: var(--ssfont); text-align: center; text-align-last: center; margin-top: 2px; box-sizing: border-box; transition: all 0.2s;">
+        <option value="" style="background: var(--sf); color: var(--text);">옵션${i+1}</option>
+        <option value="hp" style="background: var(--sf); color: #fbbf24;">체력</option>
+        <option value="atk" style="background: var(--sf); color: #f87171;">공격</option>
+        <option value="def" style="background: var(--sf); color: #60a5fa;">방어</option>
      </select>`;
   }
 
   let pendHtml = `
-    <div style="display:flex; flex-direction:column; min-width: 0; flex: 0.65;">
-      <div class="sec-hd" style="border-radius: 8px 8px 0 0; margin-bottom: 0; justify-content: center; letter-spacing: 0; font-size: var(--sfont); white-space: nowrap; padding: 9px 4px;">🔍 펜던트 조건</div>
-      <div class="sec-bd" style="background: var(--sf); border: 1px solid var(--bd); border-top: none; border-radius: 0 0 8px 8px; flex: 1; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; gap: clamp(4px, 1vw, 8px); padding: clamp(8px, 1.5vw, 14px) clamp(4px, 1vw, 8px);">
+    <div style="display:flex; flex-direction:column; min-width: 0; flex: 0.65; height: 100%;">
+      <div class="sec-hd" style="border-radius: 8px 8px 0 0; margin-bottom: 0; display: flex; justify-content: center; align-items: center; text-align: center; letter-spacing: 0; font-size: var(--sfont); white-space: nowrap; padding: 9px 4px;">🔍 펜던트 조건</div>
+      <div class="sec-bd" style="background: var(--sf); border: 1px solid var(--bd); border-top: none; border-radius: 0 0 8px 8px; flex: 1; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align: center; gap: clamp(6px, 1.5vw, 12px); padding: clamp(8px, 1.5vw, 14px) clamp(4px, 1vw, 8px);">
          
-         <div style="width: clamp(38px, 8vw, 56px); height: clamp(38px, 8vw, 56px); border: 1px solid var(--bd); border-radius: 8px; overflow: hidden; background: var(--bg); display:flex; align-items:center; justify-content:center; margin-top: 2px;">
-           <img src="${pImg}" style="width: 85%; height: 85%; object-fit: contain;">
+         <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; gap: clamp(4px, 1vw, 8px);">
+             <div style="width: clamp(38px, 8vw, 56px); height: clamp(38px, 8vw, 56px); border: 1px solid var(--bd); border-radius: 8px; overflow: hidden; background: var(--bg); display:flex; justify-content:center; align-items:center;">
+               <img src="${pImg}" style="width: 85%; height: 85%; object-fit: contain;">
+             </div>
+             <div style="font-size:var(--ssfont); color:var(--text); font-weight:800; text-align:center; word-break:keep-all;">${pName}</div>
          </div>
-         <div style="font-size:var(--ssfont); color:var(--text); font-weight:800; text-align:center; word-break:keep-all;">${pName}</div>
          
-         <div style="display:flex; flex-direction:column; width: 100%; gap: 1px; margin-top: auto;">
+         <div style="display:flex; flex-direction:column; justify-content: center; align-items: center; text-align: center; width: 100%; gap: 1px;">
            ${pendSelects}
          </div>
       </div>
     </div>
   `;
 
-  el.innerHTML = `<div style="--sfont: clamp(10px, 2.4vw, 14px); --ssfont: clamp(9px, 2vw, 12px); display: flex; gap: clamp(6px, 1.5vw, 10px); flex-wrap: nowrap;">
-     <div style="flex: 1.1; min-width: 0; display:flex; flex-direction:column;">${spiritHtml}</div>
+  el.innerHTML = `<div style="--sfont: clamp(10px, 2.4vw, 14px); --ssfont: clamp(9px, 2vw, 12px); display: flex; justify-content: center; align-items: stretch; gap: clamp(6px, 1.5vw, 10px); flex-wrap: nowrap; height: 100%;">
+     <div style="flex: 1.1; min-width: 0; display:flex; flex-direction:column; height: 100%;">${spiritHtml}</div>
      ${hlHtml}
      ${pendHtml}
   </div>`;
