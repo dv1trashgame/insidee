@@ -931,8 +931,8 @@ function mkMobCard(rank,dc,dt,accImg,accName,enc,gems,pendMob,bufHtml,fH,fA,fD,b
 function runAllSims() {
   const btn = document.getElementById('btn-run-all');
   if (btn) {
-    btn.disabled = true;
-    btn.textContent = '⏳ 분석표 및 TOP 500 일괄 연산 중...';
+    btn.style.pointerEvents = 'none'; /* 클릭 방지 */
+    btn.style.opacity = '0.5';        /* 계산 중임을 알 수 있게 반투명 처리 */
   }
 
   // 시뮬레이터 탭에 정령 정보 및 하이라이트 UI 렌더링
@@ -1131,9 +1131,9 @@ function runAllSims() {
       console.error(e);
       alert('오류: ' + e.message);
     }
-    if (btn) {
-      btn.disabled = false;
-      btn.textContent = '계산 재시작';
+if (btn) {
+      btn.style.pointerEvents = 'auto'; /* 클릭 다시 활성화 */
+      btn.style.opacity = '1';          /* 투명도 원상복구 */
     }
   }, 30);
 }
