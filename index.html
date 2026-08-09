@@ -1351,21 +1351,21 @@ function applyHighlight() {
    
    if(!accEl || !encEl) return;
    
-   // --- 셀렉트 박스 선택 시 색상을 실시간으로 변경하는 헬퍼 함수 ---
-   const updateSelectStyle = (el) => {
+   // --- 셀렉트 박스 스타일을 업데이트 (펜던트 여부에 따라 배경색 유지) ---
+   const updateSelectStyle = (el, isPend) => {
       const val = el.value;
       if (val === 'hp') {
          el.style.color = '#fbbf24';
-         el.style.borderColor = '#fbbf24';
-         el.style.backgroundColor = 'rgba(251, 191, 36, 0.15)';
+         el.style.borderColor = isPend ? 'var(--bd)' : '#fbbf24';
+         el.style.backgroundColor = isPend ? 'var(--sf2)' : 'rgba(251, 191, 36, 0.15)';
       } else if (val === 'atk') {
          el.style.color = '#f87171';
-         el.style.borderColor = '#f87171';
-         el.style.backgroundColor = 'rgba(248, 113, 113, 0.15)';
+         el.style.borderColor = isPend ? 'var(--bd)' : '#f87171';
+         el.style.backgroundColor = isPend ? 'var(--sf2)' : 'rgba(248, 113, 113, 0.15)';
       } else if (val === 'def') {
          el.style.color = '#60a5fa';
-         el.style.borderColor = '#60a5fa';
-         el.style.backgroundColor = 'rgba(96, 165, 250, 0.15)';
+         el.style.borderColor = isPend ? 'var(--bd)' : '#60a5fa';
+         el.style.backgroundColor = isPend ? 'var(--sf2)' : 'rgba(96, 165, 250, 0.15)';
       } else {
          el.style.color = 'var(--text)';
          el.style.borderColor = 'var(--bd)';
@@ -1373,9 +1373,9 @@ function applyHighlight() {
       }
    };
 
-   // 인첸트 및 펜던트 셀렉트 박스 스타일 업데이트
-   updateSelectStyle(encEl);
-   document.querySelectorAll('.hl-pend-sel').forEach(el => updateSelectStyle(el));
+   // 인첸트(배경변함) 및 펜던트(글자만변함) 스타일 업데이트
+   updateSelectStyle(encEl, false);
+   document.querySelectorAll('.hl-pend-sel').forEach(el => updateSelectStyle(el, true));
    // -----------------------------------------------------------
 
    const accName = accEl.value;
