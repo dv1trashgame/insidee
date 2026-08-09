@@ -214,7 +214,10 @@ select:focus,input:focus{outline:none;border-color:var(--gold)}
     </div>
 
   <!-- 일괄 실행 버튼 -->
-    <button class="btn-sim" id="btn-run-all" onclick="runAllSims()" style="margin-top:0; font-size: var(--ufont); padding: 12px; white-space: nowrap;">계산 시작</button>
+   <!-- 텍스트 버튼을 없애고 순수 정사각형 이미지 버튼으로 교체 -->
+    <div style="text-align: center; margin-top: 24px; margin-bottom: 24px;">
+      <img id="btn-run-all" src="images/chu.png" alt="계산 시작" onclick="runAllSims()" style="width: 70px; height: 70px; cursor: pointer; object-fit: cover; transition: opacity 0.2s ease;" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">
+    </div>
     
     <!-- 분석표 출력 영역 (복구됨!) -->
     <div id="table-res-wrap" style="margin-top: 14px; overflow-x: auto; display: none;"></div>
