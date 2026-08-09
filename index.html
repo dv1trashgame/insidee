@@ -548,31 +548,46 @@
 
             const notice = document.getElementById('sysNotice');
             
-            // 기존 단순 성공 메시지를 지우고, 버프/너프 내용을 렌더링합니다.
-            let buffHtml = '';
+            // 영문 스탯을 한글로 변환하기 위한 매핑 객체
+            const statKor = { 'hp': '체력', 'atk': '공격', 'def': '방어' };
+
+            let buffNames = [];
+            let buffStats = [];
             if (weeklyData.buff && weeklyData.buff.length > 0) {
-                buffHtml = weeklyData.buff.map(b => `<div style="color: var(--green); font-weight: 800;">${b.e || ''} ${b.e && b.t ? '/' : ''} ${b.t || ''}</div>`).join('');
-            } else {
-                buffHtml = `<div style="color: var(--dim);">없음</div>`;
+                weeklyData.buff.forEach(b => {
+                    buffNames.push(b.e || b.t); // 속성(e)이나 타입(t) 이름 저장
+                    buffStats.push(statKor[b.stat] || b.stat); // 한글 스탯명 저장
+                });
             }
 
-            let nerfHtml = '';
+            let nerfNames = [];
+            let nerfStats = [];
             if (weeklyData.nerf && weeklyData.nerf.length > 0) {
-                nerfHtml = weeklyData.nerf.map(n => `<div style="color: var(--red); font-weight: 800;">${n.e || ''} ${n.e && n.t ? '/' : ''} ${n.t || ''}</div>`).join('');
-            } else {
-                nerfHtml = `<div style="color: var(--dim);">없음</div>`;
+                weeklyData.nerf.forEach(n => {
+                    nerfNames.push(n.e || n.t);
+                    nerfStats.push(statKor[n.stat] || n.stat);
+                });
             }
 
-            // 가로 레이아웃(좌측 버프, 우측 너프)으로 구성
+            // 배열에 담긴 정보들을 ' / ' 기호로 연결
+            const buffNameHtml = buffNames.length > 0 ? buffNames.join(' <span style="color:var(--dim);font-weight:normal;">/</span> ') : '없음';
+            const buffStatHtml = buffStats.length > 0 ? buffStats.join(' <span style="color:var(--dim);font-weight:normal;">/</span> ') : '-';
+            
+            const nerfNameHtml = nerfNames.length > 0 ? nerfNames.join(' <span style="color:var(--dim);font-weight:normal;">/</span> ') : '없음';
+            const nerfStatHtml = nerfStats.length > 0 ? nerfStats.join(' <span style="color:var(--dim);font-weight:normal;">/</span> ') : '-';
+
+            // 가로 레이아웃(좌측 버프, 우측 너프)에 위아래로 이름/스탯 분리
             notice.innerHTML = `
-                <div style="display: flex; width: 100%; justify-content: space-evenly; align-items: flex-start; text-align: center;">
-                    <div style="display: flex; flex-direction: column; gap: 6px; flex: 1; border-right: 1px solid var(--bd);">
-                        <span style="font-size: 11px; color: var(--dim); font-weight: 800; border-bottom: 1px dashed var(--bd); padding-bottom: 4px; margin-bottom: 4px;">이번 주 버프</span>
-                        ${buffHtml}
+                <div style="display: flex; width: 100%; justify-content: space-evenly; align-items: stretch; text-align: center;">
+                    <div style="display: flex; flex-direction: column; flex: 1; border-right: 1px solid var(--bd); padding: 0 4px;">
+                        <span style="font-size: 11px; color: var(--dim); font-weight: 800; border-bottom: 1px dashed var(--bd); padding-bottom: 6px; margin-bottom: 6px;">이번 주 버프</span>
+                        <div style="color: var(--green); font-weight: 800; font-size: 14px;">${buffNameHtml}</div>
+                        <div style="color: var(--text); font-weight: 800; font-size: 13px; margin-top: 4px;">${buffStatHtml}</div>
                     </div>
-                    <div style="display: flex; flex-direction: column; gap: 6px; flex: 1;">
-                        <span style="font-size: 11px; color: var(--dim); font-weight: 800; border-bottom: 1px dashed var(--bd); padding-bottom: 4px; margin-bottom: 4px;">이번 주 너프</span>
-                        ${nerfHtml}
+                    <div style="display: flex; flex-direction: column; flex: 1; padding: 0 4px;">
+                        <span style="font-size: 11px; color: var(--dim); font-weight: 800; border-bottom: 1px dashed var(--bd); padding-bottom: 6px; margin-bottom: 6px;">이번 주 너프</span>
+                        <div style="color: var(--red); font-weight: 800; font-size: 14px;">${nerfNameHtml}</div>
+                        <div style="color: var(--text); font-weight: 800; font-size: 13px; margin-top: 4px;">${nerfStatHtml}</div>
                     </div>
                 </div>
             `;
@@ -580,8 +595,7 @@
             notice.style.backgroundColor = "var(--sf)";
             notice.style.color = "var(--text)";
             notice.style.borderColor = "var(--bd)";
-            // 패딩을 살짝 줄여서 레이아웃을 다듬습니다.
-            notice.style.padding = "10px";
+            notice.style.padding = "12px 10px";
 
             setupAutocomplete('preInput1', 'autoList1');
             setupAutocomplete('preInput2', 'autoList2');
@@ -597,7 +611,7 @@
             notice.style.justifyContent = "center";
             notice.style.padding = "12px 16px";
         });
-
+        
         function preprocessImageForOCR(imgSrc) {
             return new Promise((resolve) => {
                 const img = new Image();
