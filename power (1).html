@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light only">
+    <meta name="supported-color-schemes" content="light">
+    <title>길전세팅 전투력 측정기</title>
+    <link href="https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <style>
+        :root {
+            --bg: #f5f5f5; --bg2: #ffffff; --bg3: #ebebeb;
+            --border: #d5d5d5; --border2: #cccccc; --border3: #e0e0e0;
+            --text: #333333; --text2: #555555; --text3: #666666; --text4: #999999;
+            --accent: #3b4890; --accent-bg: rgba(59, 72, 144, 0.12); --accent-border: rgba(59, 72, 144, 0.30);
+            
+            --sf: var(--bg2); --sf2: var(--bg3); --bd: var(--border);
+            --gold: var(--accent); --gold2: #4a5a9f;
+            --dim: var(--text3); --dimmer: var(--text4);
+            --red: #f87171; --green: #4ade80; --blue: #60a5fa;
+            --hpc: #fbbf24; --atc: #f87171; --dfc: #60a5fa;
+            color-scheme: light !important;
+        }
+
+        * { box-sizing: border-box; }
+
+        html, body {
+            overflow-x: hidden;
+            width: 100%;
+        }
+
+        body { font-family: 'Nanum Gothic', -apple-system, sans-serif; margin: 0; padding: 0; background-color: var(--bg); color: var(--text); font-size: 14px; }
+        .page-wrap { max-width: 1000px; margin: 0 auto; padding: 30px 20px; }
+
+        .hd { display: flex; align-items: center; gap: 14px; padding: 12px 20px; background: var(--sf); border-bottom: 2px solid var(--gold); position: sticky; top: 0; z-index: 100; }
+        .hd-icon { width: 32px; height: 32px; flex-shrink: 0; border-radius: 4px; background-color: var(--border3); overflow: hidden; display: flex; justify-content: center; align-items: center; }
+        .hd-icon img { width: 100%; height: 100%; object-fit: cover; }
+        .hd-t { font-size: 15px; font-weight: 800; color: var(--gold); }
+        .hd-s { font-size: 11px; color: var(--dim); margin-top: 2px; }
+        .hd-spacer { flex: 1; }
+        h2 { color: var(--gold); text-align: center; font-weight: 800; margin-bottom: 30px; letter-spacing: -0.5px; position: relative; }
+        
+        .upload-section, .result-section { background: var(--sf); padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); margin-bottom: 25px; border: 1px solid var(--bd); }
+        
+        #imagePreview { width: 100%; height: auto; margin-top: 15px; border-radius: 8px; display: none; border: 1px solid var(--bd); box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        #processedPreview { max-width: 100%; max-height: 300px; margin-top: 15px; border-radius: 8px; display: none; }
+        
+        button { background: linear-gradient(135deg, var(--gold2), var(--gold)); color: white; padding: 16px 20px; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; margin-top: 20px; font-weight: 800; width: 100%; box-shadow: 0 4px 10px rgba(59, 72, 144, 0.2); transition: all 0.2s ease; }
+        button:hover { transform: translateY(-2px); opacity: 0.9; }
+        button:disabled { background: var(--sf2); box-shadow: none; transform: none; cursor: not-allowed; color: var(--dim); border: 1px solid var(--bd); }
+        #status { margin-top: 20px; color: var(--dim); font-weight: bold; text-align: center; font-size: 15px; }
+        
+        .groups-wrapper { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px; align-items: stretch; }
+        .group { background: var(--sf2); padding: 20px; border-radius: 8px; border: 1px solid var(--bd); border-left-width: 6px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); display: flex; flex-direction: column; }
+        .group-1 { border-left-color: #ff4757; } 
+        .group-2 { border-left-color: #ffa502; } 
+        .group-3 { border-left-color: #2ed573; } 
+        
+        .group-header { display: flex; flex-direction: column; align-items: flex-start; border-bottom: 1px solid var(--bd); padding-bottom: 12px; margin-bottom: 15px; gap: 8px; }
+        .dragon-title { font-size: 18px; font-weight: 800; color: var(--text); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .dragon-type { font-size: 12px; color: var(--dim); font-weight: normal; }
+        .dragon-icon { width: 24px; height: 24px; vertical-align: middle; border-radius: 4px; object-fit: cover; }
+        
+        .badges-container { display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px; align-items: flex-start; }
+        .eval-badge { background-color: var(--accent-bg); color: var(--gold); padding: 5px 10px; border-radius: 4px; font-size: 13px; font-weight: bold; border: 1px solid var(--accent-border); }
+        .badge-success { background-color: rgba(74, 222, 128, 0.15); color: #16a34a; padding: 5px 10px; border-radius: 4px; font-size: 13px; font-weight: bold; border: 1px solid var(--green); }
+        .grade-badge { background-color: rgba(251, 191, 36, 0.15); color: #d97706; padding: 5px 10px; border-radius: 4px; font-size: 13px; font-weight: bold; border: 1px solid var(--hpc); }
+        
+        .buff-info { background-color: var(--sf2); color: var(--dim); padding: 12px 16px; border-radius: 8px; font-size: 15px; margin-bottom: 20px; border: 1px solid var(--bd); display: flex; align-items: center; justify-content: center; font-weight: 600; }
+        
+        .stat-container { display: flex; gap: 8px; justify-content: space-between; margin-bottom: 15px; align-items: stretch; }
+        .stat-box { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 10px 4px; border-radius: 6px; text-align: center; font-size: 12px; font-weight: bold; line-height: 1.2; }
+        .stat-hp { background-color: rgba(251, 191, 36, 0.15); border: 1px solid #fbbf24; color: #d97706; }
+        .stat-atk { background-color: rgba(248, 113, 113, 0.15); border: 1px solid #f87171; color: #dc2626; }
+        .stat-def { background-color: rgba(96, 165, 250, 0.15); border: 1px solid #60a5fa; color: #2563eb; }
+        .stat-box b { font-size: 18px; display: block; margin-top: 4px; color: var(--text); letter-spacing: 0.5px; }
+        
+        .stat-buff-plus { color: #16a34a; font-weight: bold; font-size: 12px; margin-top: 4px; min-height: 14px; }
+        .stat-buff-minus { color: #dc2626; font-weight: bold; font-size: 12px; margin-top: 4px; min-height: 14px; }
+
+        .bival-box { text-align: center; background: var(--sf); padding: 12px; border-radius: 6px; border: 1px dashed var(--bd); margin-top: auto; }
+        .bival-label { font-size: 12px; color: var(--dim); margin-bottom: 4px; display: block; }
+        .bival-box span.bival-score { color: var(--gold); font-size: 20px; font-weight: 800; }
+        
+        .total-bival-box { background: linear-gradient(135deg, var(--gold2), var(--gold)); color: white; padding: 25px; border-radius: 12px; text-align: center; margin-top: 15px; font-size: 22px; font-weight: 900; box-shadow: 0 10px 25px rgba(59, 72, 144, 0.3); }
+        .total-bival-box span { font-size: 32px; display: block; margin-top: 8px; color: #ffffff; }
+
+        .submit-section { margin-top: 15px; padding: 15px; background: rgba(255,255,255,0.2); border-radius: 8px; display: flex; gap: 10px; align-items: center; justify-content: center; flex-wrap: wrap; border: 1px solid rgba(255,255,255,0.3); }
+        .submit-section input { padding: 10px 15px; border-radius: 6px; border: none; background: var(--bg); color: var(--text); font-size: 15px; font-family: inherit; width: 200px; font-weight: bold;}
+        .submit-section button { margin-top: 0; width: auto; padding: 10px 20px; background: var(--bg); color: var(--gold); font-size: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .submit-section button:hover { background: var(--sf2); }
+
+        .leaderboard-btn { position: static; width: auto; flex-shrink: 0; margin: 0; padding: 7px 12px; font-size: 12px; font-weight: 700; line-height: 1.2; border-radius: 6px; background: var(--sf); color: var(--gold); border: 1px solid var(--gold); box-shadow: none; white-space: nowrap; }
+        .leaderboard-btn:hover { background: var(--accent-bg); transform: none; }
+        
+        .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.4); backdrop-filter: blur(4px); }
+        .modal-content { background-color: var(--bg); margin: 10% auto; padding: 25px; border: 1px solid var(--bd); border-radius: 12px; width: 95%; max-width: 700px; max-height: 80vh; overflow-y: auto; color: var(--text); position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        .close-btn { color: var(--dim); float: right; font-size: 28px; font-weight: bold; cursor: pointer; line-height: 1; margin-top: -5px; }
+        .close-btn:hover { color: var(--text); }
+        
+        .rank-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px; table-layout: fixed; }
+        .rank-table th, .rank-table td { padding: 12px 4px; border-bottom: 1px solid var(--border3); text-align: center; vertical-align: middle; }
+        .rank-table th { color: var(--dim); font-weight: bold; border-bottom: 2px solid var(--bd); }
+        
+        .rank-td-cell { font-weight: bold; font-size: 15px; color: var(--text); }
+        .score-text { color: var(--gold); font-weight: 800; font-size: 15px; letter-spacing: -0.5px; }
+        .nickname-text { font-weight: bold; font-size: 15px; word-break: break-all; color: var(--text); }
+        
+        .leaderboard-medal-icon { width: 24px; height: 24px; vertical-align: middle; object-fit: contain; }
+        .leaderboard-dragon-icon { width: 22px; height: 22px; vertical-align: middle; border-radius: 4px; margin: 0 2px; object-fit: cover; }
+        .nickname-container { display: flex; align-items: center; justify-content: center; gap: 6px; flex-wrap: wrap; }
+        
+        .buff-badge { padding: 4px 8px; border-radius: 6px; font-size: 13px; font-weight: 900; display: inline-block; white-space: nowrap; }
+        .buff-6 { background-color: #ef4444; color: white; } 
+        .buff-5 { background-color: #f97316; color: white; } 
+        .buff-4 { background-color: #facc15; color: #333; } 
+        .buff-3 { background-color: #22c55e; color: white; } 
+        .buff-2 { background-color: #3b82f6; color: white; } 
+        .buff-1 { background-color: #a855f7; color: white; } 
+        .buff-0 { background-color: var(--sf2); color: var(--dim); border: 1px solid var(--bd); } 
+
+        .detail-toggle-btn { background: var(--sf2); color: var(--dim); border: 1px solid var(--bd); padding: 6px 12px; border-radius: 4px; font-size: 12px; cursor: pointer; font-weight: bold; margin-top: 0; white-space: nowrap; }
+        .detail-toggle-btn:hover { background: var(--border3); }
+        .details-row td { background: var(--sf); padding: 15px 10px; border-bottom: 2px solid var(--bd); }
+        .details-container { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+        .detail-card { background: var(--sf2); border: 1px solid var(--border3); border-radius: 8px; padding: 10px; flex: 1; min-width: 140px; font-size: 12px; text-align: center; }
+        .detail-card span.d-name { display: block; color: var(--dim); margin-bottom: 6px; font-size: 12px; font-weight: bold; }
+        .detail-card b { color: var(--text); font-size: 13px; }
+        .detail-bival { display: block; margin-top: 8px; padding-top: 6px; border-top: 1px dashed var(--bd); color: var(--gold); font-weight: 800; font-size: 13px; }
+
+        .pre-select-area { display: none; margin-top: 25px; padding: 25px; background-color: var(--sf2); border-radius: 12px; border: 1px solid var(--bd); }
+        .pre-select-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 15px; } 
+        .pre-select-item { display: flex; flex-direction: column; background: var(--sf); padding: 15px; border-radius: 8px; border: 1px solid var(--border3); }
+        .pre-select-item label { font-weight: 800; margin-bottom: 12px; color: var(--text); font-size: 15px; text-align: center; border-bottom: 1px solid var(--border3); padding-bottom: 8px; }
+        .input-row { display: flex; flex-direction: column; gap: 10px; } 
+        .autocomplete-wrapper { position: relative; width: 100%; }
+        .dragon-search, .grade-select { width: 100%; padding: 12px; border-radius: 6px; border: 1px solid var(--bd); background-color: var(--bg); font-family: inherit; font-size: 14px; font-weight: bold; box-sizing: border-box; color: var(--text); }
+        .dragon-search:focus, .grade-select:focus { outline: none; border-color: var(--gold); }
+        .autocomplete-list { position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: var(--bg); border: 1px solid var(--bd); z-index: 1000; max-height: 200px; overflow-y: auto; border-radius: 6px; display: none; }
+        .autocomplete-item { padding: 12px 14px; cursor: pointer; border-bottom: 1px solid var(--border3); font-size: 14px; color: var(--text); }
+        .autocomplete-item:hover { background-color: var(--sf2); font-weight: bold; color: var(--gold); }
+
+        .toggle-debug-btn { background: transparent; border: 1px solid var(--bd); color: var(--dim); padding: 6px 16px; border-radius: 20px; font-size: 13px; cursor: pointer; margin-top: 0; width: auto; font-weight: normal; transition: all 0.2s; }
+        .toggle-debug-btn:hover { background: var(--border3); color: var(--text); }
+        
+        .raw-text { background: var(--bg) !important; color: var(--dim) !important; border: 1px solid var(--bd) !important; }
+
+        @media (max-width: 800px) {
+            .page-wrap { padding: 10px 5px; }
+            h2 { font-size: 20px; padding-top: 0; margin-bottom: 20px; }
+
+            .leaderboard-btn { font-size: 11px; padding: 6px 9px; transform: none; }
+            .upload-section, .result-section { padding: 15px 5px; border-radius: 8px; }
+            
+            .pre-select-container, .groups-wrapper { gap: 4px; }
+            .pre-select-item { padding: 8px 4px; }
+            .pre-select-item label { font-size: 11px; padding-bottom: 6px; margin-bottom: 8px; }
+            .dragon-search, .grade-select { padding: 8px 4px; font-size: 11px; }
+            .input-row { gap: 6px; }
+
+            .group { padding: 12px 6px; border-left-width: 4px; border-radius: 6px; }
+            .group-header { padding-bottom: 8px; margin-bottom: 12px; gap: 4px; }
+            .dragon-title { font-size: 11px; gap: 2px; }
+            .dragon-type { font-size: 9px; display: block; width: 100%; }
+            .dragon-icon { width: 16px; height: 16px; }
+            
+            .badges-container { gap: 4px; margin-bottom: 12px; }
+            .eval-badge, .badge-success, .grade-badge { font-size: 8px; padding: 4px 5px; border-radius: 3px; }
+            
+            .stat-container { gap: 3px; margin-bottom: 12px; align-items: stretch; } 
+            .stat-box { padding: 6px 2px; font-size: 8px; border-radius: 4px; }
+            .stat-box b { font-size: 11px; margin-top: 3px; }
+            .stat-buff-plus, .stat-buff-minus { font-size: 8px; margin-top: 2px; min-height: 10px; }
+            
+            .group-header img:not(.dragon-icon) { height: 16px !important; }
+
+            .bival-box { padding: 8px 3px; border-radius: 4px; }
+            .bival-label { font-size: 9px; margin-bottom: 2px; }
+            .bival-box span.bival-score { font-size: 12px; }
+            
+            .total-bival-box { padding: 12px 5px; font-size: 16px; margin-top: 15px; border-radius: 6px; }
+            .total-bival-box span { font-size: 22px; margin-top: 4px; }
+
+            .modal-content { padding: 15px 4px; width: 95%; max-width: 100vw; box-sizing: border-box; overflow-x: hidden; }
+            .rank-table { word-break: break-all; }
+            .rank-table th, .rank-table td { padding: 6px 1px; font-size: 10px; }
+            
+            .rank-td-cell { font-size: 11px; }
+            .score-text { font-size: 9.5px; word-break: break-all; } 
+            .nickname-text { font-size: 10px; }
+            
+            .nickname-container { flex-direction: column; gap: 2px; }
+            .leaderboard-dragon-icon { width: 12px; height: 12px; margin: 0 1px; }
+            .leaderboard-medal-icon { width: 16px; height: 16px; }
+            
+            .buff-badge { font-size: 9px; padding: 2px 4px; } 
+            .detail-toggle-btn { padding: 5px 2px; font-size: 9px; width: 95%; }
+            
+            .submit-section input, .submit-section button { width: 100%; margin-bottom: 5px; }
+            
+            .details-container { flex-direction: column; gap: 6px; width: 100%; box-sizing: border-box; }
+            .detail-card { min-width: 0 !important; width: 100%; margin: 0; box-sizing: border-box; overflow: hidden; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="hd">
+  <div class="hd-icon">
+    <img src="images/logo.png" alt="로고">
+  </div>
+  <div>
+    <div class="hd-t">길전세팅 전투력 측정기</div>
+    <div class="hd-s">덱설정 스크린샷 업로드</div>
+  </div>
+  <div class="hd-spacer"></div>
+  <button id="openLeaderboardBtn" class="leaderboard-btn">🏆 주간 랭킹</button>
+</div>
+
+<div class="page-wrap">
+
+    <div id="sysNotice" class="buff-info">
+        데이터베이스 파일들을 불러오는 중입니다... ⏳
+    </div>
+
+    <div id="leaderboardModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" id="closeModalBtn">&times;</span>
+            <h3 style="margin-top: 0; color: var(--gold); text-align: center;">🏆 주간 랭킹 (순위표)</h3>
+            <p style="text-align: center; font-size: 13px; color: var(--dim); margin-bottom: 15px;">서버에서 데이터를 불러오는 중입니다...</p>
+            <div style="overflow-x: auto;">
+                <table class="rank-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 13%;">순위</th>
+                            <th style="width: 33%;">닉네임 & 덱</th>
+                            <th style="width: 14%;">버프</th>
+                            <th style="width: 26%;">총합 비밸</th>
+                            <th style="width: 14%;">상세</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaderboardBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="upload-section">
+        <p style="margin-top:0; font-weight:800; color: var(--text); font-size:15px; margin-bottom:12px;">1. 덱 설정 화면 스크린샷 업로드</p>
+        <input type="file" id="imageInput" accept="image/*">
+        
+        <div style="display:flex; gap: 15px; flex-wrap: wrap;">
+            <div style="width: 100%;">
+                <img id="imagePreview" alt="원본 이미지">
+            </div>
+        </div>
+        
+        <div id="preSelectArea" class="pre-select-area">
+            <p style="margin-top:0; font-weight:800; color: var(--text); font-size:15px; margin-bottom:5px;">2. 자동 인식된 드래곤·등급 확인 (직접 수정 가능)</p>
+            
+            <div class="pre-select-container">
+                <div class="pre-select-item">
+                    <label>그룹 1 (왼쪽)</label>
+                    <div class="input-row">
+                        <div class="autocomplete-wrapper">
+                            <input type="text" class="dragon-search" id="preInput1" autocomplete="off" placeholder="드래곤 이름 검색">
+                            <div class="autocomplete-list" id="autoList1"></div>
+                        </div>
+                        <select class="grade-select" id="preGrade1">
+                            <option value="7.0">7.0</option>
+                            <option value="8.0">8.0</option>
+                            <option value="9.0" selected>9.0</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="pre-select-item">
+                    <label>그룹 2 (가운데)</label>
+                    <div class="input-row">
+                        <div class="autocomplete-wrapper">
+                            <input type="text" class="dragon-search" id="preInput2" autocomplete="off" placeholder="드래곤 이름 검색">
+                            <div class="autocomplete-list" id="autoList2"></div>
+                        </div>
+                        <select class="grade-select" id="preGrade2">
+                            <option value="7.0">7.0</option>
+                            <option value="8.0">8.0</option>
+                            <option value="9.0" selected>9.0</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="pre-select-item">
+                    <label>그룹 3 (오른쪽)</label>
+                    <div class="input-row">
+                        <div class="autocomplete-wrapper">
+                            <input type="text" class="dragon-search" id="preInput3" autocomplete="off" placeholder="드래곤 이름 검색">
+                            <div class="autocomplete-list" id="autoList3"></div>
+                        </div>
+                        <select class="grade-select" id="preGrade3">
+                            <option value="7.0">7.0</option>
+                            <option value="8.0">8.0</option>
+                            <option value="9.0" selected>9.0</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="extractBtnContainer" style="display: none; text-align: center; margin-top: 30px;">
+            <img id="extractBtn" src="images/chu.png" alt="계산 시작" style="width: 70px; height: 70px; cursor: pointer; object-fit: cover; transition: opacity 0.2s ease;" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">
+        </div>
+        <div id="status"></div>
+    </div>
+
+    <div class="result-section" id="resultSection" style="display: none;">
+        <h3 style="margin-top:0; color:var(--text); font-weight:800; font-size:18px; border-bottom:1px solid var(--bd); padding-bottom:12px; margin-bottom:20px;">이번 주 비밸 계산 결과</h3>
+        <div id="parsedResults"></div>
+        <h4 style="margin-top: 35px; font-size: 13px; color: var(--dim); margin-bottom:5px;">전체 인식된 텍스트 (로그 확인용)</h4>
+        <textarea id="rawText" class="raw-text" style="width: 100%; height: 60px; background: #1e1e1e; color: #cbd5e1; border: 1px solid #444; border-radius: 6px; padding: 10px;" readonly></textarea>
+    </div>
+
+    <script>
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbzcC8qd7_MQrkipdMO-jAwsKSYzaphxUgbOeTcecK3ENdg1ooLr5pa76VHX9KmdI0Gdtw/exec";
+
+        let dragonDB = {};
+        let dragonList = [];
+        let weeklyData = { base_stats: {}, buff: [], nerf: [] };
+        
+        let currentCalculatedBival = 0; 
+        let currentTotalBuffCount = 0;
+        let currentTotalNerfCount = 0; 
+        
+        let currentG1 = {}, currentG2 = {}, currentG3 = {}; 
+
+        const modal = document.getElementById("leaderboardModal");
+        const btn = document.getElementById("openLeaderboardBtn");
+        const span = document.getElementById("closeModalBtn");
+
+        btn.onclick = function() { modal.style.display = "block"; loadLeaderboard(); }
+        span.onclick = function() { modal.style.display = "none"; }
+        window.onclick = function(event) { if (event.target == modal) { modal.style.display = "none"; } }
+
+        function toggleDetails(btnElement) {
+            const detailRow = btnElement.closest('tr').nextElementSibling;
+            if (detailRow.style.display === "none" || detailRow.style.display === "") {
+                detailRow.style.display = "table-row";
+                btnElement.innerText = "닫기 ▲";
+            } else {
+                detailRow.style.display = "none";
+                btnElement.innerText = "상세 ▼";
+            }
+        }
+
+        async function loadLeaderboard(cached = false) {
+            const tbody = document.getElementById('leaderboardBody');
+            tbody.innerHTML = `<tr><td colspan="5" style="color:var(--dim);">데이터를 불러오는 중입니다... ⏳</td></tr>`;
+            try {
+                if (!cached || !leaderboardCache) {
+                    const response = await fetch(GAS_URL);
+                    if (!response.ok) throw new Error("순위표 HTTP 오류");
+                    leaderboardCache = await response.json();
+                    if (!Array.isArray(leaderboardCache)) throw new Error("순위표 형식 오류");
+                }
+                const data = simulateRows(leaderboardCache);
+                
+                tbody.innerHTML = '';
+                if(data.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="5" style="color:var(--dim);">아직 등록된 랭킹이 없습니다.</td></tr>`;
+                    return;
+                }
+
+                data.forEach((row, index) => {
+                    let medalHtml = `<span class="rank-td-cell">${index + 1}위</span>`;
+                    if(index === 0) medalHtml = `<img src="./images/medal_1.png" class="leaderboard-medal-icon" alt="1위" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';"><span style="display:none;" class="rank-td-cell">1위</span>`;
+                    if(index === 1) medalHtml = `<img src="./images/medal_2.png" class="leaderboard-medal-icon" alt="2위" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';"><span style="display:none;" class="rank-td-cell">2위</span>`;
+                    if(index === 2) medalHtml = `<img src="./images/medal_3.png" class="leaderboard-medal-icon" alt="3위" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';"><span style="display:none;" class="rank-td-cell">3위</span>`;
+                    let iconsHtml = '';
+                    const dNames = [row.g1?.name, row.g2?.name, row.g3?.name];
+                    dNames.forEach(dName => {
+                        if(dName && !dName.startsWith("그룹 ")) {
+                            iconsHtml += `<img src="./images/icons/${dName}.png" class="leaderboard-dragon-icon" onerror="this.style.display='none'">`;
+                        }
+                    });
+                    
+                    const buffCount = row.totalBuffCount || 0;
+                    const nerfCount = row.totalNerfCount || 0;
+
+                    let buffClass = `buff-${buffCount}`;
+                    if (buffCount > 6) buffClass = "buff-6"; 
+                    if (buffCount === 0 && nerfCount > 0) buffClass = "buff-0"; 
+
+                    let buffText = "";
+                    if (buffCount > 0 && nerfCount > 0) {
+                        buffText = `${buffCount}-${nerfCount}버프`;
+                    } else if (buffCount === 0 && nerfCount > 0) {
+                        buffText = `${nerfCount}너프`;
+                    } else {
+                        buffText = `${buffCount}버프`;
+                    }
+
+                    const buffBadge = `<span class="buff-badge ${buffClass}">${buffText}</span>${Object.values(extraBuff).some(Boolean) ? `<small style="display:block">${row.extraMissing ? "등급/기준정보 없음 · 미적용" : "+@ 적용"}</small>` : ""}`;
+                    const bivalText = `<span class="score-text">${Number(row.score).toLocaleString()}</span>`;
+                    
+                    const calcBival = (g) => {
+                        if(!g || !g.base_hp) return 0;
+                        return (Number(g.base_hp) + Number(g.buff_hp || 0) + (g.extra?.missing || row.extraMissing ? 0 : g.extra?.hp || 0)) * (Number(g.base_atk) + Number(g.buff_atk || 0) + (g.extra?.missing || row.extraMissing ? 0 : g.extra?.atk || 0)) * (Number(g.base_def) + Number(g.buff_def || 0) + (g.extra?.missing || row.extraMissing ? 0 : g.extra?.def || 0));
+                    };
+                    const g1Bival = calcBival(row.g1);
+                    const g2Bival = calcBival(row.g2);
+                    const g3Bival = calcBival(row.g3);
+
+                    const calcEval = (g) => {
+                        if(!g || !g.base_hp) return 0;
+                        return Number(g.base_hp) + (Number(g.base_atk) + Number(g.base_def)) * 4;
+                    };
+                    const g1Eval = calcEval(row.g1);
+                    const g2Eval = calcEval(row.g2);
+                    const g3Eval = calcEval(row.g3);
+                    
+                    const totalEval = g1Eval + g2Eval + g3Eval;
+
+                    const renderDragonName = (name) => {
+                        if (!name || name === '-') return `🐲 -`;
+                        return `<img src="./images/icons/${name}.png" style="width:16px; height:16px; border-radius:3px; vertical-align:middle; margin-right:4px;" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';"><span style="display:none;">🐲</span>${name}`;
+                    };
+
+                    const formatDetailStat = (icon, base, buff, extra = 0) => {
+                        let buffHtml = '';
+                        if (buff > 0) buffHtml = `<span style="color:#16a34a; font-size:11px; font-weight:bold;">(+${buff})</span>`;
+                        else if (buff < 0) buffHtml = `<span style="color:#dc2626; font-size:11px; font-weight:bold;">(${buff})</span>`;
+                        else buffHtml = `<span style="visibility:hidden; font-size:11px;">(+0)</span>`;
+                        
+                        return `
+                        <div style="display:flex; flex-direction:column; align-items:center; line-height:1.3;">
+                            <span style="font-size:12px; color:var(--text);">${icon}</span>
+                            <b style="font-size:14px; color:var(--text);">${base || 0}</b>
+                            ${buffHtml}${extra ? `<span style="color:#3b4890;font-size:11px">+@ ${extra}</span>` : ""}
+                        </div>`;
+                    };
+
+                    tbody.innerHTML += `
+                        <tr class="main-row">
+                            <td>${medalHtml}</td>
+                            <td>
+                                <div class="nickname-container">
+                                    <span class="nickname-text">${esc(row.nickname)}</span>
+                                    <div>${iconsHtml}</div>
+                                </div>
+                            </td>
+                            <td>${buffBadge}</td>
+                            <td>${bivalText}</td>
+                            <td><button class="detail-toggle-btn" onclick="toggleDetails(this)">상세 ▼</button></td>
+                        </tr>
+                        <tr class="details-row" style="display:none;">
+                            <td colspan="5">
+                                <div class="details-container">
+                                    <div class="detail-card">
+                                        <span class="d-name">${renderDragonName(row.g1?.name)}</span>
+                                        <div style="display:flex; justify-content:space-around; margin:8px 0; padding-bottom:6px; border-bottom: 1px dashed var(--bd);">
+                                            ${formatDetailStat('HP', row.g1?.base_hp, row.g1?.buff_hp, row.extraMissing ? 0 : row.g1?.extra?.hp)}
+                                            ${formatDetailStat('ATK', row.g1?.base_atk, row.g1?.buff_atk, row.extraMissing ? 0 : row.g1?.extra?.atk)}
+                                            ${formatDetailStat('DEF', row.g1?.base_def, row.g1?.buff_def, row.extraMissing ? 0 : row.g1?.extra?.def)}
+                                        </div>
+                                        <div style="display:flex; justify-content:space-between; align-items:center; padding:4px 5px 0;">
+                                            <span style="font-size:12px; color:var(--dim); font-weight:bold;">Eval: ${g1Eval.toLocaleString()}</span>
+                                            <span style="font-size:13px; color:var(--gold); font-weight:bold;">📊 ${g1Bival.toLocaleString()}</span>
+                                        </div>
+                                    </div>
+                                    <div class="detail-card">
+                                        <span class="d-name">${renderDragonName(row.g2?.name)}</span>
+                                        <div style="display:flex; justify-content:space-around; margin:8px 0; padding-bottom:6px; border-bottom: 1px dashed var(--bd);">
+                                            ${formatDetailStat('HP', row.g2?.base_hp, row.g2?.buff_hp, row.extraMissing ? 0 : row.g2?.extra?.hp)}
+                                            ${formatDetailStat('ATK', row.g2?.base_atk, row.g2?.buff_atk, row.extraMissing ? 0 : row.g2?.extra?.atk)}
+                                            ${formatDetailStat('DEF', row.g2?.base_def, row.g2?.buff_def, row.extraMissing ? 0 : row.g2?.extra?.def)}
+                                        </div>
+                                        <div style="display:flex; justify-content:space-between; align-items:center; padding:4px 5px 0;">
+                                            <span style="font-size:12px; color:var(--dim); font-weight:bold;">Eval: ${g2Eval.toLocaleString()}</span>
+                                            <span style="font-size:13px; color:var(--gold); font-weight:bold;">📊 ${g2Bival.toLocaleString()}</span>
+                                        </div>
+                                    </div>
+                                    <div class="detail-card">
+                                        <span class="d-name">${renderDragonName(row.g3?.name)}</span>
+                                        <div style="display:flex; justify-content:space-around; margin:8px 0; padding-bottom:6px; border-bottom: 1px dashed var(--bd);">
+                                            ${formatDetailStat('HP', row.g3?.base_hp, row.g3?.buff_hp, row.extraMissing ? 0 : row.g3?.extra?.hp)}
+                                            ${formatDetailStat('ATK', row.g3?.base_atk, row.g3?.buff_atk, row.extraMissing ? 0 : row.g3?.extra?.atk)}
+                                            ${formatDetailStat('DEF', row.g3?.base_def, row.g3?.buff_def, row.extraMissing ? 0 : row.g3?.extra?.def)}
+                                        </div>
+                                        <div style="display:flex; justify-content:space-between; align-items:center; padding:4px 5px 0;">
+                                            <span style="font-size:12px; color:var(--dim); font-weight:bold;">Eval: ${g3Eval.toLocaleString()}</span>
+                                            <span style="font-size:13px; color:var(--gold); font-weight:bold;">📊 ${g3Bival.toLocaleString()}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div style="margin-top: 12px; padding: 10px; background: var(--sf2); border: 1px solid var(--bd); border-radius: 8px; text-align: center;">
+                                    <span style="color: var(--text); font-size: 13px; font-weight: bold;">Eval 총합:</span>
+                                    <span style="color: var(--gold); font-size: 16px; font-weight: 900; margin-left: 5px;">${totalEval.toLocaleString()}</span>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                });
+            } catch (error) {
+                tbody.innerHTML = `<tr><td colspan="5" style="color:#dc2626;">순위표를 불러오는 데 실패했습니다.</td></tr>`;
+            }
+        }
+
+        async function submitScoreToDB() {
+            const nickname = document.getElementById("nicknameInput").value.trim();
+            if(!nickname) { alert("닉네임을 입력해주세요!"); return; }
+            if(nickname.length > 10) { alert("닉네임은 10자 이내로 입력해주세요!"); return; }
+            
+            const submitBtn = document.getElementById("submitScoreBtn");
+            submitBtn.innerText = "등록 중... ⏳";
+            submitBtn.disabled = true;
+
+            try {
+                await fetch(GAS_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ 
+                        nickname: nickname, 
+                        score: currentCalculatedBival,
+                        totalBuffCount: currentTotalBuffCount,
+                        totalNerfCount: currentTotalNerfCount, 
+                        g1: currentG1,
+                        g2: currentG2,
+                        g3: currentG3
+                    })
+                });
+                alert(`${nickname} 비밸 주랭 등록 완료`);
+                submitBtn.innerText = "등록 완료 ✅";
+                modal.style.display = "block";
+                loadLeaderboard();
+            } catch (error) {
+                alert("등록에 실패했습니다. 다시 시도해주세요.");
+                submitBtn.innerText = "주간 랭킹에 기록 등록하기";
+                submitBtn.disabled = false;
+            }
+        }
+
+        function setupAutocomplete(inputId, listId) {
+            const input = document.getElementById(inputId);
+            const list = document.getElementById(listId);
+            function renderList(items) {
+                list.innerHTML = '';
+                if (items.length === 0) { list.style.display = 'none'; return; }
+                items.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = 'autocomplete-item'; div.textContent = item;
+                    div.addEventListener('click', function() { input.value = item; list.style.display = 'none'; });
+                    list.appendChild(div);
+                });
+                list.style.display = 'block';
+            }
+            input.addEventListener('input', function() { const val = this.value.trim(); renderList(val ? dragonList.filter(d => d.includes(val)) : dragonList); });
+            input.addEventListener('focus', function() { const val = this.value.trim(); renderList(val ? dragonList.filter(d => d.includes(val)) : dragonList); });
+            document.addEventListener('click', function(e) { if (e.target !== input && e.target !== list && !list.contains(e.target)) { list.style.display = 'none'; } });
+        }
+
+       const noCacheUrl = '?v=' + new Date().getTime();
+        Promise.all([
+            fetch('dragon_db.json' + noCacheUrl).then(res => res.json()),
+            fetch('buff.json' + noCacheUrl).then(res => res.json())
+        ])
+        .then(([dragonData, buffData]) => {
+            dragonDB = dragonData;
+            dragonList = Object.keys(dragonDB).sort();
+            weeklyData = buffData;
+
+            const notice = document.getElementById('sysNotice');
+            
+            const statKor = { 'hp': '체력', 'atk': '공격', 'def': '방어' };
+
+            const renderBlock = (item, isBuff) => {
+                const name = item.e || item.t;
+                const stat = statKor[item.stat] || item.stat;
+                const arrow = isBuff ? '▲' : '▼';
+                const color = isBuff ? 'var(--green)' : 'var(--red)';
+                
+                return `
+                    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                        <div style="color: var(--text); font-weight: 800; font-size: 13px;">${name}</div>
+                        <div style="color: ${color}; font-weight: 800; font-size: 13px; margin-top: 3px;">${arrow} ${stat}</div>
+                    </div>
+                `;
+            };
+
+            let buffHtml = '';
+            if (weeklyData.buff && weeklyData.buff.length > 0) {
+                buffHtml = weeklyData.buff.map(b => renderBlock(b, true)).join('<div style="width: 1px; height: 30px; background: var(--border3); margin: 0 12px;"></div>');
+            } else {
+                buffHtml = `<div style="color:var(--dim); font-size: 13px; font-weight: 800;">없음</div>`;
+            }
+
+            let nerfHtml = '';
+            if (weeklyData.nerf && weeklyData.nerf.length > 0) {
+                nerfHtml = weeklyData.nerf.map(n => renderBlock(n, false)).join('<div style="width: 1px; height: 30px; background: var(--border3); margin: 0 12px;"></div>');
+            } else {
+                nerfHtml = `<div style="color:var(--dim); font-size: 13px; font-weight: 800;">없음</div>`;
+            }
+
+            notice.innerHTML = `
+                <div style="display: flex; width: 100%; justify-content: space-evenly; align-items: stretch; text-align: center;">
+                    <div style="display: flex; flex-direction: column; flex: 1; border-right: 1px solid var(--bd); padding: 0 4px;">
+                        <span style="font-size: 11px; color: var(--dim); font-weight: 800; border-bottom: 1px dashed var(--bd); padding-bottom: 6px; margin-bottom: 8px;">이번 주 버프</span>
+                        <div style="display: flex; justify-content: center; align-items: center; height: 100%;">
+                            ${buffHtml}${extra ? `<span style="color:#3b4890;font-size:11px">+@ ${extra}</span>` : ""}
+                        </div>
+                    </div>
+                    <div style="display: flex; flex-direction: column; flex: 1; padding: 0 4px;">
+                        <span style="font-size: 11px; color: var(--dim); font-weight: 800; border-bottom: 1px dashed var(--bd); padding-bottom: 6px; margin-bottom: 8px;">이번 주 너프</span>
+                        <div style="display: flex; justify-content: center; align-items: center; height: 100%;">
+                            ${nerfHtml}
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            notice.style.backgroundColor = "var(--sf)";
+            notice.style.color = "var(--text)";
+            notice.style.borderColor = "var(--bd)";
+            notice.style.padding = "12px 10px";
+
+            setupAutocomplete('preInput1', 'autoList1');
+            setupAutocomplete('preInput2', 'autoList2');
+            setupAutocomplete('preInput3', 'autoList3');
+        })
+        .catch(err => {
+            console.error(err);
+            const notice = document.getElementById('sysNotice');
+            notice.innerHTML = `⚠️ <b>데이터 로드 실패:</b> JSON 파일을 찾을 수 없습니다.`;
+            notice.style.backgroundColor = "rgba(248, 113, 113, 0.15)";
+            notice.style.color = "#dc2626";
+            notice.style.borderColor = "var(--red)";
+            notice.style.justifyContent = "center";
+            notice.style.padding = "12px 16px";
+        });
+        
+        const imageInput = document.getElementById('imageInput');
+        const imagePreview = document.getElementById('imagePreview');
+        const extractBtn = document.getElementById('extractBtn');
+        const statusDiv = document.getElementById('status');
+        const resultSection = document.getElementById('resultSection');
+        const parsedResults = document.getElementById('parsedResults');
+        const rawText = document.getElementById('rawText');
+
+        imageInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    reviewedOCR = null; window.useReviewedOCR = false; document.getElementById('ocrReview')?.remove(); parsedResults.innerHTML = ''; resultSection.style.display = 'none';
+                    for(let i=1;i<=3;i++){document.getElementById('preInput'+i).value='';document.getElementById('preGrade'+i).value='7.0';}
+                    imagePreview.src = e.target.result;
+                    imagePreview.style.display = 'block';
+                    document.getElementById('preSelectArea').style.display = 'block'; 
+                    
+                    document.getElementById('extractBtnContainer').style.display = 'block';
+                    extractBtn.style.pointerEvents = 'auto';
+                    extractBtn.style.opacity = '1';
+
+                    statusDiv.innerHTML = "계산 준비 완료 ✅";
+                    resultSection.style.display = 'none';
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+
+        extractBtn.addEventListener('click', async () => {
+            extractBtn.style.pointerEvents = 'none';
+            extractBtn.style.opacity = '0.5';
+            statusDiv.innerHTML = "스탯 인식 중... ⏳";
+            parsedResults.innerHTML = '';
+            
+            currentTotalBuffCount = 0; 
+            currentTotalNerfCount = 0; 
+            
+            const selectedNames = [
+                document.getElementById('preInput1').value.trim() || "그룹 1",
+                document.getElementById('preInput2').value.trim() || "그룹 2",
+                document.getElementById('preInput3').value.trim() || "그룹 3"
+            ];
+            const selectedGrades = [
+                document.getElementById('preGrade1').value,
+                document.getElementById('preGrade2').value,
+                document.getElementById('preGrade3').value
+            ];
+
+            try {
+                if (!window.useReviewedOCR || !reviewedOCR) {
+                    showOCRReview(await recognizeCards(imagePreview.src));
+                    statusDiv.textContent = '자동 인식 완료. 아래에서 이름·등급·숫자를 확인한 뒤 계산해 주세요.';
+                    return;
+                }
+                window.useReviewedOCR = false;
+                const statNumbers = [];
+                for(let i=0;i<3;i++) {
+                    const values=[0,1,2,3].map(j=>Number(document.getElementById(`ocr_${i}_${j}`).value));
+                    if(values.some(v=>!Number.isSafeInteger(v)||v<=0)) throw new Error('Eval/스탯에 양의 정수를 입력해 주세요.');
+                    if(values[0]!==values[1]+4*(values[2]+values[3])) throw new Error(`그룹 ${i+1}: Eval 불일치. 숫자를 다시 확인해 주세요.`);
+                    if(!dragonDB[selectedNames[i]]) throw new Error(`그룹 ${i+1}: 데이터베이스에 있는 이름을 선택해 주세요.`);
+                    if(!weeklyData.base_stats?.[selectedGrades[i]]?.[dragonDB[selectedNames[i]].t]) throw new Error(`그룹 ${i+1}: 등급/타입 기준 스탯이 없습니다.`);
+                    statNumbers.push(...values.slice(1));
+                }
+                const processedImgSrc = imagePreview.src;
+                if (statNumbers.length === 9) {
+                    statusDiv.textContent = '확인한 값으로 계산 완료 ✅';
+                    let html = '<div class="groups-wrapper">';
+                    const colors = ['group-1', 'group-2', 'group-3']; 
+                    let totalBival = 0;
+                    
+                    for (let i = 0; i < 9; i += 3) {
+                        const groupNum = Math.floor(i / 3) + 1;
+                        const dragonName = selectedNames[groupNum - 1]; 
+                        const dragonGrade = selectedGrades[groupNum - 1];
+                        
+                        let base_hp = parseInt(statNumbers[i], 10);
+                        let base_atk = parseInt(statNumbers[i+1], 10);
+                        let base_def = parseInt(statNumbers[i+2], 10);
+                        
+                        const calculatedEval = base_hp + ((base_atk + base_def) * 4);
+                        let buff_hp = 0, buff_atk = 0, buff_def = 0;
+                        let infoBadge = `<span class="dragon-type" style="visibility:hidden;">[미지정/미지정]</span>`; 
+                        
+                        let dragonBuffCount = 0;
+                        let dragonNerfCount = 0;
+                        
+                        const dragonInfo = dragonDB[dragonName];
+                        if (dragonInfo) {
+                            const eType = dragonInfo.e;
+                            const tType = dragonInfo.t; 
+                            
+                            infoBadge = `<span class="dragon-type">[${eType} / ${tType}]</span>`;
+
+                            let buffElements = new Set();
+                            let buffTypes = new Set();
+                            let nerfElements = new Set();
+                            let nerfTypes = new Set();
+                            
+                            if (weeklyData.base_stats && weeklyData.base_stats[dragonGrade]) {
+                                const baseStats = weeklyData.base_stats[dragonGrade][tType];
+                                if (baseStats) {
+                                    if (weeklyData.buff) {
+                                        weeklyData.buff.forEach(b => {
+                                            if(b.e) buffElements.add(b.e);
+                                            if(b.t) buffTypes.add(b.t);
+                                            if (b.e === eType || b.t === tType) {
+                                                let amount = Math.floor(baseStats[b.stat] * (b.percent / 100));
+                                                if (b.stat === 'hp') buff_hp += amount;
+                                                if (b.stat === 'atk') buff_atk += amount;
+                                                if (b.stat === 'def') buff_def += amount;
+                                            }
+                                        });
+                                    }
+                                    if (weeklyData.nerf) {
+                                        weeklyData.nerf.forEach(n => {
+                                            if(n.e) nerfElements.add(n.e);
+                                            if(n.t) nerfTypes.add(n.t);
+                                            if (n.e === eType || n.t === tType) {
+                                                let amount = Math.floor(baseStats[n.stat] * (n.percent / 100));
+                                                if (n.stat === 'hp') buff_hp -= amount;
+                                                if (n.stat === 'atk') buff_atk -= amount;
+                                                if (n.stat === 'def') buff_def -= amount;
+                                            }
+                                        });
+                                    }
+                                }
+                            }
+                            if (buffElements.has(eType)) dragonBuffCount++;
+                            if (buffTypes.has(tType)) dragonBuffCount++;
+                            if (nerfElements.has(eType)) dragonNerfCount++; 
+                            if (nerfTypes.has(tType)) dragonNerfCount++;    
+                        }
+                        
+                        currentTotalBuffCount += dragonBuffCount;
+                        currentTotalNerfCount += dragonNerfCount;
+
+                        let final_hp = base_hp + buff_hp;
+                        let final_atk = base_atk + buff_atk;
+                        let final_def = base_def + buff_def;
+                        
+                        let groupBival = final_hp * final_atk * final_def;
+                        totalBival += groupBival;
+                        
+                        let currentGroupData = { 
+                            name: dragonName, grade: dragonGrade, 
+                            base_hp: base_hp, buff_hp: buff_hp, 
+                            base_atk: base_atk, buff_atk: buff_atk, 
+                            base_def: base_def, buff_def: buff_def, 
+                            bival: groupBival 
+                        };
+                        if (groupNum === 1) currentG1 = currentGroupData;
+                        if (groupNum === 2) currentG2 = currentGroupData;
+                        if (groupNum === 3) currentG3 = currentGroupData;
+
+                        const formatStat = (base, buff) => {
+                            if (buff > 0) return `<b>${base}</b> <div class="stat-buff-plus">(+${buff})</div>`;
+                            if (buff < 0) return `<b>${base}</b> <div class="stat-buff-minus">(${buff})</div>`;
+                            return `<b>${base}</b> <div class="stat-buff-plus" style="visibility:hidden;">(+0)</div>`;
+                        };
+
+                        let gradeHtml = '';
+                        if (dragonGrade === '9.0') {
+                            gradeHtml = `<img src="data:image/png;base64,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" alt="9.0" style="height: 24px;">`;
+                        } else if (dragonGrade === '8.0') {
+                            gradeHtml = `<img src="data:image/png;base64,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" alt="8.0" style="height: 24px;">`;
+                        } else {
+                            gradeHtml = `<span class="grade-badge">⭐ ${dragonGrade} 등급</span>`;
+                        }
+
+                        html += `
+                            <div class="group ${colors[groupNum-1]}">
+                                <div class="group-header">
+                                    <span class="dragon-title">
+                                        <img src="./images/icons/${dragonName}.png" alt="${dragonName}" class="dragon-icon" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+                                        <span style="display:none;">🐲</span> 
+                                        ${dragonName} ${infoBadge}
+                                    </span>
+                                    ${gradeHtml}
+                                </div>
+                                <div class="badges-container">
+                                    <span class="eval-badge">Eval: ${calculatedEval}</span>
+                                    <span class="badge-success">스탯 인식 완료</span>
+                                </div>
+                                
+                                <div class="stat-container">
+                                    <div class="stat-box stat-hp">HP${formatStat(base_hp, buff_hp)}</div>
+                                    <div class="stat-box stat-atk">ATK${formatStat(base_atk, buff_atk)}</div>
+                                    <div class="stat-box stat-def">DEF${formatStat(base_def, buff_def)}</div>
+                                </div>
+                                
+                                <div class="bival-box">
+                                    <span class="bival-label">📊 비밸 (버프 적용):</span>
+                                    <span class="bival-score">${groupBival.toLocaleString()}</span>
+                                </div>
+                            </div>
+                        `;
+                    }
+                    html += '</div>';
+                    currentCalculatedBival = totalBival;
+
+                    html += `
+                        <div style="margin-top: 25px; text-align: center;">
+                            <button class="toggle-debug-btn" onclick="const wrapper = document.getElementById('debugImageWrapper'); wrapper.style.display = wrapper.style.display === 'none' ? 'block' : 'none'; this.innerText = wrapper.style.display === 'none' ? '스탯 확인용 이미지 표시하기 ▼' : '스탯 확인용 이미지 닫기 ▲';">스탯 확인용 이미지 표시하기 ▼</button>
+                            <div id="debugImageWrapper" style="display: none; margin-top: 15px;">
+                                <img src="${processedImgSrc}" style="max-width: 100%; border: 1px solid var(--bd); border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
+                            </div>
+                        </div>
+                    `;
+
+                    html += `
+                        <div class="total-bival-box">
+                            🏆 이번 주 총합 비밸
+                            <span>${totalBival.toLocaleString()}</span>
+                            <div class="submit-section">
+                                <input type="text" id="nicknameInput" placeholder="닉네임 입력 (최대 10자)" maxlength="10">
+                                <button id="submitScoreBtn" onclick="submitScoreToDB()">주간 랭킹에 기록 등록하기</button>
+                            </div>
+                        </div>
+                    `;
+                    parsedResults.innerHTML = html;
+                } else {
+                    parsedResults.innerHTML = `
+                        <div style="background: rgba(248, 113, 113, 0.15); color: #dc2626; border: 1px solid var(--red); padding:15px; border-radius:8px; text-align:center; font-weight:bold; margin-bottom: 20px;">
+                            ❌ 스탯을 안정적으로 추출하지 못했습니다.<br>스크린샷이 덱 설정 화면 전체를 포함하는지 확인해 주세요.
+                        </div>
+                        <div style="text-align: center;">
+                            <button class="toggle-debug-btn" onclick="const wrapper = document.getElementById('debugImageWrapper'); wrapper.style.display = wrapper.style.display === 'none' ? 'block' : 'none'; this.innerText = wrapper.style.display === 'none' ? '스탯 확인용 이미지 표시하기 ▼' : '스탯 확인용 이미지 닫기 ▲';">스탯 확인용 이미지 표시하기 ▼</button>
+                            <div id="debugImageWrapper" style="display: none; margin-top: 15px;">
+                                <img src="${processedImgSrc}" style="max-width: 100%; border: 1px solid var(--bd); border-radius: 8px;">
+                            </div>
+                        </div>
+                    `;
+                    statusDiv.innerHTML = "인식 실패 ❌";
+                }
+                
+                resultSection.style.display = 'block';
+
+            } catch (error) {
+                console.error(error);
+                statusDiv.textContent = "오류: " + (error.message || "처리 실패");
+            } finally {
+                extractBtn.style.pointerEvents = 'auto';
+                extractBtn.style.opacity = '1';
+            }
+        });
+
+const GRADE_IMAGES = {"8.0": "data:image/png;base64,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", "9.0": "data:image/png;base64,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"};
+
+// OCR v2: card-local crops; no arithmetic invention of a missing digit.
+let reviewedOCR = null;
+let leaderboardCache = null;
+const extraBuff = {hp:0, atk:0, def:0};
+const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function loadImage(src) { return new Promise((resolve,reject)=>{const i=new Image(); i.onload=()=>resolve(i); i.onerror=()=>reject(new Error('이미지를 읽지 못했습니다.')); i.src=src;}); }
+function canvasOf(img) {const c=document.createElement('canvas'); c.width=img.width;c.height=img.height;c.getContext('2d').drawImage(img,0,0);return c;}
+function detectCards(canvas) {
+ const {width:w,height:h}=canvas, d=canvas.getContext('2d').getImageData(0,0,w,h).data;
+ const beige=(x,y)=>{const i=(y*w+x)*4,r=d[i],g=d[i+1],b=d[i+2];return r>160&&g>150&&b>125&&Math.max(r,g,b)-Math.min(r,g,b)<65;};
+ function runs(y){let a=[],start=-1;for(let x=0;x<=w;x++){if(x<w&&beige(x,y)){if(start<0)start=x;}else if(start>=0){if(x-start>w*.10&&x-start<w*.26)a.push({x:start,w:x-start});start=-1;}}return a;}
+ const candidates=[];
+ for(let y=Math.floor(h*.46);y<h*.76;y++) {const r=runs(y);for(let i=0;i+2<r.length;i++){const t=r.slice(i,i+3), avg=t.reduce((s,c)=>s+c.w,0)/3;
+ if(t.every(c=>Math.abs(c.w-avg)<avg*.12)&&Math.abs((t[1].x-t[0].x)-(t[2].x-t[1].x))<avg*.12)candidates.push({y,r:t});}}
+ if(!candidates.length)throw new Error('카드 3개의 Eval 이름표를 찾지 못했습니다. 카드 전체가 보이는 원본을 사용해 주세요.');
+ // Eval band is the first pale band in the lower half, followed by a dark stats band.
+ let chosen=null;
+ for(const c of candidates){const mid=c.r[1].x+c.r[1].w/2;let bottom=c.y;while(bottom<h&&beige(Math.floor(mid),bottom))bottom++;
+ if(bottom-c.y<3)continue;
+ const probe=Math.min(h-1,Math.round(bottom+c.r[1].w*.16));
+ if(!beige(Math.floor(mid),probe)){chosen={...c,bottom};break;}}
+ if(!chosen)throw new Error('스탯 영역 경계 확인 실패. 다른 스크린샷을 사용해 주세요.');
+ return chosen.r.map(r=>{
+ let top=chosen.y;const cx=Math.floor(r.x+r.w*.12);while(top>0&&beige(cx,top-1))top--;
+ let nameY=-1;
+ for(let y=top-Math.round(r.w*.5);y>Math.max(0,top-r.w*1.1);y--){let hits=0;for(let x=Math.round(r.x+r.w*.2);x<r.x+r.w*.95;x++)if(beige(x,y))hits++;
+ if(hits>r.w*.40){nameY=y;break;}}
+ if(nameY<0)throw new Error('드래곤 이름표 경계 확인 실패.');
+ let nameTop=nameY;while(nameTop>0&&beige(Math.floor(r.x+r.w*.85),nameTop-1))nameTop--;
+ return {...r,evalTop:top,evalBottom:chosen.bottom,nameTop,nameBottom:nameY+1};
+ });
+}
+function cropOCR(canvas,x,y,w,h,invert=false,threshold=null,scale=5) {
+ const c=document.createElement('canvas'),pad=12;c.width=Math.ceil(w*scale)+pad*2;c.height=Math.ceil(h*scale)+pad*2;
+ const ctx=c.getContext('2d');ctx.fillStyle='white';ctx.fillRect(0,0,c.width,c.height);ctx.imageSmoothingEnabled=true;
+ ctx.drawImage(canvas,x,y,w,h,pad,pad,w*scale,h*scale);
+ const im=ctx.getImageData(pad,pad,Math.ceil(w*scale),Math.ceil(h*scale));
+ for(let i=0;i<im.data.length;i+=4){let v=.299*im.data[i]+.587*im.data[i+1]+.114*im.data[i+2];if(invert)v=255-v;if(threshold!==null)v=v<threshold?0:255;im.data[i]=im.data[i+1]=im.data[i+2]=v;}
+ ctx.putImageData(im,pad,pad);return c;
+}
+function editDistance(a,b){let row=Array.from({length:b.length+1},(_,i)=>i);for(let i=1;i<=a.length;i++){let next=[i];for(let j=1;j<=b.length;j++)next[j]=Math.min(next[j-1]+1,row[j]+1,row[j-1]+(a[i-1]!==b[j-1]));row=next;}return row[b.length];}
+function matchDragon(text){const norm=s=>s.normalize('NFKC').replace(/[^가-힣a-zA-Z]/g,'').toLowerCase(),q=norm(text);
+ if(!q)return {name:'',note:'이름 인식 실패 — 직접 선택'};
+ const ranked=dragonList.map(name=>({name,score:1-editDistance(q,norm(name))/Math.max(q.length,norm(name).length)})).sort((a,b)=>b.score-a.score);
+ if(ranked[0]&&(ranked[0].score===1||(ranked[0].score>=.72&&ranked[0].score-(ranked[1]?.score||0)>=.18)))return {name:ranked[0].name,note:`이름 OCR: ${text.trim()}`};
+ return {name:'',note:`이름 확인 필요 (${text.trim() || '인식 실패'})`};
+}
+async function detectGrade(canvas,card){
+ const templates=await Promise.all(Object.entries(GRADE_IMAGES).map(async([grade,src])=>({grade,canvas:canvasOf(await loadImage(src))})));
+ const ctx=canvas.getContext('2d'), {x,w,nameBottom}=card;
+ const x0=Math.max(0,Math.floor(x+w*.26)),y0=Math.max(0,Math.floor(nameBottom)),rw=Math.floor(w*.48),rh=Math.floor(w*.25);
+ const source=ctx.getImageData(x0,y0,rw,rh).data;
+ const pink=(r,g,b)=>r>120&&r>g*1.3&&b>g*1.05;
+ const mask=new Uint8Array(rw*rh);for(let i=0;i<mask.length;i++)mask[i]=pink(source[i*4],source[i*4+1],source[i*4+2])?1:0;
+ let best={score:0,grade:'7.0'}, runner=0;
+ for(const template of templates){let bestTemplate=0;
+ for(let size=w*.15;size<=w*.29;size+=Math.max(1,w*.015)){
+ const tw=Math.round(size),th=Math.round(size*template.canvas.height/template.canvas.width),c=document.createElement('canvas');c.width=tw;c.height=th;
+ c.getContext('2d').drawImage(template.canvas,0,0,tw,th);const td=c.getContext('2d').getImageData(0,0,tw,th).data,pts=[];
+ for(let i=0;i<tw*th;i++)if(td[i*4+3]>80&&pink(td[i*4],td[i*4+1],td[i*4+2]))pts.push([i%tw,Math.floor(i/tw)]);
+ if(pts.length<5)continue;
+ for(let yy=0;yy<=rh-th;yy+=2)for(let xx=0;xx<=rw-tw;xx+=2){let hit=0,total=0;for(const [px,py] of pts)hit+=mask[(yy+py)*rw+xx+px];if(hit/pts.length<.5)continue;
+ for(let py=0;py<th;py++)for(let px=0;px<tw;px++)total+=mask[(yy+py)*rw+xx+px];
+ bestTemplate=Math.max(bestTemplate,2*hit/(pts.length+total));}}
+ if(bestTemplate>best.score){runner=best.score;best={grade:template.grade,score:bestTemplate};}else runner=Math.max(runner,bestTemplate);
+ }
+ const pixels=mask.reduce((a,b)=>a+b,0);
+ if(best.score<.52)return {grade:'7.0',note:pixels>8?'별 판독 불확실 — 7.0 임시값, 확인 필요':'별 없음: 7.0'};
+ return {...best,note:`별 ${best.grade} (일치도 ${Math.round(best.score*100)}%)${best.score-runner<.08?' — 확인 필요':''}`};
+}
+async function recognizeCards(src){
+ const canvas=canvasOf(await loadImage(src)),cards=detectCards(canvas),groups=[];let worker,nameWorker;
+ try{
+ worker=await Tesseract.createWorker('eng');await worker.setParameters({tessedit_pageseg_mode:'7',tessedit_char_whitelist:'0123456789',user_defined_dpi:'300'});
+ for(let g=0;g<cards.length;g++){
+ statusDiv.textContent=`숫자 검증 중… ${g+1}/3`;const c=cards[g],fields=[];
+ const regions=[{x:c.x+c.w*.50,y:c.evalTop,w:c.w*.28,h:c.evalBottom-c.evalTop,inv:false},...[0,1,2].map(j=>({x:c.x+c.w*(j/3+.025),y:c.evalBottom+c.w*.115,w:c.w*.285,h:c.w*.105,inv:true}))];
+ for(const region of regions){const votes=new Map();for(const threshold of [null,110,155]){
+ const crop=cropOCR(canvas,region.x,region.y,region.w,region.h,region.inv,threshold);
+ const {data}=await worker.recognize(crop);const text=data.text.trim();if(!/^\d{2,5}$/.test(text))continue;
+ const n=Number(text);let v=votes.get(n)||{n,count:0,confidence:0};v.count++;v.confidence+=data.confidence;votes.set(n,v);}
+ fields.push([...votes.values()].sort((a,b)=>b.count-a.count||b.confidence-a.confidence));}
+ let values=fields.map(f=>f[0]?.n??null),solutions=[];
+ for(const e of fields[0])for(const hp of fields[1])for(const atk of fields[2])for(const def of fields[3])if(hp.n+4*(atk.n+def.n)===e.n)solutions.push([e.n,hp.n,atk.n,def.n]);
+ // Only accept a unique combination actually seen by OCR, never solve for HP.
+ if(solutions.length===1)values=solutions[0];
+ const valid=values.every(v=>v!==null)&&values[0]===values[1]+4*(values[2]+values[3]);
+ const grade=await detectGrade(canvas,c);
+ groups.push({values,valid,grade,fields,card:c});
+ }
+ try {nameWorker=await Tesseract.createWorker('kor+eng');await nameWorker.setParameters({tessedit_pageseg_mode:'7'});
+ for(const group of groups){const c=group.card;const crop=cropOCR(canvas,c.x+c.w*.19,c.nameTop,c.w*.77,c.nameBottom-c.nameTop,false,null,5);const {data}=await nameWorker.recognize(crop);group.name=matchDragon(data.text);}
+ }catch(error){for(const group of groups)group.name={name:'',note:'한글 OCR 로딩 실패 — 이름 직접 선택'};}
+ return {groups,canvas};
+ }finally{if(worker)await worker.terminate();if(nameWorker)await nameWorker.terminate();}
+}
+function showOCRReview(result){
+ reviewedOCR=result;
+ let panel=document.getElementById('ocrReview');if(!panel){panel=document.createElement('div');panel.id='ocrReview';document.getElementById('preSelectArea').append(panel);}
+ panel.innerHTML='<h3>인식 결과 확인 · 수정</h3><p>Eval = 체력 + 4 × (공격력 + 방어력). 일치해도 정답을 보장하지 않으므로 원본과 확인해 주세요.</p>'+result.groups.map((g,i)=>`<fieldset style="margin:10px 0;padding:12px"><legend>그룹 ${i+1} · ${g.valid?'Eval 일치':'⚠ 숫자 확인 필요'}</legend><p>${esc(g.name.note)} / ${esc(g.grade.note)}</p><div style="display:flex;flex-wrap:wrap;gap:8px">${['Eval','HP','ATK','DEF'].map((f,j)=>`<label>${f}<input aria-label="그룹 ${i+1} ${f}" type="number" min="1" step="1" id="ocr_${i}_${j}" value="${g.values[j]??''}" style="display:block;width:90px;padding:8px"></label>`).join('')}</div></fieldset>`).join('')+'<label><input id="ocrConfirmed" type="checkbox"> 원본 이미지와 이름·등급·숫자를 확인했습니다.</label><button type="button" id="applyOCR">확인한 값으로 계산</button>';
+ result.groups.forEach((g,i)=>{document.getElementById(`preInput${i+1}`).value=g.name.name;document.getElementById(`preGrade${i+1}`).value=g.grade.grade;});
+ panel.addEventListener('input',e=>{if(e.target.id!=='ocrConfirmed')document.getElementById('ocrConfirmed').checked=false;});
+ document.getElementById('applyOCR').onclick=()=>{if(!document.getElementById('ocrConfirmed').checked){alert('원본과 대조한 뒤 확인란을 선택해 주세요.');return;}window.useReviewedOCR=true;extractBtn.click();};
+ rawText.value=result.groups.map((g,i)=>`그룹 ${i+1}: ${g.name.note}; ${g.grade.note}\n후보: ${g.fields.map(f=>f.map(v=>`${v.n}(${v.count}회)`).join('/')).join(' | ')}`).join('\n');
+ panel.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+function extraForGroup(g){
+ if(!g)return {hp:0,atk:0,def:0,missing:true};
+ const grade=g.grade||g.dragonGrade, type=dragonDB[g.name]?.t;
+ const base=weeklyData.base_stats?.[grade]?.[type];
+ if(!base)return {hp:0,atk:0,def:0,missing:true};
+ const result={};for(const stat of ['hp','atk','def']){if(!Number.isFinite(Number(base[stat])))return {hp:0,atk:0,def:0,missing:true};result[stat]=Math.floor(Number(base[stat])*extraBuff[stat]/100);}return result;
+}
+function simulateRows(rows){return rows.map(original=>{const row=structuredClone(original);let sum=0,missing=false;for(const key of ['g1','g2','g3']){const g=row[key],extra=extraForGroup(g);if(extra.missing)missing=true;if(g){g.extra=extra;sum+=(Number(g.base_hp)+Number(g.buff_hp||0)+extra.hp)*(Number(g.base_atk)+Number(g.buff_atk||0)+extra.atk)*(Number(g.base_def)+Number(g.buff_def||0)+extra.def);}}row.extraMissing=missing;row.originalScore=Number(original.score);row.score=Object.values(extraBuff).some(Boolean)&&!missing?sum:Number(original.score);return row;}).sort((a,b)=>b.score-a.score);}
+function setupExtraBuff(){const table=document.querySelector('.rank-table'),box=document.createElement('div');box.style='margin:14px 0;padding:12px;border:1px solid var(--bd);border-radius:8px';box.innerHTML='<b>추가 버프 시뮬레이션 (+@)</b><p style="font-size:12px">모든 덱에 동일 적용 · 기준 스탯 × 입력 % (소수점 버림). 기존 버프·너프에 더하며 서버 기록은 변경하지 않습니다.<br>등급 정보가 없는 과거 기록은 미적용으로 표시합니다.</p><div style="display:flex;gap:8px;flex-wrap:wrap">'+['hp','atk','def'].map((s,i)=>`<label>${['체력','공격력','방어력'][i]} +% <input id="extra_${s}" type="number" min="0" max="1000" step="0.1" value="0" style="width:75px;padding:6px"></label>`).join('')+'</div><button type="button" id="resetExtra" style="width:auto;padding:6px;margin-top:8px;font-size:12px">초기화</button>';table.before(box);
+ for(const s of ['hp','atk','def'])document.getElementById('extra_'+s).addEventListener('input',e=>{const n=Number(e.target.value);if(!e.target.validity.valid||!Number.isFinite(n))return;extraBuff[s]=n;if(leaderboardCache)loadLeaderboard(true);});
+ document.getElementById('resetExtra').onclick=()=>{for(const s of ['hp','atk','def']){extraBuff[s]=0;document.getElementById('extra_'+s).value=0;}if(leaderboardCache)loadLeaderboard(true);};
+}
+setupExtraBuff();
+
+    </script>
+</div>
+</body>
+</html>
