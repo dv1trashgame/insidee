@@ -401,7 +401,7 @@
                                 <div class="details-container">
                                     <div class="detail-card">
                                         <span class="d-name">${renderDragonName(row.g1?.name)}</span>
-                                        <div style="display:flex; justify-style:space-around; margin:8px 0; padding-bottom:6px; border-bottom: 1px dashed var(--bd);">
+                                        <div style="display:flex; justify-content:space-around; margin:8px 0; padding-bottom:6px; border-bottom: 1px dashed var(--bd);">
                                             ${formatDetailStat('HP', row.g1?.base_hp)}
                                             ${formatDetailStat('ATK', row.g1?.base_atk)}
                                             ${formatDetailStat('DEF', row.g1?.base_def)}
@@ -546,7 +546,6 @@
 
         // 등급 별 이미지 자동 검출 함수 (9.0 / 8.0 / 7.0)
         function detectGradeFromCardCanvas(ctx, cardW, cardH) {
-            // 카드 상단 중앙 (별 뱃지가 위치하는 영역) 크롭
             const sx = Math.floor(cardW * 0.25);
             const sy = Math.floor(cardH * 0.20);
             const sw = Math.floor(cardW * 0.50);
@@ -555,17 +554,15 @@
             const imgData = ctx.getImageData(sx, sy, sw, sh);
             const data = imgData.data;
 
-            let pinkWingPixels = 0;   // 9.0 등급: 붉은 별 양옆의 분홍색 날개 피셀
-            let purpleStarPixels = 0; // 8.0 등급: 보라색 별 피셀
+            let pinkWingPixels = 0;   // 9.0 등급: 붉은 별 양옆의 분홍색 날개
+            let purpleStarPixels = 0; // 8.0 등급: 보라색 별
 
             for (let i = 0; i < data.length; i += 4) {
                 const r = data[i], g = data[i+1], b = data[i+2];
 
-                // 9.0 등급 날개 (분홍색/마젠타 톤: R, B가 높고 G가 낮음)
                 if (r > 190 && b > 110 && g < 160 && (r - g) > 40 && (b - g) > 15) {
                     pinkWingPixels++;
                 }
-                // 8.0 등급 별 (보라색 톤: B, R이 높고 G가 낮음)
                 if (r > 130 && b > 150 && g < 100 && (b - g) > 50) {
                     purpleStarPixels++;
                 }
@@ -573,7 +570,7 @@
 
             if (pinkWingPixels >= 10) return "9.0";
             if (purpleStarPixels >= 10) return "8.0";
-            return "7.0"; // 별이 없는 경우 7.0
+            return "7.0";
         }
 
         // 스탯 수치 파싱 및 수학적 자동 교정 (Eval = HP + (ATK + DEF)*4)
@@ -584,7 +581,6 @@
             let nums = (text.match(/\d+/g) || []).map(n => parseInt(n, 10)).filter(n => n >= 10 && n <= 15000);
             if (nums.length < 3) return null;
 
-            // Eval 수치 찾기 (보통 4000 ~ 12000 사이)
             let evalCandidates = nums.filter(n => n >= 4000 && n <= 12000);
             let statCandidates = nums.filter(n => n >= 50 && n < 5000);
 
@@ -597,15 +593,12 @@
                 if (realEval) {
                     const calcEval = hp + (atk + def) * 4;
                     if (calcEval !== realEval) {
-                        // 1. HP 오류 교정 시도
                         const expectedHp = realEval - (atk + def) * 4;
                         if (expectedHp >= 500 && expectedHp <= 6000) hp = expectedHp;
                         else {
-                            // 2. ATK 오류 교정 시도
                             const expectedAtk = (realEval - hp) / 4 - def;
                             if (Number.isInteger(expectedAtk) && expectedAtk >= 100 && expectedAtk <= 2000) atk = expectedAtk;
                             else {
-                                // 3. DEF 오류 교정 시도
                                 const expectedDef = (realEval - hp) / 4 - atk;
                                 if (Number.isInteger(expectedDef) && expectedDef >= 100 && expectedDef <= 2000) def = expectedDef;
                             }
@@ -653,7 +646,6 @@
             const ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0);
 
-            // 3개의 카드 위치 파악 (상대적 비율 기준)
             const cards = [
                 { left: Math.floor(img.width * 0.20), width: Math.floor(img.width * 0.21), top: Math.floor(img.height * 0.22), height: Math.floor(img.height * 0.58) },
                 { left: Math.floor(img.width * 0.41), width: Math.floor(img.width * 0.20), top: Math.floor(img.height * 0.22), height: Math.floor(img.height * 0.58) },
@@ -666,11 +658,12 @@
 
             let fullRawText = "";
             let groupResults = [];
+            let croppedImages = [];
 
             for (let i = 0; i < 3; i++) {
                 const card = cards[i];
 
-                // 1. 등급 자동 검출 (9.0 / 8.0 / 7.0)
+                // 1. 등급 자동 검출
                 const cardCanvas = document.createElement('canvas');
                 cardCanvas.width = card.width;
                 cardCanvas.height = card.height;
@@ -680,7 +673,7 @@
                 const detectedGrade = detectGradeFromCardCanvas(cardCtx, card.width, card.height);
                 document.getElementById(`preGrade${i+1}`).value = detectedGrade;
 
-                // 2. 드래곤 이름 OCR 및 매칭
+                // 2. 드래곤 이름 크롭 및 OCR
                 const nameCanvas = document.createElement('canvas');
                 nameCanvas.width = card.width * 2;
                 nameCanvas.height = Math.floor(card.height * 0.18) * 2;
@@ -694,7 +687,7 @@
                     document.getElementById(`preInput${i+1}`).value = matchedName;
                 }
 
-                // 3. 스탯 OCR (하단 흰색 스탯 상자 영역만 고해상도 크롭)
+                // 3. 스탯 영역 크롭 및 OCR
                 const statCanvas = document.createElement('canvas');
                 statCanvas.width = card.width * 3;
                 statCanvas.height = Math.floor(card.height * 0.38) * 3;
@@ -707,16 +700,21 @@
 
                 const parsed = parseAndCorrectStats(statRet.data.text);
                 groupResults.push(parsed);
+
+                croppedImages.push({
+                    nameImg: nameCanvas.toDataURL('image/png'),
+                    statImg: statCanvas.toDataURL('image/png')
+                });
             }
 
             await workerKor.terminate();
             await workerNum.terminate();
 
             rawText.value = fullRawText;
-            renderCalculationResults(groupResults);
+            renderCalculationResults(groupResults, croppedImages);
         }
 
-        function renderCalculationResults(groupResults) {
+        function renderCalculationResults(groupResults, croppedImages = []) {
             const selectedNames = [
                 document.getElementById('preInput1').value.trim() || "그룹 1",
                 document.getElementById('preInput2').value.trim() || "그룹 2",
@@ -793,6 +791,28 @@
             html += '</div>';
 
             currentCalculatedBival = totalBival;
+
+            if (croppedImages && croppedImages.length > 0) {
+                html += `
+                    <div style="margin-top: 20px; text-align: center;">
+                        <button class="toggle-debug-btn" onclick="const wrapper = document.getElementById('cropDebugWrapper'); wrapper.style.display = wrapper.style.display === 'none' ? 'block' : 'none'; this.innerText = wrapper.style.display === 'none' ? '인식용 자른 이미지 표시하기 ▼' : '인식용 자른 이미지 닫기 ▲';">인식용 자른 이미지 표시하기 ▼</button>
+                        <div id="cropDebugWrapper" style="display: none; margin-top: 15px; padding: 15px; background: var(--sf2); border: 1px solid var(--bd); border-radius: 8px;">
+                            <h4 style="margin: 0 0 12px 0; color: var(--text); font-size: 14px;">🔍 OCR 인식 영역 크롭 이미지</h4>
+                            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
+                                ${croppedImages.map((crop, idx) => `
+                                    <div style="background: var(--sf); padding: 8px; border-radius: 6px; border: 1px solid var(--border3); text-align:center;">
+                                        <span style="font-weight:800; font-size:12px; display:block; margin-bottom:6px; color:var(--gold);">그룹 ${idx + 1}</span>
+                                        <div style="font-size:11px; color:var(--dim); margin-bottom:3px; font-weight:bold;">[이름 영역]</div>
+                                        <img src="${crop.nameImg}" style="max-width:100%; border:1px solid var(--bd); border-radius:4px; margin-bottom:10px; background:#fff;">
+                                        <div style="font-size:11px; color:var(--dim); margin-bottom:3px; font-weight:bold;">[스탯 영역]</div>
+                                        <img src="${crop.statImg}" style="max-width:100%; border:1px solid var(--bd); border-radius:4px; background:#fff;">
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
 
             html += `
                 <div class="total-bival-box">
