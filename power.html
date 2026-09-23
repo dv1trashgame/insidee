@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light only">
+    <meta name="supported-color-schemes" content="light">
+    <title>길전세팅 전투력 측정기</title>
+    <link href="https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <style>
+        :root {
+            --bg: #f5f5f5; --bg2: #ffffff; --bg3: #ebebeb;
+            --border: #d5d5d5; --border2: #cccccc; --border3: #e0e0e0;
+            --text: #333333; --text2: #555555; --text3: #666666; --text4: #999999;
+            --accent: #3b4890; --accent-bg: rgba(59, 72, 144, 0.12); --accent-border: rgba(59, 72, 144, 0.30);
+            
+            --sf: var(--bg2); --sf2: var(--bg3); --bd: var(--border);
+            --gold: var(--accent); --gold2: #4a5a9f;
+            --dim: var(--text3); --dimmer: var(--text4);
+            --red: #f87171; --green: #4ade80; --blue: #60a5fa;
+            --hpc: #fbbf24; --atc: #f87171; --dfc: #60a5fa;
+            color-scheme: light !important;
+        }
+
+        * { box-sizing: border-box; }
+
+        html, body {
+            overflow-x: hidden;
+            width: 100%;
+        }
+
+        body { font-family: 'Nanum Gothic', -apple-system, sans-serif; margin: 0; padding: 0; background-color: var(--bg); color: var(--text); font-size: 14px; }
+        .page-wrap { max-width: 1000px; margin: 0 auto; padding: 30px 20px; }
+
+        .hd { display: flex; align-items: center; gap: 14px; padding: 12px 20px; background: var(--sf); border-bottom: 2px solid var(--gold); position: sticky; top: 0; z-index: 100; }
+        .hd-icon { width: 32px; height: 32px; flex-shrink: 0; border-radius: 4px; background-color: var(--border3); overflow: hidden; display: flex; justify-content: center; align-items: center; }
+        .hd-icon img { width: 100%; height: 100%; object-fit: cover; }
+        .hd-t { font-size: 15px; font-weight: 800; color: var(--gold); }
+        .hd-s { font-size: 11px; color: var(--dim); margin-top: 2px; }
+        .hd-spacer { flex: 1; }
+        h2 { color: var(--gold); text-align: center; font-weight: 800; margin-bottom: 30px; letter-spacing: -0.5px; position: relative; }
+        
+        .upload-section, .result-section { background: var(--sf); padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); margin-bottom: 25px; border: 1px solid var(--bd); }
+        
+        #imagePreview { width: 100%; height: auto; margin-top: 15px; border-radius: 8px; display: none; border: 1px solid var(--bd); box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        
+        button { background: linear-gradient(135deg, var(--gold2), var(--gold)); color: white; padding: 16px 20px; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; margin-top: 20px; font-weight: 800; width: 100%; box-shadow: 0 4px 10px rgba(59, 72, 144, 0.2); transition: all 0.2s ease; }
+        button:hover { transform: translateY(-2px); opacity: 0.9; }
+        button:disabled { background: var(--sf2); box-shadow: none; transform: none; cursor: not-allowed; color: var(--dim); border: 1px solid var(--bd); }
+        #status { margin-top: 20px; color: var(--dim); font-weight: bold; text-align: center; font-size: 15px; }
+        
+        .groups-wrapper { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px; align-items: stretch; }
+        .group { background: var(--sf2); padding: 20px; border-radius: 8px; border: 1px solid var(--bd); border-left-width: 6px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); display: flex; flex-direction: column; }
+        .group-1 { border-left-color: #ff4757; } 
+        .group-2 { border-left-color: #ffa502; } 
+        .group-3 { border-left-color: #2ed573; } 
+        
+        .group-header { display: flex; flex-direction: column; align-items: flex-start; border-bottom: 1px solid var(--bd); padding-bottom: 12px; margin-bottom: 15px; gap: 8px; }
+        .dragon-title { font-size: 18px; font-weight: 800; color: var(--text); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .dragon-type { font-size: 12px; color: var(--dim); font-weight: normal; }
+        .dragon-icon { width: 24px; height: 24px; vertical-align: middle; border-radius: 4px; object-fit: cover; }
+        
+        .badges-container { display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px; align-items: flex-start; }
+        .eval-badge { background-color: var(--accent-bg); color: var(--gold); padding: 5px 10px; border-radius: 4px; font-size: 13px; font-weight: bold; border: 1px solid var(--accent-border); }
+        .badge-success { background-color: rgba(74, 222, 128, 0.15); color: #16a34a; padding: 5px 10px; border-radius: 4px; font-size: 13px; font-weight: bold; border: 1px solid var(--green); }
+        .grade-badge { background-color: rgba(251, 191, 36, 0.15); color: #d97706; padding: 5px 10px; border-radius: 4px; font-size: 13px; font-weight: bold; border: 1px solid var(--hpc); }
+        
+        .stat-container { display: flex; gap: 8px; justify-content: space-between; margin-bottom: 15px; align-items: stretch; }
+        .stat-box { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 12px 4px; border-radius: 6px; text-align: center; font-size: 12px; font-weight: bold; line-height: 1.2; }
+        .stat-hp { background-color: rgba(251, 191, 36, 0.15); border: 1px solid #fbbf24; color: #d97706; }
+        .stat-atk { background-color: rgba(248, 113, 113, 0.15); border: 1px solid #f87171; color: #dc2626; }
+        .stat-def { background-color: rgba(96, 165, 250, 0.15); border: 1px solid #60a5fa; color: #2563eb; }
+        .stat-box b { font-size: 18px; display: block; margin-top: 4px; color: var(--text); letter-spacing: 0.5px; }
+
+        .bival-box { text-align: center; background: var(--sf); padding: 12px; border-radius: 6px; border: 1px dashed var(--bd); margin-top: auto; }
+        .bival-label { font-size: 12px; color: var(--dim); margin-bottom: 4px; display: block; }
+        .bival-box span.bival-score { color: var(--gold); font-size: 20px; font-weight: 800; }
+        
+        .total-bival-box { background: linear-gradient(135deg, var(--gold2), var(--gold)); color: white; padding: 25px; border-radius: 12px; text-align: center; margin-top: 15px; font-size: 22px; font-weight: 900; box-shadow: 0 10px 25px rgba(59, 72, 144, 0.3); }
+        .total-bival-box span { font-size: 32px; display: block; margin-top: 8px; color: #ffffff; }
+
+        .submit-section { margin-top: 15px; padding: 15px; background: rgba(255,255,255,0.2); border-radius: 8px; display: flex; gap: 10px; align-items: center; justify-content: center; flex-wrap: wrap; border: 1px solid rgba(255,255,255,0.3); }
+        .submit-section input { padding: 10px 15px; border-radius: 6px; border: none; background: var(--bg); color: var(--text); font-size: 15px; font-family: inherit; width: 200px; font-weight: bold;}
+        .submit-section button { margin-top: 0; width: auto; padding: 10px 20px; background: var(--bg); color: var(--gold); font-size: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .submit-section button:hover { background: var(--sf2); }
+
+        .leaderboard-btn { position: static; width: auto; flex-shrink: 0; margin: 0; padding: 7px 12px; font-size: 12px; font-weight: 700; line-height: 1.2; border-radius: 6px; background: var(--sf); color: var(--gold); border: 1px solid var(--gold); box-shadow: none; white-space: nowrap; }
+        .leaderboard-btn:hover { background: var(--accent-bg); transform: none; }
+        
+        .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.4); backdrop-filter: blur(4px); }
+        .modal-content { background-color: var(--bg); margin: 10% auto; padding: 25px; border: 1px solid var(--bd); border-radius: 12px; width: 95%; max-width: 700px; max-height: 80vh; overflow-y: auto; color: var(--text); position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        .close-btn { color: var(--dim); float: right; font-size: 28px; font-weight: bold; cursor: pointer; line-height: 1; margin-top: -5px; }
+        .close-btn:hover { color: var(--text); }
+        
+        .rank-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px; table-layout: fixed; }
+        .rank-table th, .rank-table td { padding: 12px 4px; border-bottom: 1px solid var(--border3); text-align: center; vertical-align: middle; }
+        .rank-table th { color: var(--dim); font-weight: bold; border-bottom: 2px solid var(--bd); }
+        
+        .rank-td-cell { font-weight: bold; font-size: 15px; color: var(--text); }
+        .score-text { color: var(--gold); font-weight: 800; font-size: 15px; letter-spacing: -0.5px; }
+        .nickname-text { font-weight: bold; font-size: 15px; word-break: break-all; color: var(--text); }
+        
+        .leaderboard-medal-icon { width: 24px; height: 24px; vertical-align: middle; object-fit: contain; }
+        .leaderboard-dragon-icon { width: 22px; height: 22px; vertical-align: middle; border-radius: 4px; margin: 0 2px; object-fit: cover; }
+        .nickname-container { display: flex; align-items: center; justify-content: center; gap: 6px; flex-wrap: wrap; }
+
+        .detail-toggle-btn { background: var(--sf2); color: var(--dim); border: 1px solid var(--bd); padding: 6px 12px; border-radius: 4px; font-size: 12px; cursor: pointer; font-weight: bold; margin-top: 0; white-space: nowrap; }
+        .detail-toggle-btn:hover { background: var(--border3); }
+        .details-row td { background: var(--sf); padding: 15px 10px; border-bottom: 2px solid var(--bd); }
+        .details-container { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+        .detail-card { background: var(--sf2); border: 1px solid var(--border3); border-radius: 8px; padding: 10px; flex: 1; min-width: 140px; font-size: 12px; text-align: center; }
+        .detail-card span.d-name { display: block; color: var(--dim); margin-bottom: 6px; font-size: 12px; font-weight: bold; }
+
+        .pre-select-area { display: none; margin-top: 25px; padding: 25px; background-color: var(--sf2); border-radius: 12px; border: 1px solid var(--bd); }
+        .pre-select-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 15px; } 
+        .pre-select-item { display: flex; flex-direction: column; background: var(--sf); padding: 15px; border-radius: 8px; border: 1px solid var(--border3); }
+        .pre-select-item label { font-weight: 800; margin-bottom: 12px; color: var(--text); font-size: 15px; text-align: center; border-bottom: 1px solid var(--border3); padding-bottom: 8px; }
+        .input-row { display: flex; flex-direction: column; gap: 10px; } 
+        .autocomplete-wrapper { position: relative; width: 100%; }
+        .dragon-search, .grade-select { width: 100%; padding: 12px; border-radius: 6px; border: 1px solid var(--bd); background-color: var(--bg); font-family: inherit; font-size: 14px; font-weight: bold; box-sizing: border-box; color: var(--text); }
+        .dragon-search:focus, .grade-select:focus { outline: none; border-color: var(--gold); }
+        .autocomplete-list { position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: var(--bg); border: 1px solid var(--bd); z-index: 1000; max-height: 200px; overflow-y: auto; border-radius: 6px; display: none; }
+        .autocomplete-item { padding: 12px 14px; cursor: pointer; border-bottom: 1px solid var(--border3); font-size: 14px; color: var(--text); }
+        .autocomplete-item:hover { background-color: var(--sf2); font-weight: bold; color: var(--gold); }
+
+        .toggle-debug-btn { background: transparent; border: 1px solid var(--bd); color: var(--dim); padding: 6px 16px; border-radius: 20px; font-size: 13px; cursor: pointer; margin-top: 0; width: auto; font-weight: normal; transition: all 0.2s; }
+        .toggle-debug-btn:hover { background: var(--border3); color: var(--text); }
+        
+        .raw-text { background: var(--bg) !important; color: var(--dim) !important; border: 1px solid var(--bd) !important; }
+
+        @media (max-width: 800px) {
+            .page-wrap { padding: 10px 5px; }
+            h2 { font-size: 20px; padding-top: 0; margin-bottom: 20px; }
+
+            .leaderboard-btn { font-size: 11px; padding: 6px 9px; transform: none; }
+            .upload-section, .result-section { padding: 15px 5px; border-radius: 8px; }
+            
+            .pre-select-container, .groups-wrapper { gap: 4px; }
+            .pre-select-item { padding: 8px 4px; }
+            .pre-select-item label { font-size: 11px; padding-bottom: 6px; margin-bottom: 8px; }
+            .dragon-search, .grade-select { padding: 8px 4px; font-size: 11px; }
+            .input-row { gap: 6px; }
+
+            .group { padding: 12px 6px; border-left-width: 4px; border-radius: 6px; }
+            .group-header { padding-bottom: 8px; margin-bottom: 12px; gap: 4px; }
+            .dragon-title { font-size: 11px; gap: 2px; }
+            .dragon-type { font-size: 9px; display: block; width: 100%; }
+            .dragon-icon { width: 16px; height: 16px; }
+            
+            .badges-container { gap: 4px; margin-bottom: 12px; }
+            .eval-badge, .badge-success, .grade-badge { font-size: 8px; padding: 4px 5px; border-radius: 3px; }
+            
+            .stat-container { gap: 3px; margin-bottom: 12px; align-items: stretch; } 
+            .stat-box { padding: 8px 2px; font-size: 8px; border-radius: 4px; }
+            .stat-box b { font-size: 11px; margin-top: 3px; }
+            
+            .group-header img:not(.dragon-icon) { height: 16px !important; }
+
+            .bival-box { padding: 8px 3px; border-radius: 4px; }
+            .bival-label { font-size: 9px; margin-bottom: 2px; }
+            .bival-box span.bival-score { font-size: 12px; }
+            
+            .total-bival-box { padding: 12px 5px; font-size: 16px; margin-top: 15px; border-radius: 6px; }
+            .total-bival-box span { font-size: 22px; margin-top: 4px; }
+
+            .modal-content { padding: 15px 4px; width: 95%; max-width: 100vw; box-sizing: border-box; overflow-x: hidden; }
+            .rank-table { word-break: break-all; }
+            .rank-table th, .rank-table td { padding: 6px 1px; font-size: 10px; }
+            
+            .rank-td-cell { font-size: 11px; }
+            .score-text { font-size: 9.5px; word-break: break-all; } 
+            .nickname-text { font-size: 10px; }
+            
+            .nickname-container { flex-direction: column; gap: 2px; }
+            .leaderboard-dragon-icon { width: 12px; height: 12px; margin: 0 1px; }
+            .leaderboard-medal-icon { width: 16px; height: 16px; }
+            
+            .detail-toggle-btn { padding: 5px 2px; font-size: 9px; width: 95%; }
+            
+            .submit-section input, .submit-section button { width: 100%; margin-bottom: 5px; }
+            
+            .details-container { flex-direction: column; gap: 6px; width: 100%; box-sizing: border-box; }
+            .detail-card { min-width: 0 !important; width: 100%; margin: 0; box-sizing: border-box; overflow: hidden; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="hd">
+  <div class="hd-icon">
+    <img src="images/logo.png" alt="로고" onerror="this.style.display='none'">
+  </div>
+  <div>
+    <div class="hd-t">길전세팅 전투력 측정기</div>
+    <div class="hd-s">덱설정 스크린샷 업로드</div>
+  </div>
+  <div class="hd-spacer"></div>
+  <button id="openLeaderboardBtn" class="leaderboard-btn">🏆 주간 랭킹</button>
+</div>
+
+<div class="page-wrap">
+
+    <div id="leaderboardModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" id="closeModalBtn">&times;</span>
+            <h3 style="margin-top: 0; color: var(--gold); text-align: center;">🏆 주간 랭킹 (순위표)</h3>
+            <p style="text-align: center; font-size: 13px; color: var(--dim); margin-bottom: 15px;">서버에서 데이터를 불러오는 중입니다...</p>
+            <div style="overflow-x: auto;">
+                <table class="rank-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 15%;">순위</th>
+                            <th style="width: 45%;">닉네임 & 덱</th>
+                            <th style="width: 25%;">총합 비밸</th>
+                            <th style="width: 15%;">상세</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaderboardBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="upload-section">
+        <p style="margin-top:0; font-weight:800; color: var(--text); font-size:15px; margin-bottom:12px;">1. 덱 설정 화면 스크린샷 업로드</p>
+        <input type="file" id="imageInput" accept="image/*">
+        
+        <div style="display:flex; gap: 15px; flex-wrap: wrap;">
+            <div style="width: 100%;">
+                <img id="imagePreview" alt="원본 이미지">
+            </div>
+        </div>
+        
+        <div id="preSelectArea" class="pre-select-area">
+            <p style="margin-top:0; font-weight:800; color: var(--text); font-size:15px; margin-bottom:5px;">2. 각 그룹의 드래곤 및 등급 (자동 인식됨 / 수동 수정 가능)</p>
+            
+            <div class="pre-select-container">
+                <div class="pre-select-item">
+                    <label>그룹 1 (왼쪽)</label>
+                    <div class="input-row">
+                        <div class="autocomplete-wrapper">
+                            <input type="text" class="dragon-search" id="preInput1" autocomplete="off" placeholder="드래곤 자동 인식 중...">
+                            <div class="autocomplete-list" id="autoList1"></div>
+                        </div>
+                        <select class="grade-select" id="preGrade1">
+                            <option value="7.0">7.0 등급</option>
+                            <option value="8.0">8.0 등급</option>
+                            <option value="9.0" selected>9.0 등급</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="pre-select-item">
+                    <label>그룹 2 (가운데)</label>
+                    <div class="input-row">
+                        <div class="autocomplete-wrapper">
+                            <input type="text" class="dragon-search" id="preInput2" autocomplete="off" placeholder="드래곤 자동 인식 중...">
+                            <div class="autocomplete-list" id="autoList2"></div>
+                        </div>
+                        <select class="grade-select" id="preGrade2">
+                            <option value="7.0">7.0 등급</option>
+                            <option value="8.0">8.0 등급</option>
+                            <option value="9.0" selected>9.0 등급</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="pre-select-item">
+                    <label>그룹 3 (오른쪽)</label>
+                    <div class="input-row">
+                        <div class="autocomplete-wrapper">
+                            <input type="text" class="dragon-search" id="preInput3" autocomplete="off" placeholder="드래곤 자동 인식 중...">
+                            <div class="autocomplete-list" id="autoList3"></div>
+                        </div>
+                        <select class="grade-select" id="preGrade3">
+                            <option value="7.0">7.0 등급</option>
+                            <option value="8.0">8.0 등급</option>
+                            <option value="9.0" selected>9.0 등급</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="extractBtnContainer" style="display: none; text-align: center; margin-top: 30px;">
+            <img id="extractBtn" src="images/chu.png" alt="계산 시작" style="width: 70px; height: 70px; cursor: pointer; object-fit: cover; transition: opacity 0.2s ease;" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">
+        </div>
+        <div id="status"></div>
+    </div>
+
+    <div class="result-section" id="resultSection" style="display: none;">
+        <h3 style="margin-top:0; color:var(--text); font-weight:800; font-size:18px; border-bottom:1px solid var(--bd); padding-bottom:12px; margin-bottom:20px;">비밸 계산 결과</h3>
+        <div id="parsedResults"></div>
+        <h4 style="margin-top: 35px; font-size: 13px; color: var(--dim); margin-bottom:5px;">전체 인식된 텍스트 (로그 확인용)</h4>
+        <textarea id="rawText" class="raw-text" style="width: 100%; height: 60px; background: #1e1e1e; color: #cbd5e1; border: 1px solid #444; border-radius: 6px; padding: 10px;" readonly></textarea>
+    </div>
+
+    <script>
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbzcC8qd7_MQrkipdMO-jAwsKSYzaphxUgbOeTcecK3ENdg1ooLr5pa76VHX9KmdI0Gdtw/exec";
+
+        let dragonDB = {};
+        let dragonList = [];
+        let currentCalculatedBival = 0; 
+        let currentG1 = {}, currentG2 = {}, currentG3 = {}; 
+
+        const modal = document.getElementById("leaderboardModal");
+        const btn = document.getElementById("openLeaderboardBtn");
+        const span = document.getElementById("closeModalBtn");
+
+        btn.onclick = function() { modal.style.display = "block"; loadLeaderboard(); }
+        span.onclick = function() { modal.style.display = "none"; }
+        window.onclick = function(event) { if (event.target == modal) { modal.style.display = "none"; } }
+
+        function toggleDetails(btnElement) {
+            const detailRow = btnElement.closest('tr').nextElementSibling;
+            if (detailRow.style.display === "none" || detailRow.style.display === "") {
+                detailRow.style.display = "table-row";
+                btnElement.innerText = "닫기 ▲";
+            } else {
+                detailRow.style.display = "none";
+                btnElement.innerText = "상세 ▼";
+            }
+        }
+
+        async function loadLeaderboard() {
+            const tbody = document.getElementById('leaderboardBody');
+            tbody.innerHTML = `<tr><td colspan="4" style="color:var(--dim);">데이터를 불러오는 중입니다... ⏳</td></tr>`;
+            try {
+                const response = await fetch(GAS_URL);
+                const data = await response.json();
+                
+                tbody.innerHTML = '';
+                if(!data || data.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="4" style="color:var(--dim);">아직 등록된 랭킹이 없습니다.</td></tr>`;
+                    return;
+                }
+
+                data.forEach((row, index) => {
+                    let medalHtml = `<span class="rank-td-cell">${index + 1}위</span>`;
+                    if(index === 0) medalHtml = `<img src="./images/medal_1.png" class="leaderboard-medal-icon" alt="1위" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';"><span style="display:none;" class="rank-td-cell">1위</span>`;
+                    if(index === 1) medalHtml = `<img src="./images/medal_2.png" class="leaderboard-medal-icon" alt="2위" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';"><span style="display:none;" class="rank-td-cell">2위</span>`;
+                    if(index === 2) medalHtml = `<img src="./images/medal_3.png" class="leaderboard-medal-icon" alt="3위" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';"><span style="display:none;" class="rank-td-cell">3위</span>`;
+                    
+                    let iconsHtml = '';
+                    const dNames = [row.g1?.name, row.g2?.name, row.g3?.name];
+                    dNames.forEach(dName => {
+                        if(dName && !dName.startsWith("그룹 ")) {
+                            iconsHtml += `<img src="./images/icons/${dName}.png" class="leaderboard-dragon-icon" onerror="this.style.display='none'">`;
+                        }
+                    });
+
+                    const bivalText = `<span class="score-text">${Number(row.score).toLocaleString()}</span>`;
+                    
+                    const calcBival = (g) => {
+                        if(!g || !g.base_hp) return 0;
+                        return Number(g.base_hp) * Number(g.base_atk) * Number(g.base_def);
+                    };
+                    const g1Bival = calcBival(row.g1);
+                    const g2Bival = calcBival(row.g2);
+                    const g3Bival = calcBival(row.g3);
+
+                    const calcEval = (g) => {
+                        if(!g || !g.base_hp) return 0;
+                        return Number(g.base_hp) + (Number(g.base_atk) + Number(g.base_def)) * 4;
+                    };
+                    const g1Eval = calcEval(row.g1);
+                    const g2Eval = calcEval(row.g2);
+                    const g3Eval = calcEval(row.g3);
+                    
+                    const totalEval = g1Eval + g2Eval + g3Eval;
+
+                    const renderDragonName = (name) => {
+                        if (!name || name === '-') return `🐲 -`;
+                        return `<img src="./images/icons/${name}.png" style="width:16px; height:16px; border-radius:3px; vertical-align:middle; margin-right:4px;" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';"><span style="display:none;">🐲</span>${name}`;
+                    };
+
+                    const formatDetailStat = (icon, base) => {
+                        return `
+                        <div style="display:flex; flex-direction:column; align-items:center; line-height:1.3;">
+                            <span style="font-size:12px; color:var(--text);">${icon}</span>
+                            <b style="font-size:14px; color:var(--text);">${base || 0}</b>
+                        </div>`;
+                    };
+
+                    tbody.innerHTML += `
+                        <tr class="main-row">
+                            <td>${medalHtml}</td>
+                            <td>
+                                <div class="nickname-container">
+                                    <span class="nickname-text">${row.nickname}</span>
+                                    <div>${iconsHtml}</div>
+                                </div>
+                            </td>
+                            <td>${bivalText}</td>
+                            <td><button class="detail-toggle-btn" onclick="toggleDetails(this)">상세 ▼</button></td>
+                        </tr>
+                        <tr class="details-row" style="display:none;">
+                            <td colspan="4">
+                                <div class="details-container">
+                                    <div class="detail-card">
+                                        <span class="d-name">${renderDragonName(row.g1?.name)}</span>
+                                        <div style="display:flex; justify-style:space-around; margin:8px 0; padding-bottom:6px; border-bottom: 1px dashed var(--bd);">
+                                            ${formatDetailStat('HP', row.g1?.base_hp)}
+                                            ${formatDetailStat('ATK', row.g1?.base_atk)}
+                                            ${formatDetailStat('DEF', row.g1?.base_def)}
+                                        </div>
+                                        <div style="display:flex; justify-content:space-between; align-items:center; padding:4px 5px 0;">
+                                            <span style="font-size:12px; color:var(--dim); font-weight:bold;">Eval: ${g1Eval.toLocaleString()}</span>
+                                            <span style="font-size:13px; color:var(--gold); font-weight:bold;">📊 ${g1Bival.toLocaleString()}</span>
+                                        </div>
+                                    </div>
+                                    <div class="detail-card">
+                                        <span class="d-name">${renderDragonName(row.g2?.name)}</span>
+                                        <div style="display:flex; justify-content:space-around; margin:8px 0; padding-bottom:6px; border-bottom: 1px dashed var(--bd);">
+                                            ${formatDetailStat('HP', row.g2?.base_hp)}
+                                            ${formatDetailStat('ATK', row.g2?.base_atk)}
+                                            ${formatDetailStat('DEF', row.g2?.base_def)}
+                                        </div>
+                                        <div style="display:flex; justify-content:space-between; align-items:center; padding:4px 5px 0;">
+                                            <span style="font-size:12px; color:var(--dim); font-weight:bold;">Eval: ${g2Eval.toLocaleString()}</span>
+                                            <span style="font-size:13px; color:var(--gold); font-weight:bold;">📊 ${g2Bival.toLocaleString()}</span>
+                                        </div>
+                                    </div>
+                                    <div class="detail-card">
+                                        <span class="d-name">${renderDragonName(row.g3?.name)}</span>
+                                        <div style="display:flex; justify-content:space-around; margin:8px 0; padding-bottom:6px; border-bottom: 1px dashed var(--bd);">
+                                            ${formatDetailStat('HP', row.g3?.base_hp)}
+                                            ${formatDetailStat('ATK', row.g3?.base_atk)}
+                                            ${formatDetailStat('DEF', row.g3?.base_def)}
+                                        </div>
+                                        <div style="display:flex; justify-content:space-between; align-items:center; padding:4px 5px 0;">
+                                            <span style="font-size:12px; color:var(--dim); font-weight:bold;">Eval: ${g3Eval.toLocaleString()}</span>
+                                            <span style="font-size:13px; color:var(--gold); font-weight:bold;">📊 ${g3Bival.toLocaleString()}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div style="margin-top: 12px; padding: 10px; background: var(--sf2); border: 1px solid var(--bd); border-radius: 8px; text-align: center;">
+                                    <span style="color: var(--text); font-size: 13px; font-weight: bold;">Eval 총합:</span>
+                                    <span style="color: var(--gold); font-size: 16px; font-weight: 900; margin-left: 5px;">${totalEval.toLocaleString()}</span>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                });
+            } catch (error) {
+                tbody.innerHTML = `<tr><td colspan="4" style="color:#dc2626;">순위표를 불러오는 데 실패했습니다.</td></tr>`;
+            }
+        }
+
+        async function submitScoreToDB() {
+            const nickname = document.getElementById("nicknameInput").value.trim();
+            if(!nickname) { alert("닉네임을 입력해주세요!"); return; }
+            if(nickname.length > 10) { alert("닉네임은 10자 이내로 입력해주세요!"); return; }
+            
+            const submitBtn = document.getElementById("submitScoreBtn");
+            submitBtn.innerText = "등록 중... ⏳";
+            submitBtn.disabled = true;
+
+            try {
+                await fetch(GAS_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ 
+                        nickname: nickname, 
+                        score: currentCalculatedBival,
+                        totalBuffCount: 0,
+                        totalNerfCount: 0, 
+                        g1: currentG1,
+                        g2: currentG2,
+                        g3: currentG3
+                    })
+                });
+                alert(`${nickname} 비밸 주랭 등록 완료`);
+                submitBtn.innerText = "등록 완료 ✅";
+                modal.style.display = "block";
+                loadLeaderboard();
+            } catch (error) {
+                alert("등록에 실패했습니다. 다시 시도해주세요.");
+                submitBtn.innerText = "주간 랭킹에 기록 등록하기";
+                submitBtn.disabled = false;
+            }
+        }
+
+        function setupAutocomplete(inputId, listId) {
+            const input = document.getElementById(inputId);
+            const list = document.getElementById(listId);
+            function renderList(items) {
+                list.innerHTML = '';
+                if (items.length === 0) { list.style.display = 'none'; return; }
+                items.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = 'autocomplete-item'; div.textContent = item;
+                    div.addEventListener('click', function() { input.value = item; list.style.display = 'none'; });
+                    list.appendChild(div);
+                });
+                list.style.display = 'block';
+            }
+            input.addEventListener('input', function() { const val = this.value.trim(); renderList(val ? dragonList.filter(d => d.includes(val)) : dragonList); });
+            input.addEventListener('focus', function() { const val = this.value.trim(); renderList(val ? dragonList.filter(d => d.includes(val)) : dragonList); });
+            document.addEventListener('click', function(e) { if (e.target !== input && e.target !== list && !list.contains(e.target)) { list.style.display = 'none'; } });
+        }
+
+        const noCacheUrl = '?v=' + new Date().getTime();
+        fetch('dragon_db.json' + noCacheUrl)
+            .then(res => res.json())
+            .then(data => {
+                dragonDB = data;
+                dragonList = Object.keys(dragonDB).sort();
+                setupAutocomplete('preInput1', 'autoList1');
+                setupAutocomplete('preInput2', 'autoList2');
+                setupAutocomplete('preInput3', 'autoList3');
+            })
+            .catch(err => { console.error("dragon_db.json 로드 실패", err); });
+
+        // 드래곤 이름 유사도 매칭 함수
+        function findBestDragonMatch(ocrText) {
+            if (!ocrText || dragonList.length === 0) return "";
+            const cleanOcr = ocrText.replace(/[^가-힣a-zA-Z]/g, '');
+            if (!cleanOcr) return "";
+
+            let bestMatch = "";
+            let highestScore = -1;
+
+            for (const name of dragonList) {
+                const cleanName = name.replace(/[^가-힣a-zA-Z]/g, '');
+                if (cleanOcr === cleanName) return name;
+                if (cleanOcr.includes(cleanName) || cleanName.includes(cleanOcr)) {
+                    const score = 0.8 + (Math.min(cleanOcr.length, cleanName.length) / Math.max(cleanOcr.length, cleanName.length)) * 0.2;
+                    if (score > highestScore) { highestScore = score; bestMatch = name; }
+                    continue;
+                }
+                let matches = 0;
+                for (let char of cleanOcr) {
+                    if (cleanName.includes(char)) matches++;
+                }
+                const overlapScore = matches / Math.max(cleanOcr.length, cleanName.length);
+                if (overlapScore > highestScore) {
+                    highestScore = overlapScore;
+                    bestMatch = name;
+                }
+            }
+            return highestScore >= 0.35 ? bestMatch : "";
+        }
+
+        // 등급 별 이미지 자동 검출 함수 (9.0 / 8.0 / 7.0)
+        function detectGradeFromCardCanvas(ctx, cardW, cardH) {
+            // 카드 상단 중앙 (별 뱃지가 위치하는 영역) 크롭
+            const sx = Math.floor(cardW * 0.25);
+            const sy = Math.floor(cardH * 0.20);
+            const sw = Math.floor(cardW * 0.50);
+            const sh = Math.floor(cardH * 0.25);
+
+            const imgData = ctx.getImageData(sx, sy, sw, sh);
+            const data = imgData.data;
+
+            let pinkWingPixels = 0;   // 9.0 등급: 붉은 별 양옆의 분홍색 날개 피셀
+            let purpleStarPixels = 0; // 8.0 등급: 보라색 별 피셀
+
+            for (let i = 0; i < data.length; i += 4) {
+                const r = data[i], g = data[i+1], b = data[i+2];
+
+                // 9.0 등급 날개 (분홍색/마젠타 톤: R, B가 높고 G가 낮음)
+                if (r > 190 && b > 110 && g < 160 && (r - g) > 40 && (b - g) > 15) {
+                    pinkWingPixels++;
+                }
+                // 8.0 등급 별 (보라색 톤: B, R이 높고 G가 낮음)
+                if (r > 130 && b > 150 && g < 100 && (b - g) > 50) {
+                    purpleStarPixels++;
+                }
+            }
+
+            if (pinkWingPixels >= 10) return "9.0";
+            if (purpleStarPixels >= 10) return "8.0";
+            return "7.0"; // 별이 없는 경우 7.0
+        }
+
+        // 스탯 수치 파싱 및 수학적 자동 교정 (Eval = HP + (ATK + DEF)*4)
+        function parseAndCorrectStats(ocrText) {
+            let text = ocrText;
+            text = text.replace(/[Ss]/g, '5').replace(/B/g, '8').replace(/[OoDdQqg]/g, '0').replace(/[MNm]/g, '11').replace(/[Il|]/g, '1');
+            
+            let nums = (text.match(/\d+/g) || []).map(n => parseInt(n, 10)).filter(n => n >= 10 && n <= 15000);
+            if (nums.length < 3) return null;
+
+            // Eval 수치 찾기 (보통 4000 ~ 12000 사이)
+            let evalCandidates = nums.filter(n => n >= 4000 && n <= 12000);
+            let statCandidates = nums.filter(n => n >= 50 && n < 5000);
+
+            if (statCandidates.length >= 3) {
+                let hp = statCandidates[0];
+                let atk = statCandidates[1];
+                let def = statCandidates[2];
+                let realEval = evalCandidates[0] || null;
+
+                if (realEval) {
+                    const calcEval = hp + (atk + def) * 4;
+                    if (calcEval !== realEval) {
+                        // 1. HP 오류 교정 시도
+                        const expectedHp = realEval - (atk + def) * 4;
+                        if (expectedHp >= 500 && expectedHp <= 6000) hp = expectedHp;
+                        else {
+                            // 2. ATK 오류 교정 시도
+                            const expectedAtk = (realEval - hp) / 4 - def;
+                            if (Number.isInteger(expectedAtk) && expectedAtk >= 100 && expectedAtk <= 2000) atk = expectedAtk;
+                            else {
+                                // 3. DEF 오류 교정 시도
+                                const expectedDef = (realEval - hp) / 4 - atk;
+                                if (Number.isInteger(expectedDef) && expectedDef >= 100 && expectedDef <= 2000) def = expectedDef;
+                            }
+                        }
+                    }
+                }
+                return { hp, atk, def, evalVal: realEval || (hp + (atk + def) * 4) };
+            }
+            return null;
+        }
+
+        const imageInput = document.getElementById('imageInput');
+        const imagePreview = document.getElementById('imagePreview');
+        const extractBtn = document.getElementById('extractBtn');
+        const statusDiv = document.getElementById('status');
+        const resultSection = document.getElementById('resultSection');
+        const parsedResults = document.getElementById('parsedResults');
+        const rawText = document.getElementById('rawText');
+
+        imageInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = async function(e) {
+                    imagePreview.src = e.target.result;
+                    imagePreview.style.display = 'block';
+                    document.getElementById('preSelectArea').style.display = 'block'; 
+                    document.getElementById('extractBtnContainer').style.display = 'block';
+                    
+                    statusDiv.innerHTML = "스크린샷 자동 분석 중... ⏳";
+                    await autoDetectAndCalculate();
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+
+        async function autoDetectAndCalculate() {
+            const img = new Image();
+            img.src = imagePreview.src;
+            await new Promise(r => img.onload = r);
+
+            const canvas = document.createElement('canvas');
+            canvas.width = img.width;
+            canvas.height = img.height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0);
+
+            // 3개의 카드 위치 파악 (상대적 비율 기준)
+            const cards = [
+                { left: Math.floor(img.width * 0.20), width: Math.floor(img.width * 0.21), top: Math.floor(img.height * 0.22), height: Math.floor(img.height * 0.58) },
+                { left: Math.floor(img.width * 0.41), width: Math.floor(img.width * 0.20), top: Math.floor(img.height * 0.22), height: Math.floor(img.height * 0.58) },
+                { left: Math.floor(img.width * 0.61), width: Math.floor(img.width * 0.20), top: Math.floor(img.height * 0.22), height: Math.floor(img.height * 0.58) }
+            ];
+
+            const workerKor = await Tesseract.createWorker('kor+eng');
+            const workerNum = await Tesseract.createWorker('eng');
+            await workerNum.setParameters({ tessedit_char_whitelist: '0123456789Eval: ' });
+
+            let fullRawText = "";
+            let groupResults = [];
+
+            for (let i = 0; i < 3; i++) {
+                const card = cards[i];
+
+                // 1. 등급 자동 검출 (9.0 / 8.0 / 7.0)
+                const cardCanvas = document.createElement('canvas');
+                cardCanvas.width = card.width;
+                cardCanvas.height = card.height;
+                const cardCtx = cardCanvas.getContext('2d');
+                cardCtx.drawImage(img, card.left, card.top, card.width, card.height, 0, 0, card.width, card.height);
+
+                const detectedGrade = detectGradeFromCardCanvas(cardCtx, card.width, card.height);
+                document.getElementById(`preGrade${i+1}`).value = detectedGrade;
+
+                // 2. 드래곤 이름 OCR 및 매칭
+                const nameCanvas = document.createElement('canvas');
+                nameCanvas.width = card.width * 2;
+                nameCanvas.height = Math.floor(card.height * 0.18) * 2;
+                const nameCtx = nameCanvas.getContext('2d');
+                nameCtx.imageSmoothingEnabled = false;
+                nameCtx.drawImage(img, card.left, card.top, card.width, Math.floor(card.height * 0.18), 0, 0, nameCanvas.width, nameCanvas.height);
+                
+                const nameRet = await workerKor.recognize(nameCanvas.toDataURL('image/png'));
+                const matchedName = findBestDragonMatch(nameRet.data.text);
+                if (matchedName) {
+                    document.getElementById(`preInput${i+1}`).value = matchedName;
+                }
+
+                // 3. 스탯 OCR (하단 흰색 스탯 상자 영역만 고해상도 크롭)
+                const statCanvas = document.createElement('canvas');
+                statCanvas.width = card.width * 3;
+                statCanvas.height = Math.floor(card.height * 0.38) * 3;
+                const statCtx = statCanvas.getContext('2d');
+                statCtx.imageSmoothingEnabled = false;
+                statCtx.drawImage(img, card.left, card.top + Math.floor(card.height * 0.58), card.width, Math.floor(card.height * 0.38), 0, 0, statCanvas.width, statCanvas.height);
+
+                const statRet = await workerNum.recognize(statCanvas.toDataURL('image/png'));
+                fullRawText += `--- 카드 ${i+1} OCR ---\n${statRet.data.text}\n`;
+
+                const parsed = parseAndCorrectStats(statRet.data.text);
+                groupResults.push(parsed);
+            }
+
+            await workerKor.terminate();
+            await workerNum.terminate();
+
+            rawText.value = fullRawText;
+            renderCalculationResults(groupResults);
+        }
+
+        function renderCalculationResults(groupResults) {
+            const selectedNames = [
+                document.getElementById('preInput1').value.trim() || "그룹 1",
+                document.getElementById('preInput2').value.trim() || "그룹 2",
+                document.getElementById('preInput3').value.trim() || "그룹 3"
+            ];
+            const selectedGrades = [
+                document.getElementById('preGrade1').value,
+                document.getElementById('preGrade2').value,
+                document.getElementById('preGrade3').value
+            ];
+
+            let html = '<div class="groups-wrapper">';
+            const colors = ['group-1', 'group-2', 'group-3']; 
+            let totalBival = 0;
+
+            for (let g = 0; g < 3; g++) {
+                const dragonName = selectedNames[g];
+                const dragonGrade = selectedGrades[g];
+                const res = groupResults[g];
+
+                let hp = res ? res.hp : 0;
+                let atk = res ? res.atk : 0;
+                let def = res ? res.def : 0;
+                let evalVal = res ? res.evalVal : (hp + (atk + def) * 4);
+
+                let groupBival = hp * atk * def;
+                totalBival += groupBival;
+
+                const dragonInfo = dragonDB[dragonName];
+                let infoBadge = dragonInfo ? `<span class="dragon-type">[${dragonInfo.e} / ${dragonInfo.t}]</span>` : `<span class="dragon-type" style="visibility:hidden;">[미지정]</span>`;
+
+                let currentGroupData = { name: dragonName, base_hp: hp, base_atk: atk, base_def: def, bival: groupBival };
+                if (g === 0) currentG1 = currentGroupData;
+                if (g === 1) currentG2 = currentGroupData;
+                if (g === 2) currentG3 = currentGroupData;
+
+                let gradeHtml = '';
+                if (dragonGrade === '9.0') {
+                    gradeHtml = `<img src="./images/grade_9.png" alt="9.0" style="height: 24px;" onerror="this.outerHTML='<span class=\\'grade-badge\\'>⭐ 9.0 등급</span>'">`;
+                } else if (dragonGrade === '8.0') {
+                    gradeHtml = `<img src="./images/grade_8.png" alt="8.0" style="height: 24px;" onerror="this.outerHTML='<span class=\\'grade-badge\\'>⭐ 8.0 등급</span>'">`;
+                } else {
+                    gradeHtml = `<span class="grade-badge">⭐ 7.0 등급</span>`;
+                }
+
+                html += `
+                    <div class="group ${colors[g]}">
+                        <div class="group-header">
+                            <span class="dragon-title">
+                                <img src="./images/icons/${dragonName}.png" alt="${dragonName}" class="dragon-icon" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+                                <span style="display:none;">🐲</span> 
+                                ${dragonName} ${infoBadge}
+                            </span>
+                            ${gradeHtml}
+                        </div>
+                        <div class="badges-container">
+                            <span class="eval-badge">Eval: ${evalVal}</span>
+                            <span class="badge-success">인식 완료</span>
+                        </div>
+                        
+                        <div class="stat-container">
+                            <div class="stat-box stat-hp">HP <b>${hp}</b></div>
+                            <div class="stat-box stat-atk">ATK <b>${atk}</b></div>
+                            <div class="stat-box stat-def">DEF <b>${def}</b></div>
+                        </div>
+                        
+                        <div class="bival-box">
+                            <span class="bival-label">📊 비밸 (HP × ATK × DEF):</span>
+                            <span class="bival-score">${groupBival.toLocaleString()}</span>
+                        </div>
+                    </div>
+                `;
+            }
+            html += '</div>';
+
+            currentCalculatedBival = totalBival;
+
+            html += `
+                <div class="total-bival-box">
+                    🏆 총합 비밸
+                    <span>${totalBival.toLocaleString()}</span>
+                    <div class="submit-section">
+                        <input type="text" id="nicknameInput" placeholder="닉네임 입력 (최대 10자)" maxlength="10">
+                        <button id="submitScoreBtn" onclick="submitScoreToDB()">주간 랭킹에 기록 등록하기</button>
+                    </div>
+                </div>
+            `;
+
+            parsedResults.innerHTML = html;
+            resultSection.style.display = 'block';
+            statusDiv.innerHTML = "자동 인식 및 계산 완료 ✅";
+        }
+
+        extractBtn.addEventListener('click', () => {
+            statusDiv.innerHTML = "계산 중... ⏳";
+            autoDetectAndCalculate();
+        });
+    </script>
+</div>
+</body>
+</html>
